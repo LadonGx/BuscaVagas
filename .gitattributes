@@ -1,0 +1,5 @@
+# Mantém LF no repositório mesmo quando clonado no Windows.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.pdf binary

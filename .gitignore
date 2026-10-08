@@ -1,0 +1,20 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Variáveis de ambiente: só o .env.example vai para o repositório.
+.env
+.env.*
+!.env.example
+
+# Prisma Client gerado (recriado no pnpm install)
+apps/api/src/generated/
+
+# Editor / SO
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.log

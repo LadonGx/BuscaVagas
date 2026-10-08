@@ -1,0 +1,12 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm só roda scripts de instalação de dependências liberadas aqui.
+allowBuilds:
+  '@prisma/engines': true
+  prisma: true
+  esbuild: true
+  '@swc/core': true
+  # Acelerador nativo opcional do BullMQ; sem ele, cai na versão em JS.
+  msgpackr-extract: false

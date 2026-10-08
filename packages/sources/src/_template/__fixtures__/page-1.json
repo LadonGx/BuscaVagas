@@ -1,0 +1,20 @@
+{
+  "has_more": false,
+  "jobs": [
+    {
+      "id": 101,
+      "title": " Desenvolvedor Full Stack Júnior ",
+      "company": "Empresa Exemplo",
+      "url": "https://jobs.example.com/vagas/101?utm_source=feed",
+      "remote": true,
+      "city": "Americana, SP",
+      "published_at": "2026-10-01T09:30:00Z",
+      "description": "Node.js, NestJS e PostgreSQL."
+    },
+    {
+      "id": 102,
+      "title": "Item sem empresa — deve ser descartado",
+      "url": "https://jobs.example.com/vagas/102"
+    }
+  ]
+}

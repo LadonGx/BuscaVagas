@@ -1,0 +1,44 @@
+// Fonte de verdade do banco. Toda mudança aqui vira migration versionada:
+//   pnpm db:migrate
+// O client gerado vai para src/generated/ (fora do git, recriado no install).
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+  runtime      = "nodejs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Estrutura (Fase 0). Os modelos de negócio — vaga, candidatura, currículo —
+// entram na Fase 1 (ver docs/ROADMAP.md).
+// ---------------------------------------------------------------------------
+
+enum SourceRunStatus {
+  running
+  ok
+  failed
+}
+
+/// Uma execução de uma fonte (um job da fila `source-scan`).
+///
+/// É o histórico de saúde de cada site: quando rodou, quanto trouxe, quanto
+/// descartou e por que falhou. Um salto em `dropped` ou uma sequência de
+/// `failed` é o sinal de que o site mudou e a pasta dele precisa de ajuste.
+model SourceRun {
+  id         String          @id @default(cuid())
+  sourceId   String
+  status     SourceRunStatus @default(running)
+  jobsFound  Int             @default(0)
+  dropped    Int             @default(0)
+  durationMs Int?
+  error      String?
+  startedAt  DateTime        @default(now())
+  finishedAt DateTime?
+
+  @@index([sourceId, startedAt])
+}

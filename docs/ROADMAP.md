@@ -1,0 +1,111 @@
+# Roadmap
+
+Ordem de construção: **estrutura → backend → frontend → ajustes, melhorias e IA**.
+Uma boa base de backend evita retrabalho; a IA fica para o final de propósito.
+
+Legenda da origem das ideias: **JT** = arnaldoliro/job-tracker ·
+**VA** = vihribeiro/vagas · **JS** = Gsync/jobsync · **CO** = santifer/career-ops ·
+**VG** = leo-holanda/vagometro.
+
+---
+
+## Fase 0 — Estrutura ✅
+
+- [x] Monorepo pnpm: `apps/api`, `apps/web`, `packages/shared`, `packages/sources`
+- [x] Docker Compose com Postgres e Redis, só em `127.0.0.1`
+- [x] NestJS com config validada (Zod), Prisma 7, BullMQ, `GET /api/health`
+- [x] Segurança local: checagem de `Host` e de `Content-Type` em escrita
+- [x] Contrato `JobSource`, cliente HTTP, `canonicalUrl`, `runSources` e pasta `_template`
+- [x] Front mínimo mostrando o status da API
+- [x] ESLint, Prettier, Vitest e CI no GitHub Actions
+- [ ] Gerar e versionar a primeira migration (`pnpm db:migrate --name init`)
+
+## Fase 1 — Backend
+
+**Fontes** (uma pasta cada, em ordem de prioridade):
+
+- [ ] `gupy` — API pública por termo; cobre o mercado brasileiro (JT, CO, VG)
+- [ ] `greenhouse`, `lever`, `ashby` — boards por empresa, lista no `.env` (JT, JS)
+- [ ] `github-issues` — repositórios de vagas como `backend-br/vagas` e `frontendbr/vagas`, via API oficial do GitHub (VG)
+- [ ] `remote-boards` — RemoteOK e Remotive (JT)
+- [ ] Extração de stack, senioridade, modalidade e contrato por heurística (JT)
+
+**Modelos e módulos:**
+
+- [ ] `Job` com URL canônica `@unique`; `SavedJob` e `DismissedJob` por vaga (JT)
+- [ ] `Application` + `StatusEvent`: histórico de status com a data real do evento, separada da data do registro (JT)
+- [ ] `ResumeSection`: currículo em blocos para copiar ("gaveta") (VA)
+- [ ] `JobPreferences`: stacks, senioridade, modalidade, contrato, idade máxima da vaga
+- [ ] Processador da fila `source-scan`: um job por fonte, retry com backoff, registro em `SourceRun`
+- [ ] Busca com filtros, paginação por cursor e exclusão de vagas descartadas (JT)
+- [ ] Nota de aderência **por código** (0–1000), normalizada pelos sinais disponíveis (JT)
+- [ ] Endpoint de saúde das fontes (últimas execuções, taxa de descarte)
+
+## Fase 2 — Frontend
+
+- [ ] Lista de vagas com filtros, salvar e descartar (com desfazer)
+- [ ] **Modo deslizar**: direita = salvar, esquerda = descartar, setas do teclado, desfazer (VA)
+- [ ] Detalhe da vaga com nota, motivos e stack detectada
+- [ ] Candidaturas: quadro por status e linha do tempo
+- [ ] **Gaveta do currículo**: blocos com botão de copiar e edição no lugar (VA)
+- [ ] Preferências de busca e lista de empresas acompanhadas
+
+## Fase 3 — Ajustes e melhorias
+
+- [ ] Portais BR sem API via JSON-LD (`schema.org/JobPosting`): InfoJobs, Vagas.com (JT)
+- [ ] Varredura agendada (job repetível) + notificação de vaga nova com nota alta (JS)
+- [ ] Checagem se a vaga ainda está aberta antes de candidatar (CO)
+- [ ] Detecção de vaga repostada (VG)
+- [ ] Importar currículo de PDF, com revisão antes de salvar (VA, JS)
+- [ ] Versão do currículo congelada em cada candidatura (JT)
+- [ ] Painel: funil, tempo até a primeira resposta, rendimento por fonte (JT)
+- [ ] Estatísticas do mercado com as vagas coletadas: stacks mais pedidas etc. (VG)
+- [ ] Banco de perguntas de entrevista com as suas respostas (JS)
+- [ ] Backup / exportação dos dados (JS)
+- [ ] Diretório embutido de empresas por ATS (JS)
+- [ ] Extensão do Chrome: enviar vaga do LinkedIn para o app, sem scraping (VA)
+- [ ] Alertas de vaga do LinkedIn lidos do e-mail (IMAP com rótulo) (JT)
+- [ ] Preencher formulário com Playwright, **nunca enviar** (JT)
+- [ ] Docker Compose completo (API + web em container) para quem só quer usar
+
+## Fase 4 — IA (guardada para o final)
+
+**Princípios**
+
+- O código ordena todas as vagas; a IA analisa só as do topo ou a que você abriu (JS).
+- A IA sugere, você decide: nenhuma sugestão vira dado sem o seu clique (JT).
+- Saída sempre estruturada (JSON Schema) e validada com Zod; resposta inválida é descartada.
+- Nunca inventar experiência: só o que está no currículo, citando o trecho (JT).
+
+**Arquitetura:** interface `LlmProvider` com adaptadores trocáveis pelo `.env` —
+`ollama` (padrão), `groq`, `zai` (GLM) e, depois, `anthropic` (Claude). Fila
+`ai-analysis` com concorrência 1 para o modelo local e limite de taxa para as
+APIs gratuitas.
+
+**Usos planejados**
+
+- Motivos e dicas da nota nas vagas do topo (VA)
+- Análise de lacunas: o que a vaga pede que o currículo não mostra
+- Extração de vaga a partir de link colado, quando não houver JSON-LD (JT)
+- Rascunho de respostas abertas e carta de apresentação (JT)
+- Pesquisa sobre a empresa antes da entrevista
+
+**Modelos a avaliar** (hardware de referência: RTX 3060 12 GB + 32 GB RAM;
+nomes de outubro/2026 — reconfirmar no catálogo do Ollama quando chegar a hora)
+
+| Modelo                  | Onde roda                              | Observação                                                    |
+| ----------------------- | -------------------------------------- | ------------------------------------------------------------- |
+| `qwen3.5:9b`            | Inteiro na GPU (Q4/Q6)                 | Candidato a padrão; desligar o "thinking" em extração         |
+| Gemma 4 12B             | Inteiro na GPU (Q4)                    | Alternativa forte em tarefas estruturadas                     |
+| gpt-oss-20b             | GPU + parte na RAM                     | Citado como bom em saída estruturada                          |
+| `qwen3.6:35b-a3b` (MoE) | GPU + RAM (offload)                    | Mais inteligente, mais lento — bom para lote em segundo plano |
+| GLM-4.7-Flash (30B-A3B) | Offload local, ou API gratuita da Z.ai | Ler a política de dados antes de enviar currículo             |
+| Groq (Llama/Qwen)       | Nuvem, cota gratuita                   | Não retém dados por padrão; ótimo se o PC estiver ocupado     |
+
+Cuidados no Ollama: contexto padrão de 4K abaixo de 24 GB de VRAM (ajustar
+`num_ctx`); usar o parâmetro `format` com JSON Schema; `think: false` em tarefas
+de extração.
+
+**Antes de escolher:** script de avaliação no repositório — ~20 vagas reais +
+o currículo, a mesma tarefa em cada modelo, medindo JSON válido, tempo e
+qualidade. Benchmarks divulgados pelos fabricantes não substituem esse teste.

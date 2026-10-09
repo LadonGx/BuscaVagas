@@ -1,0 +1,145 @@
+# Requisições de exemplo para testar a API à mão.
+# Use a extensão "REST Client" do VS Code (humao.rest-client): clique em
+# "Send Request" acima de cada bloco. Rode na ordem — os blocos usam o id
+# devolvido pelos anteriores.
+
+@api = http://127.0.0.1:3333/api
+
+### Saúde
+GET {{api}}/health
+
+############################################################ Vagas
+
+### Cadastrar vaga manual
+# @name createJob
+POST {{api}}/jobs
+Content-Type: application/json
+
+{
+  "title": "Desenvolvedor Full Stack Júnior",
+  "company": "Empresa Exemplo",
+  "url": "https://empresa.gupy.io/jobs/123?utm_source=linkedin",
+  "location": "Campinas, SP",
+  "workModel": "hybrid",
+  "contractType": "clt",
+  "seniority": "junior",
+  "stack": ["TypeScript", "NestJS", "React", "PostgreSQL"],
+  "salaryMin": 3500,
+  "salaryMax": 4500,
+  "salaryCurrency": "BRL",
+  "salaryPeriod": "month",
+  "postedAt": "2026-10-05"
+}
+
+### Listar (padrão: inbox + salvas)
+GET {{api}}/jobs?limit=20
+
+### Filtrar
+GET {{api}}/jobs?q=full&workModel=remote,hybrid&stack=nestjs&postedWithinDays=30
+
+### Detalhe
+GET {{api}}/jobs/{{createJob.response.body.id}}
+
+### Editar (null limpa o campo)
+PATCH {{api}}/jobs/{{createJob.response.body.id}}
+Content-Type: application/json
+
+{
+  "notes": "Indicação do Pedro. Falar com a Ana do RH.",
+  "location": null
+}
+
+############################################################ Triagem
+
+### Salvar
+PUT {{api}}/jobs/{{createJob.response.body.id}}/triage
+Content-Type: application/json
+
+{ "status": "saved" }
+
+### Descartar com motivo (desfazer = "inbox")
+# PUT {{api}}/jobs/<id>/triage
+# Content-Type: application/json
+#
+# { "status": "dismissed", "reason": "presencial" }
+
+### Ver descartadas
+GET {{api}}/jobs?triage=dismissed
+
+############################################################ Candidaturas
+
+### Candidatar-se
+# @name apply
+POST {{api}}/applications
+Content-Type: application/json
+
+{
+  "jobId": "{{createJob.response.body.id}}",
+  "occurredAt": "2026-10-06T10:00:00-03:00",
+  "appliedVia": "Gupy",
+  "salaryExpectation": 4000
+}
+
+### Registrar evento (data retroativa vale)
+POST {{api}}/applications/{{apply.response.body.id}}/events
+Content-Type: application/json
+
+{
+  "status": "in_process",
+  "occurredAt": "2026-10-08",
+  "note": "Entrevista com RH"
+}
+
+### Próxima etapa
+PATCH {{api}}/applications/{{apply.response.body.id}}
+Content-Type: application/json
+
+{
+  "nextStepAt": "2026-10-15T14:00:00-03:00",
+  "nextStepNote": "Entrevista técnica com o time"
+}
+
+### Detalhe com linha do tempo
+GET {{api}}/applications/{{apply.response.body.id}}
+
+### Listar e resumo por status
+GET {{api}}/applications?status=applied,in_process
+
+###
+GET {{api}}/applications/summary
+
+############################################################ Currículo
+
+### Currículo (cria as seções padrão no 1º acesso)
+# @name resume
+GET {{api}}/resume
+
+### Preencher o 1º campo da 2ª seção (Contato > E-mail)
+PATCH {{api}}/resume/items/{{resume.response.body.sections[1].items[0].id}}
+Content-Type: application/json
+
+{ "data": { "label": "E-mail", "value": "voce@email.com" } }
+
+### Adicionar experiência (5ª seção = Experiência)
+POST {{api}}/resume/sections/{{resume.response.body.sections[4].id}}/items
+Content-Type: application/json
+
+{
+  "data": {
+    "title": "Desenvolvedor Full Stack Trainee",
+    "organization": "Empresa",
+    "location": "Americana, SP",
+    "startDate": "2026-01",
+    "current": true,
+    "description": "APIs em NestJS, app em React Native, PostgreSQL e Docker."
+  }
+}
+
+### Nova seção
+POST {{api}}/resume/sections
+Content-Type: application/json
+
+{ "title": "Voluntariado", "kind": "entries" }
+
+### Exportar em texto puro
+GET {{api}}/resume/export

@@ -22,3 +22,11 @@ export type SeniorityLevel = z.infer<typeof seniorityLevelSchema>;
 export const SALARY_PERIODS = ['hour', 'month', 'year'] as const;
 export const salaryPeriodSchema = z.enum(SALARY_PERIODS);
 export type SalaryPeriod = z.infer<typeof salaryPeriodSchema>;
+
+/** Triagem da vaga: `inbox` = ainda não triada. */
+export const TRIAGE_STATUSES = ['inbox', 'saved', 'dismissed'] as const;
+export const triageStatusSchema = z.enum(TRIAGE_STATUSES);
+export type TriageStatus = z.infer<typeof triageStatusSchema>;
+
+/** O que a listagem mostra quando o filtro `triage` não é informado. */
+export const DEFAULT_TRIAGE_FILTER: TriageStatus[] = ['inbox', 'saved'];

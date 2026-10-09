@@ -1,9 +1,14 @@
 import { Module } from '@nestjs/common';
+import { ApplicationsController } from './applications.controller';
+import { ApplicationsService } from './applications.service';
 
 /**
- * Candidaturas: status (salva -> aplicada -> triagem -> entrevista -> teste
- * -> oferta / recusada) e histórico de transições com a data real do evento.
- * — Fase 1
+ * Candidaturas com histórico de status.
+ * Plano: docs/features/03-applications.md
  */
-@Module({})
+@Module({
+  controllers: [ApplicationsController],
+  providers: [ApplicationsService],
+  exports: [ApplicationsService],
+})
 export class ApplicationsModule {}

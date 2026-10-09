@@ -8,8 +8,11 @@ candidatura.
 > sobe e usa em `127.0.0.1`. Cada pessoa roda a própria instância — e faz as
 > próprias buscas, em volume baixo. Veja [Segurança](#segurança).
 
-**Status:** Fase 0 — estrutura. As funcionalidades entram por fases; o plano
-completo está em [`docs/ROADMAP.md`](docs/ROADMAP.md).
+**Status:** Fase 1 em andamento — a API já tem vagas (cadastro manual),
+triagem salvar/descartar, candidaturas com histórico de status e currículo em
+blocos. As fontes automáticas e as telas vêm a seguir. Plano completo em
+[`docs/ROADMAP.md`](docs/ROADMAP.md); planos de cada feature em
+[`docs/features/`](docs/features/README.md).
 
 ## Stack
 
@@ -66,6 +69,20 @@ pnpm dev:web              # telas em http://127.0.0.1:5173
 
 Abra **http://127.0.0.1:5173**: a página mostra se API, banco e fila estão de pé.
 O mesmo relatório sai em `GET http://127.0.0.1:3333/api/health`.
+
+Para testar a API à mão, abra [`apps/api/requests.http`](apps/api/requests.http)
+no VS Code com a extensão **REST Client** — há um exemplo para cada rota.
+
+## API
+
+| Recurso      | Rotas principais                                                                                                                                                     |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vagas        | `POST/GET /api/jobs`, `GET/PATCH/DELETE /api/jobs/:id`                                                                                                               |
+| Triagem      | `PUT /api/jobs/:id/triage`, `POST /api/jobs/triage` (lote)                                                                                                           |
+| Candidaturas | `POST/GET /api/applications`, `GET /api/applications/summary`, `GET/PATCH/DELETE /api/applications/:id`, `POST/PATCH/DELETE /api/applications/:id/events[/:eventId]` |
+| Currículo    | `GET /api/resume`, `GET /api/resume/export`, seções e itens em `/api/resume/sections` e `/api/resume/items`                                                          |
+
+Detalhes, regras e códigos de erro de cada uma: [`docs/features/`](docs/features/README.md).
 
 ## Scripts
 

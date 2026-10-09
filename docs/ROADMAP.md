@@ -18,9 +18,11 @@ Legenda da origem das ideias: **JT** = arnaldoliro/job-tracker ·
 - [x] Contrato `JobSource`, cliente HTTP, `canonicalUrl`, `runSources` e pasta `_template`
 - [x] Front mínimo mostrando o status da API
 - [x] ESLint, Prettier, Vitest e CI no GitHub Actions
-- [ ] Gerar e versionar a primeira migration (`pnpm db:migrate --name init`)
+- [x] Gerar e versionar a primeira migration (`pnpm db:migrate --name init`)
 
 ## Fase 1 — Backend
+
+Planos detalhados de cada feature: [`docs/features/`](features/README.md).
 
 **Fontes** (uma pasta cada, em ordem de prioridade):
 
@@ -32,12 +34,14 @@ Legenda da origem das ideias: **JT** = arnaldoliro/job-tracker ·
 
 **Modelos e módulos:**
 
-- [ ] `Job` com URL canônica `@unique`; `SavedJob` e `DismissedJob` por vaga (JT)
-- [ ] `Application` + `StatusEvent`: histórico de status com a data real do evento, separada da data do registro (JT)
-- [ ] `ResumeSection`: currículo em blocos para copiar ("gaveta") (VA)
+- [x] Base: contratos Zod compartilhados, pipe de validação, erros do Prisma → HTTP, cursor, testes de integração com Postgres real ([00](features/00-base.md))
+- [x] `Job` com URL canônica `@unique`, CRUD manual e `ingest` para as fontes (JT) ([01](features/01-jobs.md))
+- [x] Triagem salvar/descartar como campo da vaga — descartada nunca volta (JT) ([02](features/02-triage.md))
+- [x] `Application` + `StatusEvent`: status derivado do histórico, data real do evento separada da data do registro (JT) ([03](features/03-applications.md))
+- [x] `ResumeSection` + `ResumeItem`: currículo em blocos para copiar ("gaveta"), seções padrão e export em texto (VA) ([04](features/04-resume.md))
 - [ ] `JobPreferences`: stacks, senioridade, modalidade, contrato, idade máxima da vaga
 - [ ] Processador da fila `source-scan`: um job por fonte, retry com backoff, registro em `SourceRun`
-- [ ] Busca com filtros, paginação por cursor e exclusão de vagas descartadas (JT)
+- [x] Busca com filtros, paginação por cursor e exclusão de vagas descartadas (JT)
 - [ ] Nota de aderência **por código** (0–1000), normalizada pelos sinais disponíveis (JT)
 - [ ] Endpoint de saúde das fontes (últimas execuções, taxa de descarte)
 

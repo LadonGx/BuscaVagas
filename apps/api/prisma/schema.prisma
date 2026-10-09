@@ -13,10 +13,64 @@ datasource db {
   provider = "postgresql"
 }
 
+// Planos de cada modelo: docs/features/.
+
 // ---------------------------------------------------------------------------
-// Estrutura (Fase 0). Os modelos de negócio — vaga, candidatura, currículo —
-// entram na Fase 1 (ver docs/ROADMAP.md).
+// Enums
 // ---------------------------------------------------------------------------
+
+enum WorkModel {
+  remote
+  hybrid
+  onsite
+}
+
+enum ContractType {
+  clt
+  pj
+  internship
+  temporary
+  other
+}
+
+enum SeniorityLevel {
+  intern
+  trainee
+  junior
+  mid
+  senior
+  lead
+}
+
+enum SalaryPeriod {
+  hour
+  month
+  year
+}
+
+/// Triagem da vaga — docs/features/02-triage.md
+enum TriageStatus {
+  inbox
+  saved
+  dismissed
+}
+
+/// Etapas da candidatura (versão enxuta) — docs/features/03-applications.md.
+/// O detalhe ("entrevista RH", "teste técnico") vai na nota do evento.
+enum ApplicationStatus {
+  applied
+  in_process
+  offer
+  rejected
+  withdrawn
+}
+
+/// Tipo de seção do currículo — docs/features/04-resume.md
+enum ResumeSectionKind {
+  fields
+  text
+  entries
+}
 
 enum SourceRunStatus {
   running
@@ -41,4 +95,150 @@ model SourceRun {
   finishedAt DateTime?
 
   @@index([sourceId, startedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Vagas — docs/features/01-jobs.md
+// ---------------------------------------------------------------------------
+
+/// Uma vaga, venha de uma fonte ou do cadastro manual.
+///
+/// A URL canônica é a chave de deduplicação: a mesma vaga trazida de novo por
+/// uma fonte NUNCA cria outra linha — só atualiza `lastSeenAt`.
+model Job {
+  id         String  @id @default(cuid())
+  /// "manual" ou o id da fonte ("gupy", "greenhouse"...).
+  source     String
+  /// Id da vaga dentro da fonte, quando ela expõe um.
+  externalId String?
+  /// Canônica (sem utm/fragmento). Opcional: vaga indicada pode não ter link.
+  /// NULL não colide no Postgres, então várias vagas sem URL convivem.
+  url        String? @unique
+
+  title       String
+  company     String
+  /// CONTEÚDO EXTERNO quando vem de fonte: é dado, nunca instrução.
+  description String?
+  location    String?
+  /// Suas anotações sobre a vaga.
+  notes       String?
+
+  workModel    WorkModel?
+  contractType ContractType?
+  seniority    SeniorityLevel?
+  stack        String[]       @default([])
+
+  salaryMin      Int?
+  salaryMax      Int?
+  salaryCurrency String?
+  salaryPeriod   SalaryPeriod?
+
+  /// Quando a empresa publicou (se a fonte informar).
+  postedAt    DateTime?
+  /// Quando entrou no app. É a ordem da listagem.
+  firstSeenAt DateTime  @default(now())
+  /// Última vez que uma fonte trouxe a vaga — base para "ainda está aberta?".
+  lastSeenAt  DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  /// Decisão da triagem. `inbox` = ainda não triada. Fica na própria vaga:
+  /// a linha que deduplica pela URL guarda a decisão, então uma vaga
+  /// descartada nunca volta quando a fonte a trouxer de novo.
+  triage        TriageStatus @default(inbox)
+  triagedAt     DateTime?
+  /// Só com `dismissed`. Ex.: "presencial", "sênior demais".
+  dismissReason String?
+
+  application Application?
+
+  @@unique([source, externalId])
+  @@index([company])
+  @@index([triage, firstSeenAt])
+}
+
+// ---------------------------------------------------------------------------
+// Candidaturas — docs/features/03-applications.md
+// ---------------------------------------------------------------------------
+
+/// Sua candidatura a uma vaga. Uma por vaga.
+///
+/// `status` e `appliedAt` são DERIVADOS do histórico (StatusEvent) e
+/// recalculados na mesma transação a cada evento criado, editado ou apagado.
+/// Nunca atualize esses dois campos direto.
+model Application {
+  id    String @id @default(cuid())
+  jobId String @unique
+
+  /// Status do evento mais recente (por `occurredAt`).
+  status    ApplicationStatus
+  /// Data do primeiro evento.
+  appliedAt DateTime
+
+  /// Onde se candidatou: site da empresa, LinkedIn, Gupy, indicação...
+  appliedVia        String?
+  /// Pretensão salarial informada no processo.
+  salaryExpectation Int?
+  notes             String?
+  /// Próxima etapa combinada ("entrevista dia 15 às 14h").
+  nextStepAt        DateTime?
+  nextStepNote      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Restrict: apagar a vaga apagaria o histórico da candidatura junto.
+  job    Job           @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  events StatusEvent[]
+
+  @@index([status, updatedAt])
+}
+
+/// Uma mudança de status. `occurredAt` é quando ACONTECEU (você informa);
+/// `createdAt` é quando você registrou. Separar os dois é o que permite medir
+/// o tempo de resposta da empresa, e não o seu hábito de registro.
+model StatusEvent {
+  id            String            @id @default(cuid())
+  applicationId String
+  status        ApplicationStatus
+  occurredAt    DateTime
+  note          String?
+  createdAt     DateTime          @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, occurredAt])
+}
+
+// ---------------------------------------------------------------------------
+// Currículo em blocos — docs/features/04-resume.md
+// ---------------------------------------------------------------------------
+
+/// Uma seção do currículo ("Contato", "Experiência"...). O `kind` define o
+/// formato dos itens e não muda depois de criada.
+model ResumeSection {
+  id        String            @id @default(cuid())
+  title     String
+  kind      ResumeSectionKind
+  position  Int
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  items ResumeItem[]
+
+  @@index([position])
+}
+
+/// Um bloco copiável. `data` segue o schema Zod do `kind` da seção
+/// (fields / text / entries) — validado na API antes de gravar.
+model ResumeItem {
+  id        String   @id @default(cuid())
+  sectionId String
+  position  Int
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  section ResumeSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, position])
 }

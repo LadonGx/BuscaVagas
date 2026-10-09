@@ -83,6 +83,27 @@ descartado e contado (`parseEach`), sem derrubar o resto.
 duplo: ESM (para o Vite) e CommonJS (para o NestJS). O `pnpm install` já
 compila; depois de editar um deles, rode `pnpm build:packages`.
 
+### Testes contra o banco de verdade
+
+Regra de negócio que mora em query (filtro, unicidade, cascata, transação) é
+testada com Postgres real, não com Prisma mockado: um mock deixaria o teste
+verde com a query errada. Os arquivos `*.int.spec.ts` sobem o app Nest com a
+mesma configuração do `main.ts` e fazem requisições HTTP com `supertest`.
+
+O banco de testes (`buscavagas_test`) é recriado a cada rodada a partir dos
+próprios `migration.sql` — então os testes também validam as migrations. Por
+segurança, o setup recusa qualquer banco cujo nome não termine em `_test`.
+
+Função pura (filtros → `where`, cálculo do status pelo histórico, texto do
+currículo) tem teste unitário próprio, sem banco.
+
+### Status derivado, nunca editado
+
+O status da candidatura é sempre recalculado a partir do histórico de eventos
+na mesma transação. Não existe rota para "mudar o status" direto — só para
+registrar, corrigir ou apagar eventos. Assim o histórico e o status atual
+nunca discordam.
+
 ## Convenções
 
 - Código, nomes e commits em inglês; documentação em português.

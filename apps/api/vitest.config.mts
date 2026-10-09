@@ -8,5 +8,9 @@ export default defineConfig({
   test: {
     include: ['src/**/*.spec.ts'],
     environment: 'node',
+    // Prepara o banco de testes (cria, zera, aplica as migrations).
+    globalSetup: ['./test/global-setup.ts'],
+    // Os testes de integração dividem o mesmo banco: um arquivo por vez.
+    fileParallelism: false,
   },
 });

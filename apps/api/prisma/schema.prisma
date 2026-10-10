@@ -97,6 +97,8 @@ model SourceRun {
   jobsNew    Int             @default(0)
   /// Itens descartados pelo mapper (fora do formato ou fora das regras).
   dropped    Int             @default(0)
+  /// Vagas válidas que ficaram de fora pelos filtros da fonte (boards de empresa).
+  filtered   Int             @default(0)
   durationMs Int?
   error      String?
   startedAt  DateTime        @default(now())

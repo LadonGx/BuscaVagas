@@ -18,8 +18,13 @@ export interface SourceQuery {
    * resultado; as `company-board` ignoram.
    */
   terms?: readonly string[];
-  /** Slugs das empresas acompanhadas. Só as fontes `company-board` usam. */
+  /**
+   * Slugs das empresas. Só as fontes `company-board` usam; quando presente,
+   * substitui a lista do `.env` (é o que o `try` usa para conferir um slug).
+   */
   companies?: readonly string[];
+  /** Ignora os filtros da fonte (título, local). Só para diagnóstico. */
+  skipFilters?: boolean;
 }
 
 export interface SourceContext {
@@ -33,6 +38,11 @@ export interface SourceResult {
   jobs: JobPosting[];
   /** Itens que vieram da fonte mas não passaram na validação. */
   dropped: number;
+  /**
+   * Vagas válidas que ficaram de fora pelos filtros da fonte (ex.: vaga de
+   * vendas num board de empresa). Diferente de `dropped`: não indica problema.
+   */
+  filtered?: number;
 }
 
 export interface JobSource {
@@ -62,6 +72,11 @@ export interface SourceDefinition<Config = unknown> {
   readonly kind: SourceKind;
   /** Lê e valida a configuração da fonte. Valor inválido lança, com a variável no texto. */
   parseConfig(env: EnvLike): Config;
+  /**
+   * Motivo para a fonte ficar de fora mesmo com a configuração válida (ex.:
+   * nenhuma empresa na lista). `null` = ativa. Ausente = sempre ativa.
+   */
+  inactiveReason?(config: Config): string | null;
   create(config: Config): JobSource;
 }
 

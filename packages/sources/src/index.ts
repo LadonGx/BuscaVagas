@@ -6,4 +6,7 @@ export * from './core/run-sources';
 export * from './core/normalize/text';
 export * from './core/normalize/seniority';
 export * from './core/normalize/stack';
+export * from './core/normalize/work-model';
+export * from './core/normalize/values';
+export * from './core/boards';
 export * from './registry';

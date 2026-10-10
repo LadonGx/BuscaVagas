@@ -27,7 +27,7 @@ Planos detalhados de cada feature: [`docs/features/`](features/README.md).
 **Fontes** (uma pasta cada, em ordem de prioridade):
 
 - [x] `gupy` — API pública por termo; cobre o mercado brasileiro (JT, CO, VG) ([05](features/05-discovery-gupy.md))
-- [ ] `greenhouse`, `lever`, `ashby` — boards por empresa, lista no `.env` (JT, JS)
+- [x] `greenhouse`, `lever`, `ashby` — boards por empresa, lista no `.env`, filtro de tecnologia e de local (JT, JS) ([06](features/06-company-boards.md))
 - [ ] `github-issues` — repositórios de vagas como `backend-br/vagas` e `frontendbr/vagas`, via API oficial do GitHub (VG)
 - [ ] `remote-boards` — RemoteOK e Remotive (JT)
 - [x] Extração de stack, senioridade, modalidade e contrato por heurística (JT)
@@ -54,7 +54,7 @@ Planos detalhados de cada feature: [`docs/features/`](features/README.md).
 - [ ] Detalhe da vaga com nota, motivos e stack detectada
 - [ ] Candidaturas: quadro por status e linha do tempo
 - [ ] **Gaveta do currículo**: blocos com botão de copiar e edição no lugar (VA)
-- [ ] Preferências de busca e lista de empresas acompanhadas
+- [ ] Preferências de busca e lista de empresas acompanhadas (hoje no `.env`: `*_COMPANIES`)
 
 ## Fase 3 — Ajustes e melhorias
 

@@ -49,6 +49,18 @@ const fakeSource: JobSource = {
   },
 };
 
+/** Board de empresa falso: não usa termos e devolve vagas filtradas. */
+const boardQueries: SourceQuery[] = [];
+const boardSource: JobSource = {
+  id: 'board',
+  displayName: 'Board falso',
+  kind: 'company-board',
+  fetch: async (query) => {
+    boardQueries.push(query);
+    return { jobs: [posting(10, 'board')], dropped: 1, filtered: 5 };
+  },
+};
+
 const queue = {
   add: vi.fn(async (_name: string, data: { sourceId: string }) => ({ id: `job-${data.sourceId}` })),
   getDeduplicationJobId: vi.fn(async (_id: string): Promise<string | null> => null),
@@ -63,7 +75,7 @@ const http: HttpClient = { getJson: async () => ({}), getText: async () => '' };
   providers: [
     ScanRunner,
     DiscoveryService,
-    { provide: SOURCES, useValue: [fakeSource] },
+    { provide: SOURCES, useValue: [fakeSource, boardSource] },
     { provide: SOURCE_HTTP_CLIENT, useValue: http },
     { provide: getQueueToken(QUEUES.SOURCE_SCAN), useValue: queue },
   ],
@@ -86,6 +98,7 @@ describeDb('Descoberta (integração)', () => {
   beforeEach(async () => {
     await resetDatabase(t.prisma);
     Object.assign(fake, { jobs: [], dropped: 0, error: null, queries: [] });
+    boardQueries.length = 0;
     queue.add.mockClear();
     queue.getDeduplicationJobId.mockReset().mockResolvedValue(null);
   });
@@ -115,6 +128,18 @@ describeDb('Descoberta (integração)', () => {
 
     expect(await t.prisma.job.count()).toBe(3);
     expect(await t.prisma.sourceRun.count()).toBe(2);
+    expect(first.filtered).toBe(0);
+  });
+
+  it('board de empresa: grava as filtradas e não registra termos', async () => {
+    const run = await runner.run('board', ['node'], 'schedule');
+
+    expect(run).toMatchObject({ terms: [], jobsFound: 1, jobsNew: 1, dropped: 1, filtered: 5 });
+    expect(boardQueries[0]).toEqual({ terms: [] });
+
+    const [listed] = (await api().get('/api/discovery/runs?sourceId=board').expect(200))
+      .body as SourceRunDto[];
+    expect(listed).toMatchObject({ id: run.id, filtered: 5 });
   });
 
   it('falha da fonte fica registrada e é relançada (para o BullMQ tentar de novo)', async () => {
@@ -137,6 +162,7 @@ describeDb('Descoberta (integração)', () => {
     let sources = (await api().get('/api/discovery/sources').expect(200)).body as SourceInfoDto[];
     expect(sources).toEqual([
       { id: 'fake', displayName: 'Fonte falsa', kind: 'search', lastRun: null },
+      { id: 'board', displayName: 'Board falso', kind: 'company-board', lastRun: null },
     ]);
 
     fake.jobs = [posting(1)];
@@ -149,7 +175,10 @@ describeDb('Descoberta (integração)', () => {
 
   it('POST /discovery/scan enfileira com os termos do .env ou os pedidos', async () => {
     const byEnv = (await api().post('/api/discovery/scan').expect(202)).body as ScanResultDto;
-    expect(byEnv.queued).toEqual([{ sourceId: 'fake', jobId: 'job-fake' }]);
+    expect(byEnv.queued).toEqual([
+      { sourceId: 'fake', jobId: 'job-fake' },
+      { sourceId: 'board', jobId: 'job-board' },
+    ]);
     expect(byEnv.terms).toContain('full stack');
     expect(queue.add).toHaveBeenCalledWith(
       'scan',
@@ -171,7 +200,7 @@ describeDb('Descoberta (integração)', () => {
 
     const result = (await api().post('/api/discovery/scan').expect(202)).body as ScanResultDto;
 
-    expect(result).toMatchObject({ queued: [], alreadyQueued: ['fake'] });
+    expect(result).toMatchObject({ queued: [], alreadyQueued: ['fake', 'board'] });
     expect(queue.add).not.toHaveBeenCalled();
   });
 

@@ -5,7 +5,13 @@
  *
  *   pnpm --filter @busca-vagas/sources try gupy "desenvolvedor"
  *   pnpm --filter @busca-vagas/sources try gupy "node" "react" --save-fixture
+ *   pnpm --filter @busca-vagas/sources try greenhouse minha-empresa outra-empresa
  *
+ * Nas fontes `search` os argumentos são termos; nas `company-board`, slugs
+ * de empresas (é assim que se confere se um slug existe).
+ *
+ * --no-filter     desliga os filtros da fonte (título, local) para ver tudo
+ *                 o que o board tem.
  * --save-fixture  grava a primeira resposta real em
  *                 src/<fonte>/__fixtures__/live-page.json (até 30 itens), que
  *                 os testes da fonte passam a usar.
@@ -24,7 +30,8 @@ const SRC_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'src');
 async function main(): Promise<number> {
   const args = process.argv.slice(2);
   const saveFixture = args.includes('--save-fixture');
-  const [sourceId, ...terms] = args.filter((arg) => !arg.startsWith('--'));
+  const skipFilters = args.includes('--no-filter');
+  const [sourceId, ...values] = args.filter((arg) => !arg.startsWith('--'));
 
   const definition = SOURCE_DEFINITIONS.find((item) => item.id === sourceId);
   if (!definition) {
@@ -48,15 +55,25 @@ async function main(): Promise<number> {
     getText: (url, options) => base.getText(url, options),
   };
 
+  const byCompany = source.kind === 'company-board';
+  if (byCompany && values.length === 0) {
+    console.error(`Informe ao menos um slug: try ${source.id} <empresa> [outra-empresa...]`);
+    return 2;
+  }
+  const query = byCompany ? { companies: values, skipFilters } : { terms: values, skipFilters };
+
   console.log(
-    `\n▶ ${source.displayName} — termos: ${terms.length ? terms.join(', ') : '(padrão)'}\n`,
+    `\n▶ ${source.displayName} — ${byCompany ? 'empresas' : 'termos'}: ${values.length ? values.join(', ') : '(padrão)'}` +
+      `${skipFilters ? '  (sem filtros)' : ''}\n`,
   );
-  const { jobs, outcome } = await runSource(source, { terms }, http, (message) =>
+  const { jobs, outcome } = await runSource(source, query, http, (message) =>
     console.log(`  [log] ${message}`),
   );
 
   console.log(`\nStatus: ${outcome.status}  ·  ${outcome.durationMs} ms`);
-  console.log(`Vagas válidas: ${outcome.jobs}  ·  descartadas: ${outcome.dropped}`);
+  console.log(
+    `Vagas válidas: ${outcome.jobs}  ·  filtradas: ${outcome.filtered}  ·  descartadas: ${outcome.dropped}`,
+  );
   if (outcome.error) {
     console.log(`Erro: ${outcome.error}`);
   }
@@ -98,18 +115,32 @@ function saveFirstResponse(sourceId: string, response: unknown): void {
     return;
   }
 
-  // Corta a lista para a fixture ficar pequena e legível no git.
-  const trimmed =
-    response && typeof response === 'object' && Array.isArray((response as { data?: unknown }).data)
-      ? {
-          ...(response as object),
-          data: (response as { data: unknown[] }).data.slice(0, FIXTURE_MAX_ITEMS),
-        }
-      : response;
+  const trimmed = trimForFixture(response);
 
   const path = join(SRC_DIR, sourceId, '__fixtures__', 'live-page.json');
   writeFileSync(path, `${JSON.stringify(trimmed, null, 2)}\n`);
   console.log(`\nFixture gravada: ${path}`);
+}
+
+/**
+ * Corta a lista para a fixture ficar pequena e legível no git. Entende os
+ * envelopes das fontes atuais: `{ data: [...] }` (Gupy), `{ jobs: [...] }`
+ * (Greenhouse, Ashby) e a lista pura (Lever).
+ */
+function trimForFixture(response: unknown): unknown {
+  if (Array.isArray(response)) {
+    return response.slice(0, FIXTURE_MAX_ITEMS);
+  }
+  if (response && typeof response === 'object') {
+    const body = response as Record<string, unknown>;
+    for (const key of ['data', 'jobs']) {
+      const list = body[key];
+      if (Array.isArray(list)) {
+        return { ...body, [key]: list.slice(0, FIXTURE_MAX_ITEMS) };
+      }
+    }
+  }
+  return response;
 }
 
 main().then(

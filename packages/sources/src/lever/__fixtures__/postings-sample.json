@@ -1,0 +1,75 @@
+[
+  {
+    "id": "5b1c0001-0000-4000-8000-000000000001",
+    "text": "Desenvolvedor(a) Backend Pleno",
+    "hostedUrl": "https://jobs.lever.co/acme/5b1c0001-0000-4000-8000-000000000001",
+    "applyUrl": "https://jobs.lever.co/acme/5b1c0001-0000-4000-8000-000000000001/apply",
+    "categories": {
+      "location": "São Paulo",
+      "commitment": "CLT",
+      "team": "Engenharia",
+      "department": "Tecnologia",
+      "allLocations": ["São Paulo", "Remote"]
+    },
+    "country": "BR",
+    "workplaceType": "hybrid",
+    "createdAt": 1791000000000,
+    "description": "<div>Atuar com <b>Node.js</b> e PostgreSQL.</div>",
+    "descriptionPlain": "Atuar com Node.js e PostgreSQL.",
+    "lists": [
+      {
+        "text": "Requisitos",
+        "content": "<li>TypeScript</li><li>Docker</li>"
+      }
+    ],
+    "additional": "<div>VR e plano de saúde.</div>",
+    "additionalPlain": "VR e plano de saúde.",
+    "salaryRange": {
+      "min": 8000,
+      "max": 12000,
+      "currency": "BRL",
+      "interval": "per-month-salary"
+    }
+  },
+  {
+    "id": "5b1c0002-0000-4000-8000-000000000002",
+    "text": "Software Engineer Intern",
+    "hostedUrl": "https://jobs.lever.co/acme/5b1c0002-0000-4000-8000-000000000002?lever-source=linkedin",
+    "categories": {
+      "location": "Remote",
+      "commitment": "Intern"
+    },
+    "country": null,
+    "workplaceType": "remote",
+    "createdAt": 1791100000000,
+    "descriptionPlain": "Python e SQL."
+  },
+  {
+    "id": "5b1c0003-0000-4000-8000-000000000003",
+    "text": "Senior Software Engineer",
+    "hostedUrl": "https://jobs.lever.co/acme/5b1c0003-0000-4000-8000-000000000003",
+    "categories": {
+      "location": "Remote - US",
+      "commitment": "Full-time"
+    },
+    "country": "US",
+    "workplaceType": "remote",
+    "createdAt": 1791200000000
+  },
+  {
+    "id": "5b1c0004-0000-4000-8000-000000000004",
+    "text": "Customer Success Manager",
+    "hostedUrl": "https://jobs.lever.co/acme/5b1c0004-0000-4000-8000-000000000004",
+    "categories": {
+      "location": "São Paulo",
+      "commitment": "CLT"
+    },
+    "country": "BR",
+    "workplaceType": "on-site"
+  },
+  {
+    "id": "5b1c0005-0000-4000-8000-000000000005",
+    "text": 42,
+    "hostedUrl": "https://jobs.lever.co/acme/5"
+  }
+]

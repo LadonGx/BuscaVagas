@@ -44,11 +44,13 @@ export class ScanRunner {
       throw new Error(`Fonte "${sourceId}" não está ativa.`);
     }
 
+    // Boards de empresa não usam termos: registrar os termos ali só confundiria.
+    const usedTerms = source.kind === 'search' ? terms : [];
     const run = await this.prisma.sourceRun.create({
-      data: { sourceId, terms, trigger, status: 'running' },
+      data: { sourceId, terms: usedTerms, trigger, status: 'running' },
     });
 
-    const { jobs, outcome } = await runSource(source, { terms }, this.http, (message) =>
+    const { jobs, outcome } = await runSource(source, { terms: usedTerms }, this.http, (message) =>
       this.logger.log(message),
     );
 
@@ -58,6 +60,7 @@ export class ScanRunner {
         jobsFound: 0,
         jobsNew: 0,
         dropped: outcome.dropped,
+        filtered: outcome.filtered,
         durationMs: outcome.durationMs,
         error: outcome.error ?? 'erro desconhecido',
       });
@@ -75,6 +78,7 @@ export class ScanRunner {
         jobsFound: outcome.jobs,
         jobsNew: 0,
         dropped: outcome.dropped,
+        filtered: outcome.filtered,
         durationMs: outcome.durationMs,
         error: `Falha ao gravar as vagas: ${message}`,
       });
@@ -86,12 +90,14 @@ export class ScanRunner {
       jobsFound: outcome.jobs,
       jobsNew: created,
       dropped: outcome.dropped,
+      filtered: outcome.filtered,
       durationMs: outcome.durationMs,
       error: null,
     });
 
     this.logger.log(
-      `${sourceId}: ${done.jobsFound} vagas (${done.jobsNew} novas, ${done.dropped} descartadas) em ${done.durationMs} ms`,
+      `${sourceId}: ${done.jobsFound} vagas (${done.jobsNew} novas, ${done.filtered} filtradas, ` +
+        `${done.dropped} descartadas) em ${done.durationMs} ms`,
     );
     return done;
   }
@@ -103,6 +109,7 @@ export class ScanRunner {
       jobsFound: number;
       jobsNew: number;
       dropped: number;
+      filtered: number;
       durationMs: number;
       error: string | null;
     },

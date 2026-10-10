@@ -1,0 +1,120 @@
+{
+  "_comment": "Amostra montada a partir da documentação da Posting API (developers.ashbyhq.com). Complementar com live-page.json gerado por `pnpm --filter @busca-vagas/sources try ashby <slug> --save-fixture`.",
+  "apiVersion": "1",
+  "jobs": [
+    {
+      "id": "a1",
+      "title": "Full Stack Engineer",
+      "department": "Engineering",
+      "team": "Payments",
+      "employmentType": "FullTime",
+      "location": "Remote - Brazil",
+      "secondaryLocations": [],
+      "publishedAt": "2026-10-02T12:00:00.000+00:00",
+      "isListed": true,
+      "isRemote": true,
+      "workplaceType": "Remote",
+      "address": {
+        "postalAddress": {
+          "addressLocality": "São Paulo",
+          "addressRegion": "SP",
+          "addressCountry": "Brazil"
+        }
+      },
+      "jobUrl": "https://jobs.ashbyhq.com/acme/a1",
+      "applyUrl": "https://jobs.ashbyhq.com/acme/a1/application",
+      "descriptionHtml": "<p>React, Node.js e AWS.</p>",
+      "descriptionPlain": "React, Node.js e AWS.",
+      "compensation": {
+        "compensationTierSummary": "$40K – $60K",
+        "summaryComponents": [
+          {
+            "compensationType": "Salary",
+            "interval": "1 YEAR",
+            "currencyCode": "USD",
+            "minValue": 40000,
+            "maxValue": 60000
+          },
+          {
+            "compensationType": "EquityPercentage",
+            "interval": "NONE",
+            "currencyCode": null,
+            "minValue": 0.01,
+            "maxValue": 0.05
+          }
+        ]
+      }
+    },
+    {
+      "id": "a2",
+      "title": "Backend Engineer",
+      "employmentType": "FullTime",
+      "location": "New York",
+      "secondaryLocations": [
+        {
+          "location": "Remote - LATAM",
+          "address": {
+            "addressCountry": null
+          }
+        }
+      ],
+      "isListed": true,
+      "isRemote": false,
+      "workplaceType": "Hybrid",
+      "address": {
+        "postalAddress": {
+          "addressCountry": "United States"
+        }
+      },
+      "jobUrl": "https://jobs.ashbyhq.com/acme/a2",
+      "descriptionPlain": "Kotlin."
+    },
+    {
+      "id": "a3",
+      "title": "Software Engineer",
+      "employmentType": "FullTime",
+      "location": "Remote",
+      "isListed": true,
+      "isRemote": true,
+      "workplaceType": "Remote",
+      "address": {
+        "postalAddress": {
+          "addressCountry": "United States"
+        }
+      },
+      "jobUrl": "https://jobs.ashbyhq.com/acme/a3"
+    },
+    {
+      "id": "a4",
+      "title": "Developer Intern",
+      "employmentType": "Intern",
+      "location": "Florianópolis",
+      "isListed": true,
+      "isRemote": false,
+      "workplaceType": "OnSite",
+      "address": {
+        "postalAddress": {
+          "addressLocality": "Florianópolis",
+          "addressCountry": "Brazil"
+        }
+      },
+      "jobUrl": "https://jobs.ashbyhq.com/acme/a4"
+    },
+    {
+      "id": "a5",
+      "title": "Platform Engineer",
+      "location": "Remote",
+      "isListed": false,
+      "isRemote": true,
+      "jobUrl": "https://jobs.ashbyhq.com/acme/a5"
+    },
+    {
+      "id": "a6",
+      "title": "Marketing Manager",
+      "location": "São Paulo",
+      "isListed": true,
+      "workplaceType": "OnSite",
+      "jobUrl": "https://jobs.ashbyhq.com/acme/a6"
+    }
+  ]
+}

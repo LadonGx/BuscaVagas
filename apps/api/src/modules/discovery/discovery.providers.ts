@@ -6,8 +6,9 @@ import { SOURCE_HTTP_CLIENT, SOURCES } from './discovery.constants';
 
 /**
  * Cria as fontes ativas a partir do registro do pacote `sources`. Cada fonte
- * lê a própria configuração do `.env` (GUPY_*...). Fonte com configuração
- * inválida fica de fora com aviso — a API sobe com as outras.
+ * lê a própria configuração do `.env` (GUPY_*, GREENHOUSE_*...). Fonte com
+ * configuração inválida fica de fora com erro no log; fonte sem o que fazer
+ * (board sem empresas), com um aviso — a API sobe com as outras.
  */
 export const sourcesProvider: Provider = {
   provide: SOURCES,
@@ -21,6 +22,9 @@ export const sourcesProvider: Provider = {
     }
     for (const error of result.errors) {
       logger.error(`Fonte "${error.sourceId}" desativada: ${error.message}`);
+    }
+    for (const item of result.inactive) {
+      logger.log(`Fonte "${item.sourceId}" inativa: ${item.reason}`);
     }
 
     logger.log(`Fontes ativas: ${result.sources.map((s) => s.id).join(', ') || '(nenhuma)'}`);

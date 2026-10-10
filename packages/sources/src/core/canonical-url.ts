@@ -22,6 +22,11 @@ const TRACKING_PARAMS = new Set([
   'trackingid',
   // Gupy: indica de qual vitrine veio o clique, não muda a vaga.
   'jobboardsource',
+  // Greenhouse: origem do clique (`gh_jid`, que identifica a vaga, fica).
+  'gh_src',
+  // Lever: origem da candidatura.
+  'lever-source',
+  'lever-origin',
 ]);
 
 export function canonicalUrl(raw: string): string | null {

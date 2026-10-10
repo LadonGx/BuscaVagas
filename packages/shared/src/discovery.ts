@@ -40,7 +40,10 @@ export interface SourceRunDto {
   terms: string[];
   jobsFound: number;
   jobsNew: number;
+  /** Itens fora do formato — um salto aqui indica que o site mudou. */
   dropped: number;
+  /** Vagas válidas que os filtros da fonte deixaram de fora (não indica problema). */
+  filtered: number;
   durationMs: number | null;
   error: string | null;
   startedAt: string;

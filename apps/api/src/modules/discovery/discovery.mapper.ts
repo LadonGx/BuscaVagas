@@ -11,6 +11,7 @@ export function toSourceRunDto(run: SourceRun): SourceRunDto {
     jobsFound: run.jobsFound,
     jobsNew: run.jobsNew,
     dropped: run.dropped,
+    filtered: run.filtered,
     durationMs: run.durationMs,
     error: run.error,
     startedAt: run.startedAt.toISOString(),

@@ -41,7 +41,8 @@ const NAMED_ENTITIES: Record<string, string> = {
   Otilde: 'Õ',
 };
 
-function decodeEntities(text: string): string {
+/** Decodifica entidades HTML (`&amp;`, `&#233;`...). Exportada para HTML que chega escapado. */
+export function decodeEntities(text: string): string {
   return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, entity: string) => {
     if (entity[0] === '#') {
       const code =

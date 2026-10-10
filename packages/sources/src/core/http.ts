@@ -38,7 +38,8 @@ export class HttpError extends Error {
 
 export const DEFAULT_USER_AGENT = 'busca-vagas/0.1 (+https://github.com/LadonGx/busca-vagas)';
 const DEFAULT_TIMEOUT_MS = 15_000;
-const DEFAULT_MAX_BYTES = 4 * 1024 * 1024;
+/** Board grande do Greenhouse, com descrições, passa de 4 MB. */
+const DEFAULT_MAX_BYTES = 16 * 1024 * 1024;
 
 export function createHttpClient(config: HttpClientConfig = {}): HttpClient {
   const userAgent = config.userAgent ?? DEFAULT_USER_AGENT;

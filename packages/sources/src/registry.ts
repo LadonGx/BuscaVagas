@@ -1,5 +1,8 @@
 import type { EnvLike, JobSource, SourceDefinition } from './core/job-source';
+import { ashbySourceDefinition } from './ashby';
+import { greenhouseSourceDefinition } from './greenhouse';
 import { gupySourceDefinition } from './gupy';
+import { leverSourceDefinition } from './lever';
 
 /**
  * Todas as fontes disponíveis. Para adicionar uma: crie a pasta dela a partir
@@ -10,6 +13,9 @@ import { gupySourceDefinition } from './gupy';
  */
 export const SOURCE_DEFINITIONS: readonly SourceDefinition<never>[] = [
   gupySourceDefinition as SourceDefinition<never>,
+  greenhouseSourceDefinition as SourceDefinition<never>,
+  leverSourceDefinition as SourceDefinition<never>,
+  ashbySourceDefinition as SourceDefinition<never>,
 ];
 
 export interface BuildSourcesResult {
@@ -19,12 +25,15 @@ export interface BuildSourcesResult {
   unknown: string[];
   /** Fontes que não puderam ser criadas (configuração inválida). */
   errors: { sourceId: string; message: string }[];
+  /** Fontes com configuração válida mas sem o que fazer (ex.: lista de empresas vazia). */
+  inactive: { sourceId: string; reason: string }[];
 }
 
 /**
  * Cria as fontes ativas, cada uma com a própria configuração lida do `env`.
  * Sem `enabledIds` (ou lista vazia), todas. Uma fonte com configuração
- * inválida fica de fora e é reportada em `errors` — as outras sobem normalmente.
+ * inválida fica de fora e é reportada em `errors`; uma sem o que fazer
+ * (`inactiveReason`), em `inactive` — as outras sobem normalmente.
  */
 export function buildSources(
   env: EnvLike,
@@ -38,6 +47,7 @@ export function buildSources(
     sources: [],
     unknown: wanted ? [...wanted].filter((id) => !known.has(id)) : [],
     errors: [],
+    inactive: [],
   };
 
   for (const definition of definitions) {
@@ -46,7 +56,13 @@ export function buildSources(
     }
 
     try {
-      result.sources.push(definition.create(definition.parseConfig(env)));
+      const config = definition.parseConfig(env);
+      const reason = definition.inactiveReason?.(config) ?? null;
+      if (reason) {
+        result.inactive.push({ sourceId: definition.id, reason });
+        continue;
+      }
+      result.sources.push(definition.create(config));
     } catch (error) {
       result.errors.push({
         sourceId: definition.id,

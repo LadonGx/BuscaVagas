@@ -1,0 +1,101 @@
+{
+  "_comment": "Amostra montada a partir da documentação da Job Board API (developers.greenhouse.io). Complementar com live-page.json gerado por `pnpm --filter @busca-vagas/sources try greenhouse <slug> --save-fixture`.",
+  "jobs": [
+    {
+      "id": 4001,
+      "internal_job_id": 901,
+      "title": "Software Engineer",
+      "updated_at": "2026-10-08T10:00:00-04:00",
+      "first_published": "2026-10-01T09:00:00-04:00",
+      "requisition_id": "ENG-1",
+      "location": {
+        "name": "São Paulo, Brazil"
+      },
+      "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/4001?gh_src=linkedin",
+      "language": "en",
+      "company_name": "Acme Pagamentos",
+      "metadata": null,
+      "content": "&lt;p&gt;Trabalhe com &lt;strong&gt;Node.js&lt;/strong&gt; e React.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;TypeScript&lt;/li&gt;&lt;li&gt;PostgreSQL &amp;amp; Redis&lt;/li&gt;&lt;/ul&gt;",
+      "departments": [
+        {
+          "id": 1,
+          "name": "Engineering"
+        }
+      ],
+      "offices": [
+        {
+          "id": 10,
+          "name": "São Paulo",
+          "location": "São Paulo, Brazil"
+        }
+      ]
+    },
+    {
+      "id": 4002,
+      "title": "Senior Backend Engineer",
+      "updated_at": "2026-10-07T10:00:00-04:00",
+      "first_published": null,
+      "location": {
+        "name": "Remote - LATAM"
+      },
+      "absolute_url": "https://www.acme.com/careers/job?gh_jid=4002",
+      "company_name": "Acme Pagamentos",
+      "content": "&lt;p&gt;Go e Kafka.&lt;/p&gt;",
+      "offices": []
+    },
+    {
+      "id": 4003,
+      "title": "Account Executive",
+      "location": {
+        "name": "São Paulo, Brazil"
+      },
+      "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/4003",
+      "company_name": "Acme Pagamentos",
+      "content": "&lt;p&gt;Vendas.&lt;/p&gt;"
+    },
+    {
+      "id": 4004,
+      "title": "Frontend Engineer",
+      "location": {
+        "name": "Remote - US"
+      },
+      "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/4004",
+      "company_name": "Acme Pagamentos",
+      "content": null
+    },
+    {
+      "id": 4005,
+      "title": "Data Engineer",
+      "location": {
+        "name": "Hybrid"
+      },
+      "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/4005",
+      "company_name": null,
+      "offices": [
+        {
+          "id": 11,
+          "name": "Recife",
+          "location": "Recife, Brazil"
+        }
+      ]
+    },
+    {
+      "id": 4006,
+      "location": {
+        "name": "Remote"
+      },
+      "absolute_url": "https://job-boards.greenhouse.io/acme/jobs/4006"
+    },
+    {
+      "id": 4007,
+      "title": "Mobile Developer",
+      "location": {
+        "name": "Remote"
+      },
+      "absolute_url": "não é url"
+    }
+  ],
+  "meta": {
+    "total": 7
+  }
+}

@@ -3,7 +3,7 @@ name: busca-vagas
 services:
   postgres:
     image: postgres:17-alpine
-    restart: unless-stopped
+    restart: no
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-buscavagas}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-buscavagas}
@@ -23,7 +23,7 @@ services:
 
   redis:
     image: redis:8-alpine
-    restart: unless-stopped
+    restart: no
     # appendonly: a fila sobrevive a um restart do container.
     # noeviction: exigido pelo BullMQ — o Redis nunca pode descartar chaves de job.
     command: ['redis-server', '--appendonly', 'yes', '--maxmemory-policy', 'noeviction']

@@ -7,6 +7,8 @@ export interface SourceOutcome {
   status: 'ok' | 'failed';
   jobs: number;
   dropped: number;
+  /** Vagas válidas que ficaram de fora pelos filtros da fonte. */
+  filtered: number;
   durationMs: number;
   error?: string;
 }
@@ -51,6 +53,7 @@ export async function runSource(
         status: 'ok',
         jobs: result.jobs.length,
         dropped: result.dropped,
+        filtered: result.filtered ?? 0,
         durationMs: Date.now() - started,
       },
     };
@@ -62,6 +65,7 @@ export async function runSource(
         status: 'failed',
         jobs: 0,
         dropped: 0,
+        filtered: 0,
         durationMs: Date.now() - started,
         error: error instanceof Error ? error.message : String(error),
       },

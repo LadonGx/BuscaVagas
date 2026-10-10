@@ -4,8 +4,9 @@ Cada fonte é um **módulo isolado**: uma pasta em `packages/sources/src/<fonte>
 com tudo dela — configuração, formato, conversão, busca, testes e
 documentação. A API não precisa mudar para ganhar uma fonte nova.
 
-Ponto de partida: `packages/sources/src/_template/`. Exemplo real e completo:
-`packages/sources/src/gupy/`. O passo a passo usa um site fictício chamado `acme`.
+Ponto de partida: `packages/sources/src/_template/`. Exemplos reais e completos:
+`packages/sources/src/gupy/` (busca por termo) e `packages/sources/src/lever/`
+(board de empresa). O passo a passo usa um site fictício chamado `acme`.
 
 ## 1. Antes de escrever código
 
@@ -17,6 +18,20 @@ Ponto de partida: `packages/sources/src/_template/`. Exemplo real e completo:
   estruturado que o site publica para o Google e muda bem menos que o layout.
 - Decida o tipo: `search` (busca por termo no acervo todo) ou
   `company-board` (lê o board de uma empresa por vez).
+
+### Board de empresa: reaproveite `core/boards/`
+
+Um ATS novo do tipo `company-board` (ex.: Workable, SmartRecruiters) não
+reimplementa o loop. Copie a pasta `lever/` em vez do `_template` e use:
+
+- `parseCompanyBoardConfig('ACME_', env)` — lê `ACME_COMPANIES`,
+  `ACME_REQUEST_DELAY_MS` e os filtros comuns `BOARDS_*`;
+- `noCompaniesReason('ACME_')` como `inactiveReason` — sem empresas, a fonte
+  não sobe;
+- `scanCompanies({ fetchCompany, mapItem, ... })` — pausa, 404 por empresa,
+  filtros de título e local (`filtered`), dedup;
+- o mapper devolve `{ posting, place }`: a vaga e os locais (texto + país)
+  para o filtro de local.
 
 ## 2. Copie o modelo
 
@@ -76,6 +91,8 @@ Coloque antes as que trazem dados mais completos (com descrição).
 ```bash
 pnpm --filter @busca-vagas/sources try acme "desenvolvedor"
 pnpm --filter @busca-vagas/sources try acme "desenvolvedor" --save-fixture
+# board de empresa: os argumentos são slugs; --no-filter mostra tudo
+pnpm --filter @busca-vagas/sources try acme minha-empresa --no-filter
 ```
 
 O primeiro roda a fonte contra o site real (sem gravar no banco) e mostra o

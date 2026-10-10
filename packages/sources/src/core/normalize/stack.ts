@@ -74,6 +74,9 @@ const TECHNOLOGIES: { name: string; pattern: RegExp }[] = [
   { name: 'cypress', pattern: /\bcypress\b/ },
 ];
 
+/** Nomes que o detector reconhece — para validar listas de preferências. */
+export const KNOWN_TECHNOLOGIES: readonly string[] = TECHNOLOGIES.map((tech) => tech.name);
+
 /** Tecnologias citadas no texto, na ordem da lista acima, sem repetição. */
 export function stackFromText(...texts: (string | null | undefined)[]): string[] {
   const text = fold(texts.filter(Boolean).join(' \n '));

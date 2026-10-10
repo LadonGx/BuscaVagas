@@ -41,4 +41,11 @@ describe('buildJobWhere', () => {
       ],
     });
   });
+
+  it('nota mínima e esconder incompatíveis', () => {
+    expect(buildJobWhere({ minScore: 600, hideIncompatible: true })).toEqual({
+      AND: [defaultTriage, { score: { gte: 600 } }, { incompatible: false }],
+    });
+    expect(buildJobWhere({ hideIncompatible: false })).toEqual({ AND: [defaultTriage] });
+  });
 });

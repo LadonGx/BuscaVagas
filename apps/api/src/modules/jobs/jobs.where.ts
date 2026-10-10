@@ -42,5 +42,8 @@ export function buildJobWhere(
     });
   }
 
+  if (query.minScore !== undefined) and.push({ score: { gte: query.minScore } });
+  if (query.hideIncompatible) and.push({ incompatible: false });
+
   return { AND: and };
 }

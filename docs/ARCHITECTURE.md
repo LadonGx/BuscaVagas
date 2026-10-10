@@ -56,13 +56,18 @@ Passo a passo: [`ADDING_A_SOURCE.md`](ADDING_A_SOURCE.md).
 A fila (BullMQ sobre Redis) existe para o que é **lento, externo ou
 limitado por taxa**:
 
-| Fila                       | Uso                                                                                          |
-| -------------------------- | -------------------------------------------------------------------------------------------- |
-| `source-scan`              | Um job por fonte: retry com backoff exponencial, limite de taxa por site, varredura agendada |
-| `ai-analysis` (fase final) | Concorrência 1 para modelo local; limite de requisições para APIs gratuitas                  |
+| Fila                       | Uso                                                                                             |
+| -------------------------- | ----------------------------------------------------------------------------------------------- |
+| `source-scan`              | Um job por fonte: retry com backoff exponencial, limite de taxa por site, varredura agendada    |
+| `scoring`                  | Nota de aderência das vagas pendentes, em lotes; baixa prioridade, um job por vez, com debounce |
+| `ai-analysis` (fase final) | Concorrência 1 para modelo local; limite de requisições para APIs gratuitas                     |
 
 Gravar vagas no Postgres **não** passa por fila: um `createMany` de mil linhas
 leva milissegundos. Fila ali só adicionaria latência e pontos de falha.
+
+A **nota** passa: a vaga é gravada e mostrada na hora, sem nota
+(`scorePending: true`), e a fila `scoring` calcula logo depois. Assim um lote
+grande de vagas novas ou uma troca de preferências nunca segura a listagem.
 
 ### Deduplicação no banco, não no código
 

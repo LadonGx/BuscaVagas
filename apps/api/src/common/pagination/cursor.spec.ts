@@ -1,6 +1,14 @@
 import { BadRequestException } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
-import { afterCursor, decodeCursor, encodeCursor, toPage } from './cursor';
+import {
+  afterCursor,
+  afterScoreCursor,
+  decodeCursor,
+  decodeScoreCursor,
+  encodeCursor,
+  encodeScoreCursor,
+  toPage,
+} from './cursor';
 
 describe('cursor', () => {
   it('ida e volta', () => {
@@ -45,5 +53,31 @@ describe('cursor', () => {
         (r) => r.id,
       ).nextCursor,
     ).toBeNull();
+  });
+});
+
+describe('cursor por nota', () => {
+  it('ida e volta, inclusive com nota nula', () => {
+    expect(decodeScoreCursor(encodeScoreCursor({ s: 850, id: 'x' }))).toEqual({ s: 850, id: 'x' });
+    expect(decodeScoreCursor(encodeScoreCursor({ s: null, id: 'y' }))).toEqual({
+      s: null,
+      id: 'y',
+    });
+  });
+
+  it('cursor de uma ordenação não serve na outra', () => {
+    const byDate = encodeCursor({ t: new Date('2026-10-01T00:00:00Z'), id: 'a' });
+    const byScore = encodeScoreCursor({ s: 500, id: 'a' });
+    expect(() => decodeScoreCursor(byDate)).toThrow(BadRequestException);
+    expect(() => decodeCursor(byScore)).toThrow(BadRequestException);
+  });
+
+  it('depois do cursor: menores, empate pelo id, e as sem nota no fim', () => {
+    expect(afterScoreCursor({ s: 700, id: 'm' })).toEqual({
+      OR: [{ score: { lt: 700 } }, { score: 700, id: { lt: 'm' } }, { score: null }],
+    });
+    expect(afterScoreCursor({ s: null, id: 'm' })).toEqual({
+      OR: [{ score: null, id: { lt: 'm' } }],
+    });
   });
 });

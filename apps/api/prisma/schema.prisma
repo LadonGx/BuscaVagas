@@ -161,9 +161,25 @@ model Job {
 
   application Application?
 
+  /// Nota de aderência (0–1000) — docs/features/07-preferences-score.md.
+  /// Calculada em segundo plano (fila `scoring`). `null` = sem preferências,
+  /// nenhum critério com sinal ou ainda não calculada.
+  score         Int?
+  /// % do peso dos critérios ligados que a vaga informa (0–100).
+  scoreCoverage Int?
+  /// Motivos da nota: [{ criterion, kind, text }].
+  scoreReasons  Json?
+  /// Bateu numa regra dura (empresa bloqueada, stack evitada no título...).
+  incompatible  Boolean   @default(false)
+  /// Versão das preferências usada na nota. `null` = pendente (vaga nova ou editada).
+  scoredVersion Int?
+  scoredAt      DateTime?
+
   @@unique([source, externalId])
   @@index([company])
   @@index([triage, firstSeenAt])
+  @@index([triage, score])
+  @@index([scoredVersion])
 }
 
 // ---------------------------------------------------------------------------
@@ -251,4 +267,27 @@ model ResumeItem {
   section ResumeSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
   @@index([sectionId, position])
+}
+
+// ---------------------------------------------------------------------------
+// Preferências de busca — docs/features/07-preferences-score.md
+// ---------------------------------------------------------------------------
+
+/// Linha única (id = 1): o app é de uma pessoa. Lista vazia / null = critério desligado.
+model Preferences {
+  id               Int              @id @default(1)
+  stacksCore       String[]         @default([])
+  stacksPlus       String[]         @default([])
+  stacksAvoid      String[]         @default([])
+  seniorities      SeniorityLevel[] @default([])
+  workModels       WorkModel[]      @default([])
+  cities           String[]         @default([])
+  contractTypes    ContractType[]   @default([])
+  maxAgeDays       Int?
+  /// BRL por mês.
+  minMonthlySalary Int?
+  blockedCompanies String[]         @default([])
+  /// Sobe a cada PUT; a vaga guarda a versão com que foi pontuada.
+  version          Int              @default(0)
+  updatedAt        DateTime         @updatedAt
 }

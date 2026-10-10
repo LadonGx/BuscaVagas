@@ -1,4 +1,5 @@
 import {
+  isPreferencesConfigured,
   MANUAL_SOURCE,
   normalizeStack,
   type BulkTriageInput,
@@ -16,18 +17,36 @@ import { canonicalUrl } from '@busca-vagas/sources';
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
-import { afterCursor, decodeCursor, toPage } from '../../common/pagination/cursor';
+import {
+  afterCursor,
+  afterScoreCursor,
+  decodeCursor,
+  decodeScoreCursor,
+  encodeScoreCursor,
+  toPage,
+} from '../../common/pagination/cursor';
 import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { loadPreferences } from '../preferences/preferences.store';
+import { SCORE_REQUESTER, type ScoreRequester } from '../scoring/scoring.constants';
 import { jobInclude, toJobDto } from './jobs.mapper';
 import { buildJobWhere } from './jobs.where';
 
 @Injectable()
 export class JobsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    /**
+     * Pede o cálculo da nota em segundo plano (fila `scoring`). Opcional:
+     * sem ele (testes sem Redis), a vaga só fica com a nota pendente.
+     */
+    @Optional() @Inject(SCORE_REQUESTER) private readonly scoring?: ScoreRequester,
+  ) {}
 
   async create(input: CreateJobInput): Promise<JobDto> {
     const url = this.canonicalOrNull(input.url);
@@ -41,17 +60,47 @@ export class JobsService {
       include: jobInclude,
     });
 
+    this.requestScoring('job:create');
     return toJobDto(job);
   }
 
+  /**
+   * Listagem paginada por cursor. Ordem padrão: pela nota quando há
+   * preferências (vagas sem nota no fim), senão pela data de entrada.
+   */
   async list(query: JobListQuery): Promise<Page<JobDto>> {
     const where: Prisma.JobWhereInput = buildJobWhere(query);
+    const and = (where.AND as Prisma.JobWhereInput[] | undefined) ?? [];
+    const sort = query.sort ?? ((await this.hasPreferences()) ? 'score' : 'recent');
+
+    if (sort === 'score') {
+      if (query.cursor) {
+        where.AND = [
+          ...and,
+          afterScoreCursor(decodeScoreCursor(query.cursor)) as Prisma.JobWhereInput,
+        ];
+      }
+
+      const rows = await this.prisma.job.findMany({
+        where,
+        orderBy: [{ score: { sort: 'desc', nulls: 'last' } }, { id: 'desc' }],
+        take: query.limit + 1,
+        include: jobInclude,
+      });
+
+      const hasMore = rows.length > query.limit;
+      const page = hasMore ? rows.slice(0, query.limit) : rows;
+      const last = page.at(-1);
+      return {
+        items: page.map(toJobDto),
+        nextCursor: hasMore && last ? encodeScoreCursor({ s: last.score, id: last.id }) : null,
+      };
+    }
 
     if (query.cursor) {
-      const key = decodeCursor(query.cursor);
       where.AND = [
-        ...((where.AND as Prisma.JobWhereInput[] | undefined) ?? []),
-        afterCursor('firstSeenAt', key) as Prisma.JobWhereInput,
+        ...and,
+        afterCursor('firstSeenAt', decodeCursor(query.cursor)) as Prisma.JobWhereInput,
       ];
     }
 
@@ -71,7 +120,8 @@ export class JobsService {
 
   async update(id: string, input: UpdateJobInput): Promise<JobDto> {
     const current = await this.findOrThrow(id);
-    const data: Prisma.JobUpdateInput = { ...input };
+    // Editou a vaga: a nota volta a ficar pendente e é recalculada em segundo plano.
+    const data: Prisma.JobUpdateInput = { ...input, scoredVersion: null };
 
     if (input.url !== undefined) {
       const url = this.canonicalOrNull(input.url);
@@ -96,6 +146,7 @@ export class JobsService {
     }
 
     const job = await this.prisma.job.update({ where: { id }, data, include: jobInclude });
+    this.requestScoring('job:update');
     return toJobDto(job);
   }
 
@@ -210,10 +261,25 @@ export class JobsService {
       data: { lastSeenAt: now },
     });
 
+    // As novas entram sem nota; a fila calcula depois, sem atrasar a gravação.
+    if (created > 0) {
+      this.requestScoring('ingest');
+    }
+
     return { received: postings.length, created, seen };
   }
 
   /* ----------------------------------------------------------- internos */
+
+  /** Sem esperar: a nota é trabalho de fundo e nunca segura a resposta. */
+  private requestScoring(reason: string): void {
+    void this.scoring?.request(reason);
+  }
+
+  private async hasPreferences(): Promise<boolean> {
+    const { values } = await loadPreferences(this.prisma);
+    return isPreferencesConfigured(values);
+  }
 
   private async findOrThrow(id: string) {
     const job = await this.prisma.job.findUnique({ where: { id }, include: jobInclude });

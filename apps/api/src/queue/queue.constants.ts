@@ -6,6 +6,11 @@
 export const QUEUES = {
   /** Um job por fonte: busca, retry com backoff, histórico em SourceRun. */
   SOURCE_SCAN: 'source-scan',
+  /**
+   * Nota de aderência das vagas pendentes. Baixa prioridade: fila própria,
+   * um job por vez, nunca segura a listagem nem a gravação das vagas.
+   */
+  SCORING: 'scoring',
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

@@ -166,3 +166,47 @@ GET {{api}}/discovery/runs?limit=10
 
 ### Vagas que vieram da Gupy
 GET {{api}}/jobs?source=gupy&limit=20
+
+############################################################ Preferências e nota
+# docs/features/07-preferences-score.md — a nota é calculada em segundo plano.
+
+### Preferências atuais
+GET {{api}}/preferences
+
+### Salvar preferências (exemplo: perfil do autor — ajuste e rode)
+PUT {{api}}/preferences
+Content-Type: application/json
+
+{
+  "stacksCore": ["node.js", "nestjs", "react", "typescript"],
+  "stacksPlus": ["react native", "postgresql", "docker"],
+  "stacksAvoid": ["php", "delphi"],
+  "seniorities": ["intern", "trainee", "junior"],
+  "workModels": ["remote", "hybrid"],
+  "cities": ["Americana", "Campinas", "Sumaré", "Santa Bárbara d'Oeste", "Nova Odessa"],
+  "contractTypes": ["clt", "pj", "internship"],
+  "maxAgeDays": 30,
+  "minMonthlySalary": null,
+  "blockedCompanies": []
+}
+
+### Desligar a nota (lista volta a sair por data)
+PUT {{api}}/preferences
+Content-Type: application/json
+
+{}
+
+### Tecnologias conhecidas e quantas vagas citam cada uma
+GET {{api}}/preferences/stacks
+
+### Recalcular todas as notas (segundo plano)
+POST {{api}}/preferences/rescore
+
+### Vagas pela nota (padrão quando há preferências)
+GET {{api}}/jobs?limit=20
+
+### Só as boas, sem incompatíveis
+GET {{api}}/jobs?minScore=700&hideIncompatible=true
+
+### Pela data de entrada, mesmo com preferências
+GET {{api}}/jobs?sort=recent&limit=20

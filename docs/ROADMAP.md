@@ -39,13 +39,23 @@ Planos detalhados de cada feature: [`docs/features/`](features/README.md).
 - [x] Triagem salvar/descartar como campo da vaga — descartada nunca volta (JT) ([02](features/02-triage.md))
 - [x] `Application` + `StatusEvent`: status derivado do histórico, data real do evento separada da data do registro (JT) ([03](features/03-applications.md))
 - [x] `ResumeSection` + `ResumeItem`: currículo em blocos para copiar ("gaveta"), seções padrão e export em texto (VA) ([04](features/04-resume.md))
-- [ ] `JobPreferences`: stacks, senioridade, modalidade, contrato, idade máxima da vaga
+- [x] `Preferences`: stacks, senioridade, modalidade e cidades, contrato, idade máxima, salário, empresas bloqueadas ([07](features/07-preferences-score.md))
 - [x] Processador da fila `source-scan`: um job por fonte, retry com backoff, registro em `SourceRun`
 - [x] Varredura agendada (a cada 6 h) + manual (`POST /api/discovery/scan`)
 - [x] `try`: rodar uma fonte de verdade e gravar a fixture real
 - [x] Busca com filtros, paginação por cursor e exclusão de vagas descartadas (JT)
-- [ ] Nota de aderência **por código** (0–1000), normalizada pelos sinais disponíveis (JT)
+- [x] Nota de aderência **por código** (0–1000), normalizada pelos sinais disponíveis, com motivos e cobertura, calculada em segundo plano (JT) ([07](features/07-preferences-score.md))
 - [x] Endpoint de saúde das fontes (últimas execuções, taxa de descarte)
+
+**Próximo passo (08) — retenção e volume:**
+
+- [ ] Vagas que não seguiram no processo seletivo ficam **1 mês** e depois são
+      apagadas, para não pesar o banco nem a tela. A definir no plano: o que
+      conta como "não seguiu" (descartada? caixa de entrada sem ação? candidatura
+      recusada/desistida?) e o que guardar para a vaga apagada **não voltar** na
+      próxima varredura (hoje a linha da vaga é o que impede isso — ver 02).
+- [ ] Paginação no banco já existe (cursor em `/api/jobs`); revisar limites e
+      as demais listagens; no frontend, na Fase 2.
 
 ## Fase 2 — Frontend
 

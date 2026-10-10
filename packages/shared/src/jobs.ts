@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { ApplicationStatus } from './applications';
+import type { ScoreReason } from './preferences';
 import { dateInputSchema, optionalText, pageQuerySchema, queryList } from './common';
 import {
   contractTypeSchema,
@@ -91,6 +92,9 @@ export type CreateJobInput = z.output<typeof createJobInputSchema>;
 export const updateJobInputSchema = jobFields.partial().superRefine(checkSalaryRange);
 export type UpdateJobInput = z.output<typeof updateJobInputSchema>;
 
+export const JOB_SORTS = ['score', 'recent'] as const;
+export type JobSort = (typeof JOB_SORTS)[number];
+
 export const jobListQuerySchema = pageQuerySchema.extend({
   q: z
     .string()
@@ -111,6 +115,18 @@ export const jobListQuerySchema = pageQuerySchema.extend({
   postedWithinDays: z.coerce.number().int().min(1).max(365).optional(),
   /** Padrão: `inbox,saved` (descartadas só quando pedidas). */
   triage: queryList(triageStatusSchema),
+  /**
+   * Ordem. Ausente: pela nota quando há preferências, senão pela data de
+   * entrada. Vaga sem nota vai para o fim.
+   */
+  sort: z.enum(JOB_SORTS).optional(),
+  /** Só vagas com nota ≥ este valor (vagas sem nota ficam de fora). */
+  minScore: z.coerce.number().int().min(0).max(1000).optional(),
+  /** `true` esconde as incompatíveis (nota 0 por regra). */
+  hideIncompatible: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .optional(),
 });
 export type JobListQuery = z.output<typeof jobListQuerySchema>;
 
@@ -157,6 +173,17 @@ export interface JobDto {
   dismissReason: string | null;
   /** Resumo da candidatura, se houver — a lista mostra sem outra requisição. */
   application: { id: string; status: ApplicationStatus } | null;
+
+  /* Nota de aderência — docs/features/07-preferences-score.md */
+  /** 0–1000. `null` = sem preferências, nenhum critério com sinal, ou ainda não calculada. */
+  score: number | null;
+  /** Quanto dos critérios ligados a vaga informa (0–100). */
+  scoreCoverage: number | null;
+  scoreReasons: ScoreReason[];
+  /** Bateu numa regra dura (empresa bloqueada, stack evitada no título...). Nota 0. */
+  incompatible: boolean;
+  /** A nota está na fila para ser calculada (vaga nova ou editada). */
+  scorePending: boolean;
 }
 
 /** Resultado de `JobsService.ingest` — usado pelas fontes. */

@@ -13,5 +13,6 @@ implementação divergir do plano, o plano é atualizado junto.
 | 04  | [Currículo em blocos](04-resume.md)                                 | ✅     |
 | 05  | [Descoberta + fonte Gupy](05-discovery-gupy.md)                     | ✅     |
 | 06  | [Boards de empresa: Greenhouse, Lever, Ashby](06-company-boards.md) | ✅     |
+| 07  | [Preferências e nota de aderência](07-preferences-score.md)         | ✅     |
 
-Ordem de dependência: 00 → 01 → 02 → 03 (usa a triagem) · 04 é independente · 05 usa o `ingest` de 01 · 06 usa a descoberta de 05.
+Ordem de dependência: 00 → 01 → 02 → 03 (usa a triagem) · 04 é independente · 05 usa o `ingest` de 01 · 06 usa a descoberta de 05 · 07 usa 01 (vagas) e o `ingest`.

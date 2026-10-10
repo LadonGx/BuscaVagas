@@ -62,3 +62,46 @@ export function toPage<Row extends { id: string }, Item>(
     nextCursor: hasMore && last ? encodeCursor({ t: cursorDate(last), id: last.id }) : null,
   };
 }
+
+/* ------------------------------------------------------- cursor por nota */
+
+/**
+ * Cursor da ordenação por nota: `{ s: nota | null, id }`. A ordem é
+ * (nota desc, nulas no fim, id desc). Cursor de uma ordenação usado na outra
+ * é 400 — o formato é diferente de propósito.
+ */
+export interface ScoreCursorKey {
+  s: number | null;
+  id: string;
+}
+
+export function encodeScoreCursor(key: ScoreCursorKey): string {
+  return Buffer.from(JSON.stringify({ s: key.s, id: key.id })).toString('base64url');
+}
+
+export function decodeScoreCursor(cursor: string): ScoreCursorKey {
+  try {
+    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as {
+      s?: unknown;
+      id?: unknown;
+    };
+    const validScore =
+      parsed.s === null || (typeof parsed.s === 'number' && Number.isInteger(parsed.s));
+    if (!('s' in parsed) || !validScore || typeof parsed.id !== 'string' || !parsed.id) {
+      throw new Error('formato');
+    }
+    return { s: parsed.s as number | null, id: parsed.id };
+  } catch {
+    throw new BadRequestException({ statusCode: 400, message: 'Cursor inválido.' });
+  }
+}
+
+/** "Depois do cursor" para (score desc nulls last, id desc). */
+export function afterScoreCursor(key: ScoreCursorKey): { OR: Record<string, unknown>[] } {
+  if (key.s === null) {
+    return { OR: [{ score: null, id: { lt: key.id } }] };
+  }
+  return {
+    OR: [{ score: { lt: key.s } }, { score: key.s, id: { lt: key.id } }, { score: null }],
+  };
+}

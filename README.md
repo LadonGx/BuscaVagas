@@ -124,6 +124,10 @@ Rode `pnpm infra:up` e confira com `docker compose ps`.
 **"Configuração inválida no .env".** A mensagem lista a variável. Compare com
 o `.env.example`.
 
+**Erro de tipo do Prisma depois de uma migration** (`Property 'score' does not
+exist...`). Desde o Prisma 7, `migrate dev` não regenera o client. `pnpm dev:api`
+e `pnpm test` já rodam `pnpm db:generate` antes; em outro caso, rode-o à mão.
+
 **Mexi em `packages/shared` ou `packages/sources` e a API não viu.** A API usa
 o código compilado deles (`dist/`). `pnpm dev:api` recompila os pacotes ao
 subir; se a API já estiver rodando, rode `pnpm build:packages` e reinicie.

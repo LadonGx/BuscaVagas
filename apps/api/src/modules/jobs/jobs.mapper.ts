@@ -1,4 +1,4 @@
-import type { JobDto } from '@busca-vagas/shared';
+import type { JobDto, ScoreReason } from '@busca-vagas/shared';
 import type { Prisma } from '../../generated/prisma/client';
 
 /** O que toda consulta de vaga traz junto, para montar o `JobDto`. */
@@ -34,5 +34,12 @@ export function toJobDto(job: Prisma.JobGetPayload<{ include: typeof jobInclude 
     triagedAt: job.triagedAt?.toISOString() ?? null,
     dismissReason: job.dismissReason,
     application: job.application,
+    score: job.score,
+    scoreCoverage: job.scoreCoverage,
+    scoreReasons: Array.isArray(job.scoreReasons)
+      ? (job.scoreReasons as unknown as ScoreReason[])
+      : [],
+    incompatible: job.incompatible,
+    scorePending: job.scoredVersion === null,
   };
 }

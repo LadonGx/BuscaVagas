@@ -1,7 +1,12 @@
 import { Module } from '@nestjs/common';
 import { JobsModule } from '../jobs/jobs.module';
 import { DiscoveryController } from './discovery.controller';
-import { sourceHttpClientProvider, sourcesProvider } from './discovery.providers';
+import {
+  sourceHttpClientProvider,
+  sourceRegistryProvider,
+  sourcesProvider,
+  unavailableSourcesProvider,
+} from './discovery.providers';
 import { DiscoveryScheduler } from './discovery.scheduler';
 import { DiscoveryService } from './discovery.service';
 import { ScanRunner } from './scan-runner.service';
@@ -18,7 +23,9 @@ import { SourceScanProcessor } from './source-scan.processor';
   imports: [JobsModule],
   controllers: [DiscoveryController],
   providers: [
+    sourceRegistryProvider,
     sourcesProvider,
+    unavailableSourcesProvider,
     sourceHttpClientProvider,
     ScanRunner,
     DiscoveryService,

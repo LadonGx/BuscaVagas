@@ -54,7 +54,19 @@ export interface SourceInfoDto {
   id: string;
   displayName: string;
   kind: 'search' | 'company-board';
+  /**
+   * `false` = a fonte existe mas não roda: sem configuração (ex.: board sem
+   * empresas no `.env`) ou com configuração inválida. O motivo vem em `reason`.
+   */
+  active: boolean;
+  reason: string | null;
   lastRun: SourceRunDto | null;
+}
+
+/** Fonte pedida (ou existente) que não rodou, e por quê. */
+export interface InactiveSourceDto {
+  sourceId: string;
+  reason: string;
 }
 
 export interface ScanResultDto {
@@ -62,7 +74,12 @@ export interface ScanResultDto {
   queued: { sourceId: string; jobId: string }[];
   /** Fontes que já estavam na fila ou rodando — o pedido repetido foi ignorado. */
   alreadyQueued: string[];
-  /** Ids pedidos que não são fontes ativas. */
+  /**
+   * Fontes que existem mas estão desligadas (ex.: `GREENHOUSE_COMPANIES`
+   * vazio). Nada foi buscado nelas — o motivo diz o que configurar.
+   */
+  inactive: InactiveSourceDto[];
+  /** Ids pedidos que não existem. */
   unknown: string[];
   terms: string[];
 }

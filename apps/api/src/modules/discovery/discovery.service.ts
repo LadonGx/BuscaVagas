@@ -13,7 +13,14 @@ import type { Queue } from 'bullmq';
 import type { Env } from '../../config/env';
 import { PrismaService } from '../../prisma/prisma.service';
 import { QUEUES } from '../../queue/queue.constants';
-import { SCAN_JOB_NAME, scanDedupId, SOURCES, type ScanJobData } from './discovery.constants';
+import {
+  SCAN_JOB_NAME,
+  scanDedupId,
+  SOURCES,
+  UNAVAILABLE_SOURCES,
+  type ScanJobData,
+  type UnavailableSource,
+} from './discovery.constants';
 import { toSourceRunDto } from './discovery.mapper';
 
 /**
@@ -26,34 +33,54 @@ export class DiscoveryService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService<Env, true>,
     @Inject(SOURCES) private readonly sources: JobSource[],
+    @Inject(UNAVAILABLE_SOURCES) private readonly unavailable: UnavailableSource[],
     @InjectQueue(QUEUES.SOURCE_SCAN) private readonly queue: Queue<ScanJobData>,
   ) {}
 
+  /** Ativas primeiro; depois as que existem mas não rodam, com o motivo. */
   async listSources(): Promise<SourceInfoDto[]> {
+    const ids = [...this.sources.map((source) => source.id), ...this.unavailable.map((s) => s.id)];
     const lastRuns = await this.prisma.sourceRun.findMany({
-      where: { sourceId: { in: this.sources.map((source) => source.id) } },
+      where: { sourceId: { in: ids } },
       orderBy: { startedAt: 'desc' },
       distinct: ['sourceId'],
     });
     const lastBySource = new Map(lastRuns.map((run) => [run.sourceId, toSourceRunDto(run)]));
 
-    return this.sources.map((source) => ({
-      id: source.id,
-      displayName: source.displayName,
-      kind: source.kind,
-      lastRun: lastBySource.get(source.id) ?? null,
-    }));
+    return [
+      ...this.sources.map((source) => ({
+        id: source.id,
+        displayName: source.displayName,
+        kind: source.kind,
+        active: true,
+        reason: null,
+        lastRun: lastBySource.get(source.id) ?? null,
+      })),
+      ...this.unavailable.map((source) => ({
+        id: source.id,
+        displayName: source.displayName,
+        kind: source.kind,
+        active: false,
+        reason: source.reason,
+        lastRun: lastBySource.get(source.id) ?? null,
+      })),
+    ];
   }
 
   async scan(input: ScanInput): Promise<ScanResultDto> {
     const active = new Set(this.sources.map((source) => source.id));
-    const requested = input.sources ?? [...active];
+    const unavailable = new Map(this.unavailable.map((source) => [source.id, source.reason]));
+    // Sem lista: todas as ativas, e as desligadas só para avisar o motivo.
+    const requested = input.sources ?? [...active, ...unavailable.keys()];
     const terms = input.terms ?? this.config.get('DISCOVERY_TERMS', { infer: true });
 
     const result: ScanResultDto = {
       queued: [],
       alreadyQueued: [],
-      unknown: requested.filter((id) => !active.has(id)),
+      inactive: [...new Set(requested)]
+        .filter((id) => unavailable.has(id))
+        .map((sourceId) => ({ sourceId, reason: unavailable.get(sourceId) ?? '' })),
+      unknown: requested.filter((id) => !active.has(id) && !unavailable.has(id)),
       terms,
     };
 

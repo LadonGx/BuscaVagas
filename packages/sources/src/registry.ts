@@ -1,4 +1,4 @@
-import type { EnvLike, JobSource, SourceDefinition } from './core/job-source';
+import type { EnvLike, JobSource, SourceDefinition, SourceKind } from './core/job-source';
 import { ashbySourceDefinition } from './ashby';
 import { greenhouseSourceDefinition } from './greenhouse';
 import { gupySourceDefinition } from './gupy';
@@ -24,9 +24,16 @@ export interface BuildSourcesResult {
   /** Ids pedidos em `enabledIds` que não existem no registro. */
   unknown: string[];
   /** Fontes que não puderam ser criadas (configuração inválida). */
-  errors: { sourceId: string; message: string }[];
+  errors: (UnavailableSourceInfo & { message: string })[];
   /** Fontes com configuração válida mas sem o que fazer (ex.: lista de empresas vazia). */
-  inactive: { sourceId: string; reason: string }[];
+  inactive: (UnavailableSourceInfo & { reason: string })[];
+}
+
+/** Identificação de uma fonte que ficou de fora, para mostrar na API. */
+export interface UnavailableSourceInfo {
+  sourceId: string;
+  displayName: string;
+  kind: SourceKind;
 }
 
 /**
@@ -55,17 +62,23 @@ export function buildSources(
       continue;
     }
 
+    const info: UnavailableSourceInfo = {
+      sourceId: definition.id,
+      displayName: definition.displayName,
+      kind: definition.kind,
+    };
+
     try {
       const config = definition.parseConfig(env);
       const reason = definition.inactiveReason?.(config) ?? null;
       if (reason) {
-        result.inactive.push({ sourceId: definition.id, reason });
+        result.inactive.push({ ...info, reason });
         continue;
       }
       result.sources.push(definition.create(config));
     } catch (error) {
       result.errors.push({
-        sourceId: definition.id,
+        ...info,
         message: error instanceof Error ? error.message : String(error),
       });
     }

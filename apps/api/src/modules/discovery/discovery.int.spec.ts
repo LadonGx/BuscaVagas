@@ -7,7 +7,7 @@ import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { createTestApp, describeDb, resetDatabase, type TestApp } from '../../../test/helpers';
 import { QUEUES } from '../../queue/queue.constants';
 import { JobsModule } from '../jobs/jobs.module';
-import { SOURCE_HTTP_CLIENT, SOURCES } from './discovery.constants';
+import { SOURCE_HTTP_CLIENT, SOURCES, UNAVAILABLE_SOURCES } from './discovery.constants';
 import { DiscoveryController } from './discovery.controller';
 import { DiscoveryService } from './discovery.service';
 import { ScanRunner, SourceRunFailedError } from './scan-runner.service';
@@ -76,6 +76,17 @@ const http: HttpClient = { getJson: async () => ({}), getText: async () => '' };
     ScanRunner,
     DiscoveryService,
     { provide: SOURCES, useValue: [fakeSource, boardSource] },
+    {
+      provide: UNAVAILABLE_SOURCES,
+      useValue: [
+        {
+          id: 'parado',
+          displayName: 'Board sem empresas',
+          kind: 'company-board',
+          reason: 'PARADO_COMPANIES vazio — nenhuma empresa para buscar',
+        },
+      ],
+    },
     { provide: SOURCE_HTTP_CLIENT, useValue: http },
     { provide: getQueueToken(QUEUES.SOURCE_SCAN), useValue: queue },
   ],
@@ -161,8 +172,30 @@ describeDb('Descoberta (integração)', () => {
   it('GET /discovery/sources traz a última execução de cada fonte', async () => {
     let sources = (await api().get('/api/discovery/sources').expect(200)).body as SourceInfoDto[];
     expect(sources).toEqual([
-      { id: 'fake', displayName: 'Fonte falsa', kind: 'search', lastRun: null },
-      { id: 'board', displayName: 'Board falso', kind: 'company-board', lastRun: null },
+      {
+        id: 'fake',
+        displayName: 'Fonte falsa',
+        kind: 'search',
+        active: true,
+        reason: null,
+        lastRun: null,
+      },
+      {
+        id: 'board',
+        displayName: 'Board falso',
+        kind: 'company-board',
+        active: true,
+        reason: null,
+        lastRun: null,
+      },
+      {
+        id: 'parado',
+        displayName: 'Board sem empresas',
+        kind: 'company-board',
+        active: false,
+        reason: 'PARADO_COMPANIES vazio — nenhuma empresa para buscar',
+        lastRun: null,
+      },
     ]);
 
     fake.jobs = [posting(1)];
@@ -192,7 +225,24 @@ describeDb('Descoberta (integração)', () => {
         .send({ sources: ['fake', 'linkedin'], terms: ['nestjs'] })
         .expect(202)
     ).body as ScanResultDto;
-    expect(custom).toMatchObject({ terms: ['nestjs'], unknown: ['linkedin'] });
+    expect(custom).toMatchObject({ terms: ['nestjs'], unknown: ['linkedin'], inactive: [] });
+  });
+
+  it('POST /discovery/scan avisa que a fonte desligada não buscou nada, e por quê', async () => {
+    const all = (await api().post('/api/discovery/scan').expect(202)).body as ScanResultDto;
+    expect(all.inactive).toEqual([
+      { sourceId: 'parado', reason: 'PARADO_COMPANIES vazio — nenhuma empresa para buscar' },
+    ]);
+
+    queue.add.mockClear();
+    const only = (
+      await api()
+        .post('/api/discovery/scan')
+        .send({ sources: ['parado'] })
+        .expect(202)
+    ).body as ScanResultDto;
+    expect(only).toMatchObject({ queued: [], unknown: [], inactive: [{ sourceId: 'parado' }] });
+    expect(queue.add).not.toHaveBeenCalled();
   });
 
   it('POST /discovery/scan não duplica fonte que já está na fila', async () => {

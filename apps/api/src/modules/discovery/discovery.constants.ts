@@ -3,6 +3,22 @@ import type { ScanTrigger } from '@busca-vagas/shared';
 /** Token das fontes ativas (`JobSource[]`), já configuradas. */
 export const SOURCES = Symbol('SOURCES');
 
+/**
+ * Token das fontes que existem mas não rodam (`UnavailableSource[]`): sem
+ * configuração ou com configuração inválida. Aparecem na API com o motivo.
+ */
+export const UNAVAILABLE_SOURCES = Symbol('UNAVAILABLE_SOURCES');
+
+export interface UnavailableSource {
+  id: string;
+  displayName: string;
+  kind: 'search' | 'company-board';
+  reason: string;
+}
+
+/** Token interno: o resultado de `buildSources`, montado uma vez. */
+export const SOURCE_REGISTRY = Symbol('SOURCE_REGISTRY');
+
 /** Token do cliente HTTP que as fontes usam. */
 export const SOURCE_HTTP_CLIENT = Symbol('SOURCE_HTTP_CLIENT');
 

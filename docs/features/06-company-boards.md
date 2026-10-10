@@ -10,8 +10,10 @@ molde da Gupy. O que é comum às três fica em `core/boards/`.
 ## Decisões
 
 - **Empresas no `.env`, por fonte:** `GREENHOUSE_COMPANIES`,
-  `LEVER_COMPANIES`, `ASHBY_COMPANIES`. Lista vazia = fonte inativa (não é
-  agendada, não gera execução vazia a cada 6 h). Na Fase 2 a lista vai para o
+  `LEVER_COMPANIES`, `ASHBY_COMPANIES`. **Tudo opcional:** lista vazia (ou
+  variável ausente) = fonte inativa — não é agendada, não gera execução vazia
+  a cada 6 h e não atrapalha a Gupy. A API mostra o motivo em vez de ficar
+  em silêncio (ver "Fonte desligada" abaixo). Na Fase 2 a lista vai para o
   banco, com a tela de "empresas acompanhadas".
 - **Só vagas de tecnologia:** filtro por palavras no título, em PT e EN
   (developer, engineer, desenvolvedor, software, frontend, QA...). Os
@@ -127,11 +129,23 @@ contractor. Por isso:
 | Contract / contractor / freelance | `other`        |
 | Full-time, part-time, nada        | `null`         |
 
+## Fonte desligada
+
+Board sem empresas, ou com a lista inválida, fica de fora sem derrubar nada:
+
+- **Na subida:** `Fonte "greenhouse" inativa: GREENHOUSE_COMPANIES vazio —
+nenhuma empresa para buscar` (lista inválida: erro com a variável).
+- **`GET /api/discovery/sources`:** a fonte aparece com `active: false` e o
+  `reason`.
+- **`POST /api/discovery/scan`:** nada é enfileirado para ela e a resposta
+  traz `inactive: [{ sourceId, reason }]` — "não foi adicionado nada, e por quê".
+
 ## Mudanças fora das pastas das fontes
 
 - `SourceResult.filtered` (opcional) e `SourceOutcome.filtered`.
 - `SourceDefinition.inactiveReason(config)` (opcional): `buildSources` deixa
   a fonte de fora e explica o motivo ("GREENHOUSE_COMPANIES vazio").
+- `SourceInfoDto.active`/`reason` e `ScanResultDto.inactive`.
 - `SourceRun.filtered` (migration nova) e `SourceRunDto.filtered`.
 - Cliente HTTP: teto de resposta sobe de 4 MB para 16 MB (board grande do
   Greenhouse com descrições passa de 4 MB).

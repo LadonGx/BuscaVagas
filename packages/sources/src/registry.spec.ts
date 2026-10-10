@@ -52,7 +52,9 @@ describe('buildSources', () => {
     } as SourceDefinition<never>;
     const result = buildSources({}, undefined, [...available, lazy]);
     expect(result.sources.map((s) => s.id)).toEqual(['alpha', 'beta', 'gama']);
-    expect(result.inactive).toEqual([{ sourceId: 'delta', reason: 'DELTA_COMPANIES vazio' }]);
+    expect(result.inactive).toEqual([
+      { sourceId: 'delta', displayName: 'delta', kind: 'search', reason: 'DELTA_COMPANIES vazio' },
+    ]);
   });
 
   it('o registro real: Gupy primeiro, depois os boards de empresa', () => {

@@ -161,7 +161,7 @@ Content-Type: application/json
 
 { "sources": ["gupy"], "terms": ["nestjs", "react native"] }
 
-### Histórico de execuções
+### Histórico de execuções (paginado: use o nextCursor da resposta em &cursor=)
 GET {{api}}/discovery/runs?limit=10
 
 ### Vagas que vieram da Gupy
@@ -210,3 +210,12 @@ GET {{api}}/jobs?minScore=700&hideIncompatible=true
 
 ### Pela data de entrada, mesmo com preferências
 GET {{api}}/jobs?sort=recent&limit=20
+
+############################################################ Retenção
+# docs/features/08-retention.md — roda sozinha 1x por dia (RETENTION_DAYS).
+
+### Prévia: quanto a limpeza apagaria agora (não apaga nada)
+GET {{api}}/maintenance/retention
+
+### Rodar a limpeza agora
+POST {{api}}/maintenance/retention

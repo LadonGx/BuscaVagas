@@ -16,6 +16,7 @@ export class AppController {
         resume: '/api/resume · /api/resume/export',
         discovery: '/api/discovery/sources · /api/discovery/scan · /api/discovery/runs',
         preferences: '/api/preferences · /api/preferences/stacks · /api/preferences/rescore',
+        maintenance: '/api/maintenance/retention (GET = prévia, POST = rodar agora)',
       },
     };
   }

@@ -91,7 +91,7 @@ a fonte devolveu; `dropped` = itens descartados pelo mapper. Um salto em
 | ------ | ------------------------ | --------------------------------------------------------------------------- |
 | `GET`  | `/api/discovery/sources` | fontes, se estão ativas (senão, o motivo), última execução                  |
 | `POST` | `/api/discovery/scan`    | `{ sources?, terms? }` → 202 `{ queued, alreadyQueued, inactive, unknown }` |
-| `GET`  | `/api/discovery/runs`    | `?sourceId=&limit=` — histórico, mais recente primeiro                      |
+| `GET`  | `/api/discovery/runs`    | `?sourceId=&limit=&cursor=` — histórico paginado, mais recente primeiro     |
 | `GET`  | `/api`                   | índice das rotas da API                                                     |
 
 ### Configuração (`.env`)

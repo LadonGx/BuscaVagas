@@ -1,4 +1,10 @@
-import type { JobPosting, ScanResultDto, SourceInfoDto, SourceRunDto } from '@busca-vagas/shared';
+import type {
+  JobPosting,
+  Page,
+  ScanResultDto,
+  SourceInfoDto,
+  SourceRunDto,
+} from '@busca-vagas/shared';
 import type { HttpClient, JobSource, SourceQuery } from '@busca-vagas/sources';
 import { getQueueToken } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
@@ -148,8 +154,9 @@ describeDb('Descoberta (integração)', () => {
     expect(run).toMatchObject({ terms: [], jobsFound: 1, jobsNew: 1, dropped: 1, filtered: 5 });
     expect(boardQueries[0]).toEqual({ terms: [] });
 
-    const [listed] = (await api().get('/api/discovery/runs?sourceId=board').expect(200))
-      .body as SourceRunDto[];
+    const [listed] = (
+      (await api().get('/api/discovery/runs?sourceId=board').expect(200)).body as Page<SourceRunDto>
+    ).items;
     expect(listed).toMatchObject({ id: run.id, filtered: 5 });
   });
 
@@ -267,11 +274,17 @@ describeDb('Descoberta (integração)', () => {
     await runner.run('fake', ['primeira'], 'manual');
     await runner.run('fake', ['segunda'], 'schedule');
 
-    const runs = (await api().get('/api/discovery/runs?limit=5').expect(200))
-      .body as SourceRunDto[];
-    expect(runs.map((run) => run.terms[0])).toEqual(['segunda', 'primeira']);
+    const first = (await api().get('/api/discovery/runs?limit=1').expect(200))
+      .body as Page<SourceRunDto>;
+    expect(first.items.map((run) => run.terms[0])).toEqual(['segunda']);
+
+    const second = (
+      await api().get(`/api/discovery/runs?limit=1&cursor=${first.nextCursor}`).expect(200)
+    ).body as Page<SourceRunDto>;
+    expect(second.items.map((run) => run.terms[0])).toEqual(['primeira']);
+    expect(second.nextCursor).toBeNull();
 
     const none = (await api().get('/api/discovery/runs?sourceId=gupy').expect(200)).body;
-    expect(none).toEqual([]);
+    expect(none).toEqual({ items: [], nextCursor: null });
   });
 });

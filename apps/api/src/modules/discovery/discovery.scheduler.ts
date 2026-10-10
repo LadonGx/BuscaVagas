@@ -6,7 +6,7 @@ import type { Queue } from 'bullmq';
 import type { Env } from '../../config/env';
 import { QUEUES } from '../../queue/queue.constants';
 import { SCAN_JOB_NAME, schedulerId, SOURCES, type ScanJobData } from './discovery.constants';
-import { planSchedules, type ScheduleSpec } from './schedule-plan';
+import { planSchedules, type ScheduleSpec } from '../../queue/schedule-plan';
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -42,7 +42,7 @@ export class DiscoveryScheduler implements OnApplicationBootstrap {
     const hours = this.config.get('DISCOVERY_INTERVAL_HOURS', { infer: true });
     const terms = this.config.get('DISCOVERY_TERMS', { infer: true });
 
-    const desired: ScheduleSpec[] =
+    const desired: ScheduleSpec<ScanJobData>[] =
       hours > 0
         ? this.sources.map((source) => ({
             id: schedulerId(source.id),

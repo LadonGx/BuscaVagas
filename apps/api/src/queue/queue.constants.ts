@@ -11,6 +11,8 @@ export const QUEUES = {
    * um job por vez, nunca segura a listagem nem a gravação das vagas.
    */
   SCORING: 'scoring',
+  /** Tarefas de casa: limpeza diária de vagas antigas (retenção). */
+  MAINTENANCE: 'maintenance',
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];

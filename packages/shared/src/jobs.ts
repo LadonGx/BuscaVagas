@@ -192,6 +192,8 @@ export interface IngestResult {
   created: number;
   /** Vagas que já existiam e tiveram o `lastSeenAt` atualizado. */
   seen: number;
+  /** Vagas descartadas e já apagadas pela retenção: a fonte trouxe, foram ignoradas. */
+  ignored: number;
 }
 
 export interface BulkTriageResult {

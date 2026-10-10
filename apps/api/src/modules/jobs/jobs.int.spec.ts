@@ -178,13 +178,14 @@ describeDb('Vagas (integração)', () => {
       received: 3,
       created: 2,
       seen: 0,
+      ignored: 0,
     });
 
     const [job1] = (await api().get('/api/jobs?q=Vaga 1').expect(200)).body.items as JobDto[];
     await api().patch(`/api/jobs/${job1!.id}`).send({ title: 'Título que eu corrigi' }).expect(200);
 
     const result = await service.ingest([posting(1, 'Título da fonte'), posting(3)]);
-    expect(result).toEqual({ received: 2, created: 1, seen: 1 });
+    expect(result).toEqual({ received: 2, created: 1, seen: 1, ignored: 0 });
 
     const after = (await api().get(`/api/jobs/${job1!.id}`).expect(200)).body as JobDto;
     expect(after.title).toBe('Título que eu corrigi');

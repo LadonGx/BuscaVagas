@@ -24,7 +24,11 @@ import { redisConnectionFromUrl } from './redis-connection';
         },
       }),
     }),
-    BullModule.registerQueue({ name: QUEUES.SOURCE_SCAN }, { name: QUEUES.SCORING }),
+    BullModule.registerQueue(
+      { name: QUEUES.SOURCE_SCAN },
+      { name: QUEUES.SCORING },
+      { name: QUEUES.MAINTENANCE },
+    ),
   ],
   exports: [BullModule],
 })

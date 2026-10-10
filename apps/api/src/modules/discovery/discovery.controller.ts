@@ -1,4 +1,5 @@
 import {
+  type Page,
   scanInputSchema,
   sourceRunsQuerySchema,
   type ScanInput,
@@ -31,7 +32,7 @@ export class DiscoveryController {
   @Get('runs')
   runs(
     @Query(new ZodValidationPipe(sourceRunsQuerySchema)) query: SourceRunsQuery,
-  ): Promise<SourceRunDto[]> {
+  ): Promise<Page<SourceRunDto>> {
     return this.discovery.runs(query);
   }
 }

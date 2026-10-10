@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { pageQuerySchema } from './common';
 
 /**
  * Descoberta de vagas: rodar fontes, histórico de execuções.
@@ -24,9 +25,9 @@ export const scanInputSchema = z
   .default({});
 export type ScanInput = z.output<typeof scanInputSchema>;
 
-export const sourceRunsQuerySchema = z.object({
+/** Paginado por cursor, como as outras listagens: `{ items, nextCursor }`. */
+export const sourceRunsQuerySchema = pageQuerySchema.extend({
   sourceId: z.string().trim().min(1).max(50).optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 export type SourceRunsQuery = z.output<typeof sourceRunsQuerySchema>;
 

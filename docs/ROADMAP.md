@@ -47,15 +47,13 @@ Planos detalhados de cada feature: [`docs/features/`](features/README.md).
 - [x] Nota de aderência **por código** (0–1000), normalizada pelos sinais disponíveis, com motivos e cobertura, calculada em segundo plano (JT) ([07](features/07-preferences-score.md))
 - [x] Endpoint de saúde das fontes (últimas execuções, taxa de descarte)
 
-**Próximo passo (08) — retenção e volume:**
+**Retenção e volume** ([08](features/08-retention.md)):
 
-- [ ] Vagas que não seguiram no processo seletivo ficam **1 mês** e depois são
-      apagadas, para não pesar o banco nem a tela. A definir no plano: o que
-      conta como "não seguiu" (descartada? caixa de entrada sem ação? candidatura
-      recusada/desistida?) e o que guardar para a vaga apagada **não voltar** na
-      próxima varredura (hoje a linha da vaga é o que impede isso — ver 02).
-- [ ] Paginação no banco já existe (cursor em `/api/jobs`); revisar limites e
-      as demais listagens; no frontend, na Fase 2.
+- [x] Descartadas e caixa esquecida (a fonte não traz mais) saem depois de 30 dias
+      (`RETENTION_DAYS`), numa limpeza diária com prévia; salvas, com candidatura e
+      manuais na caixa ficam
+- [x] URL da descartada apagada é lembrada (`ForgottenJob`, 6 meses) para a vaga não voltar
+- [x] Paginação por cursor em todas as listagens (`/jobs`, `/applications`, `/discovery/runs`)
 
 ## Fase 2 — Frontend
 

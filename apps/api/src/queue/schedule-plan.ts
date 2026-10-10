@@ -1,9 +1,8 @@
-import type { ScanJobData } from './discovery.constants';
-
-export interface ScheduleSpec {
+/** Um agendador desejado de uma fila (BullMQ job scheduler). */
+export interface ScheduleSpec<Data = unknown> {
   id: string;
   everyMs: number;
-  data: ScanJobData;
+  data: Data;
 }
 
 export interface ExistingSchedule {
@@ -13,7 +12,7 @@ export interface ExistingSchedule {
 }
 
 /**
- * Decide o que fazer com os agendadores da fila, comparando o que existe no
+ * Decide o que fazer com os agendadores de uma fila (descoberta, manutenção), comparando o que existe no
  * Redis com o que a configuração pede. Função pura — é aqui que mora a regra
  * que importa:
  *
@@ -23,10 +22,10 @@ export interface ExistingSchedule {
  * modo dev reinicia a API (a cada arquivo salvo). Só cria/atualiza quando a
  * configuração mudou (intervalo, termos) e remove o que não é mais pedido.
  */
-export function planSchedules(
+export function planSchedules<Data>(
   existing: readonly ExistingSchedule[],
-  desired: readonly ScheduleSpec[],
-): { upsert: ScheduleSpec[]; remove: string[] } {
+  desired: readonly ScheduleSpec<Data>[],
+): { upsert: ScheduleSpec<Data>[]; remove: string[] } {
   const current = new Map(existing.map((schedule) => [schedule.id, schedule]));
   const wanted = new Set(desired.map((spec) => spec.id));
 

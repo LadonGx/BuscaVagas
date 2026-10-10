@@ -244,8 +244,22 @@ export class JobsService {
       });
     }
 
+    // Descartadas que a retenção já apagou: a fonte trouxe de novo, mas você
+    // já disse não. Ver docs/features/08-retention.md.
+    let ignored = 0;
+    if (byUrl.size > 0) {
+      const forgotten = await this.prisma.forgottenJob.findMany({
+        where: { url: { in: [...byUrl.keys()] } },
+        select: { url: true },
+      });
+      for (const { url } of forgotten) {
+        byUrl.delete(url);
+        ignored += 1;
+      }
+    }
+
     if (byUrl.size === 0) {
-      return { received: postings.length, created: 0, seen: 0 };
+      return { received: postings.length, created: 0, seen: 0, ignored };
     }
 
     // skipDuplicates: a deduplicação é do banco (URL e source+externalId
@@ -266,7 +280,7 @@ export class JobsService {
       this.requestScoring('ingest');
     }
 
-    return { received: postings.length, created, seen };
+    return { received: postings.length, created, seen, ignored };
   }
 
   /* ----------------------------------------------------------- internos */

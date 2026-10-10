@@ -6,6 +6,7 @@ import { HealthModule } from './health/health.module';
 import { ApplicationsModule } from './modules/applications/applications.module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
 import { JobsModule } from './modules/jobs/jobs.module';
+import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { PreferencesModule } from './modules/preferences/preferences.module';
 import { ResumeModule } from './modules/resume/resume.module';
 import { ScoringModule } from './modules/scoring/scoring.module';
@@ -29,6 +30,7 @@ import { QueueModule } from './queue/queue.module';
     ResumeModule,
     DiscoveryModule,
     PreferencesModule,
+    MaintenanceModule,
   ],
   controllers: [AppController],
 })

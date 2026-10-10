@@ -1,4 +1,5 @@
 import type {
+  Page,
   ScanInput,
   ScanResultDto,
   SourceInfoDto,
@@ -11,6 +12,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Queue } from 'bullmq';
 import type { Env } from '../../config/env';
+import { afterCursor, decodeCursor, toPage } from '../../common/pagination/cursor';
+import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { QUEUES } from '../../queue/queue.constants';
 import {
@@ -103,12 +106,19 @@ export class DiscoveryService {
     return result;
   }
 
-  async runs(query: SourceRunsQuery): Promise<SourceRunDto[]> {
-    const runs = await this.prisma.sourceRun.findMany({
-      where: query.sourceId ? { sourceId: query.sourceId } : {},
+  /** Histórico, mais recente primeiro, paginado por cursor. */
+  async runs(query: SourceRunsQuery): Promise<Page<SourceRunDto>> {
+    const and: Prisma.SourceRunWhereInput[] = [];
+    if (query.sourceId) and.push({ sourceId: query.sourceId });
+    if (query.cursor) {
+      and.push(afterCursor('startedAt', decodeCursor(query.cursor)) as Prisma.SourceRunWhereInput);
+    }
+
+    const rows = await this.prisma.sourceRun.findMany({
+      where: { AND: and },
       orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
-      take: query.limit,
+      take: query.limit + 1,
     });
-    return runs.map(toSourceRunDto);
+    return toPage(rows, query.limit, (run) => run.startedAt, toSourceRunDto);
   }
 }

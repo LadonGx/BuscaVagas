@@ -48,6 +48,12 @@ export const envSchema = z.object({
     .default(DEFAULT_DISCOVERY_TERMS),
   /** Varredura automática a cada N horas enquanto a API roda. 0 desliga. */
   DISCOVERY_INTERVAL_HOURS: z.coerce.number().int().min(0).max(168).default(6),
+
+  // --- Retenção (docs/features/08-retention.md) ------------------------------
+  /** Descartadas e caixa esquecida saem depois de N dias. 0 desliga a limpeza. */
+  RETENTION_DAYS: z.coerce.number().int().min(0).max(365).default(30),
+  /** Por quanto tempo a URL de uma descartada apagada impede a vaga de voltar. */
+  RETENTION_FORGET_DAYS: z.coerce.number().int().min(30).max(3650).default(180),
 });
 
 export type Env = z.infer<typeof envSchema>;

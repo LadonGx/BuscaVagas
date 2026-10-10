@@ -291,3 +291,19 @@ model Preferences {
   version          Int              @default(0)
   updatedAt        DateTime         @updatedAt
 }
+
+// ---------------------------------------------------------------------------
+// Retenção — docs/features/08-retention.md
+// ---------------------------------------------------------------------------
+
+/// URL de uma vaga descartada que a limpeza apagou. Enquanto existir, o
+/// `ingest` ignora a vaga — descartada continua descartada. Expira em
+/// RETENTION_FORGET_DAYS.
+model ForgottenJob {
+  /// Canônica, como estava em Job.url.
+  url         String   @id
+  source      String
+  forgottenAt DateTime @default(now())
+
+  @@index([forgottenAt])
+}

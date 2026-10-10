@@ -8,9 +8,9 @@ candidatura.
 > sobe e usa em `127.0.0.1`. Cada pessoa roda a própria instância — e faz as
 > próprias buscas, em volume baixo. Veja [Segurança](#segurança).
 
-**Status:** Fase 1 em andamento — a API já tem vagas (cadastro manual),
-triagem salvar/descartar, candidaturas com histórico de status e currículo em
-blocos. As fontes automáticas e as telas vêm a seguir. Plano completo em
+**Status:** Fase 1 em andamento — a API já tem vagas (manuais e da Gupy,
+buscadas automaticamente), triagem salvar/descartar, candidaturas com
+histórico de status e currículo em blocos. Mais fontes e as telas vêm a seguir. Plano completo em
 [`docs/ROADMAP.md`](docs/ROADMAP.md); planos de cada feature em
 [`docs/features/`](docs/features/README.md).
 
@@ -88,7 +88,7 @@ Detalhes, regras e códigos de erro de cada uma: [`docs/features/`](docs/feature
 
 | Comando                                       | O que faz                                         |
 | --------------------------------------------- | ------------------------------------------------- |
-| `pnpm dev:api` / `pnpm dev:web`               | Sobe API / front em modo desenvolvimento          |
+| `pnpm dev:api` / `pnpm dev:web`               | Sobe API (recompila `packages/*` antes) / front   |
 | `pnpm build`                                  | Compila todos os pacotes, na ordem de dependência |
 | `pnpm build:packages`                         | Recompila só `packages/*` (rode após mexer neles) |
 | `pnpm lint` / `pnpm format`                   | ESLint / Prettier                                 |
@@ -124,8 +124,11 @@ Rode `pnpm infra:up` e confira com `docker compose ps`.
 **"Configuração inválida no .env".** A mensagem lista a variável. Compare com
 o `.env.example`.
 
-**Mexi em `packages/shared` ou `packages/sources` e a API não viu.** Rode
-`pnpm build:packages` — a API usa o código compilado deles.
+**Mexi em `packages/shared` ou `packages/sources` e a API não viu.** A API usa
+o código compilado deles (`dist/`). `pnpm dev:api` recompila os pacotes ao
+subir; se a API já estiver rodando, rode `pnpm build:packages` e reinicie.
+(`pnpm --filter @busca-vagas/sources try` lê o código-fonte direto, por isso
+pode funcionar enquanto a API ainda usa a versão antiga.)
 
 ## Licença
 

@@ -2,6 +2,23 @@ import { z } from 'zod';
 
 const LOOPBACK_HOSTS = ['127.0.0.1', 'localhost', '::1'] as const;
 
+export const DEFAULT_DISCOVERY_TERMS = [
+  'desenvolvedor',
+  'full stack',
+  'backend',
+  'frontend',
+  'node',
+  'react',
+];
+
+/** "a, b ,c" -> ["a", "b", "c"]; vazio -> []. */
+const csv = z.string().transform((value) =>
+  value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean),
+);
+
 /**
  * Variáveis de ambiente validadas na subida. Valor faltando ou errado
  * derruba a API com uma mensagem clara, em vez de um erro estranho depois.
@@ -21,6 +38,16 @@ export const envSchema = z.object({
   REDIS_URL: z.string().regex(/^rediss?:\/\//, 'REDIS_URL deve começar com redis://'),
 
   LOG_LEVEL: z.enum(['error', 'warn', 'log', 'debug', 'verbose']).default('log'),
+
+  // --- Descoberta de vagas (docs/features/05-discovery-gupy.md) -------------
+  /** Fontes ativas; vazio = todas as registradas. */
+  DISCOVERY_SOURCES: csv.default([]),
+  /** Termos de busca das fontes por termo. Cada termo é uma busca separada. */
+  DISCOVERY_TERMS: csv
+    .refine((terms) => terms.length > 0, 'Informe ao menos um termo')
+    .default(DEFAULT_DISCOVERY_TERMS),
+  /** Varredura automática a cada N horas enquanto a API roda. 0 desliga. */
+  DISCOVERY_INTERVAL_HOURS: z.coerce.number().int().min(0).max(168).default(6),
 });
 
 export type Env = z.infer<typeof envSchema>;

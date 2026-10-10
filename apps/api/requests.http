@@ -5,6 +5,9 @@
 
 @api = http://127.0.0.1:3333/api
 
+### Índice da API
+GET {{api}}
+
 ### Saúde
 GET {{api}}/health
 
@@ -143,3 +146,23 @@ Content-Type: application/json
 
 ### Exportar em texto puro
 GET {{api}}/resume/export
+
+############################################################ Descoberta
+
+### Fontes ativas e última execução
+GET {{api}}/discovery/sources
+
+### Buscar agora (todas as fontes, termos do .env)
+POST {{api}}/discovery/scan
+
+### Buscar agora com termos próprios
+POST {{api}}/discovery/scan
+Content-Type: application/json
+
+{ "sources": ["gupy"], "terms": ["nestjs", "react native"] }
+
+### Histórico de execuções
+GET {{api}}/discovery/runs?limit=10
+
+### Vagas que vieram da Gupy
+GET {{api}}/jobs?source=gupy&limit=20

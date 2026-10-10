@@ -26,11 +26,11 @@ Planos detalhados de cada feature: [`docs/features/`](features/README.md).
 
 **Fontes** (uma pasta cada, em ordem de prioridade):
 
-- [ ] `gupy` — API pública por termo; cobre o mercado brasileiro (JT, CO, VG)
+- [x] `gupy` — API pública por termo; cobre o mercado brasileiro (JT, CO, VG) ([05](features/05-discovery-gupy.md))
 - [ ] `greenhouse`, `lever`, `ashby` — boards por empresa, lista no `.env` (JT, JS)
 - [ ] `github-issues` — repositórios de vagas como `backend-br/vagas` e `frontendbr/vagas`, via API oficial do GitHub (VG)
 - [ ] `remote-boards` — RemoteOK e Remotive (JT)
-- [ ] Extração de stack, senioridade, modalidade e contrato por heurística (JT)
+- [x] Extração de stack, senioridade, modalidade e contrato por heurística (JT)
 
 **Modelos e módulos:**
 
@@ -40,10 +40,12 @@ Planos detalhados de cada feature: [`docs/features/`](features/README.md).
 - [x] `Application` + `StatusEvent`: status derivado do histórico, data real do evento separada da data do registro (JT) ([03](features/03-applications.md))
 - [x] `ResumeSection` + `ResumeItem`: currículo em blocos para copiar ("gaveta"), seções padrão e export em texto (VA) ([04](features/04-resume.md))
 - [ ] `JobPreferences`: stacks, senioridade, modalidade, contrato, idade máxima da vaga
-- [ ] Processador da fila `source-scan`: um job por fonte, retry com backoff, registro em `SourceRun`
+- [x] Processador da fila `source-scan`: um job por fonte, retry com backoff, registro em `SourceRun`
+- [x] Varredura agendada (a cada 6 h) + manual (`POST /api/discovery/scan`)
+- [x] `try`: rodar uma fonte de verdade e gravar a fixture real
 - [x] Busca com filtros, paginação por cursor e exclusão de vagas descartadas (JT)
 - [ ] Nota de aderência **por código** (0–1000), normalizada pelos sinais disponíveis (JT)
-- [ ] Endpoint de saúde das fontes (últimas execuções, taxa de descarte)
+- [x] Endpoint de saúde das fontes (últimas execuções, taxa de descarte)
 
 ## Fase 2 — Frontend
 
@@ -57,7 +59,7 @@ Planos detalhados de cada feature: [`docs/features/`](features/README.md).
 ## Fase 3 — Ajustes e melhorias
 
 - [ ] Portais BR sem API via JSON-LD (`schema.org/JobPosting`): InfoJobs, Vagas.com (JT)
-- [ ] Varredura agendada (job repetível) + notificação de vaga nova com nota alta (JS)
+- [ ] Notificação de vaga nova com nota alta (JS)
 - [ ] Checagem se a vaga ainda está aberta antes de candidatar (CO)
 - [ ] Detecção de vaga repostada (VG)
 - [ ] Importar currículo de PDF, com revisão antes de salvar (VA, JS)

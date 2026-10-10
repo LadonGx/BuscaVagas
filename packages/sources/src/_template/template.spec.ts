@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { HttpClient } from '../core/http';
 import page1 from './__fixtures__/page-1.json';
+import { parseTemplateConfig } from './template.config';
 import { mapTemplateJob } from './template.mapper';
 import { TemplateSource } from './template.source';
 
@@ -47,7 +48,7 @@ describe('TemplateSource', () => {
     const source = new TemplateSource();
 
     const result = await source.fetch(
-      { term: 'node' },
+      { terms: ['node'] },
       { http, signal: new AbortController().signal, log: () => {} },
     );
 
@@ -67,5 +68,18 @@ describe('TemplateSource', () => {
 
     expect(result).toEqual({ jobs: [], dropped: 0 });
     expect(logs[0]).toContain('formato inesperado');
+  });
+});
+
+describe('configuração', () => {
+  it('padrão sem nada no .env; lê só as variáveis com o prefixo', () => {
+    expect(parseTemplateConfig({})).toEqual({ maxPages: 3 });
+    expect(parseTemplateConfig({ TEMPLATE_MAX_PAGES: '5', OTHER_MAX_PAGES: '9' })).toEqual({
+      maxPages: 5,
+    });
+  });
+
+  it('valor inválido lança com o nome da variável', () => {
+    expect(() => parseTemplateConfig({ TEMPLATE_MAX_PAGES: '99' })).toThrow(/TEMPLATE_MAX_PAGES/);
   });
 });

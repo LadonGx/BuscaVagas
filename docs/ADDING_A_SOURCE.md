@@ -1,7 +1,11 @@
 # Como adicionar uma fonte de vagas
 
-Toda fonte segue o modelo de `packages/sources/src/_template/`. O exemplo
-abaixo usa um site fictício chamado `acme`.
+Cada fonte é um **módulo isolado**: uma pasta em `packages/sources/src/<fonte>/`
+com tudo dela — configuração, formato, conversão, busca, testes e
+documentação. A API não precisa mudar para ganhar uma fonte nova.
+
+Ponto de partida: `packages/sources/src/_template/`. Exemplo real e completo:
+`packages/sources/src/gupy/`. O passo a passo usa um site fictício chamado `acme`.
 
 ## 1. Antes de escrever código
 
@@ -20,59 +24,75 @@ abaixo usa um site fictício chamado `acme`.
 cp -r packages/sources/src/_template packages/sources/src/acme
 ```
 
-Renomeie os arquivos para `acme.schema.ts`, `acme.mapper.ts`,
-`acme.source.ts` e `acme.spec.ts`.
+Renomeie os arquivos (`template.*` → `acme.*`) e troque `TEMPLATE`/`template`
+por `ACME`/`acme` nos nomes.
 
-## 3. Salve uma resposta real
+## 3. Os arquivos
 
-Faça uma requisição real e salve a resposta (enxugada) em
-`acme/__fixtures__/`. É ela que os testes usam — nenhum teste acessa a rede.
-Inclua de propósito um item quebrado, para testar o descarte.
+| Arquivo          | Regra                                                                                                                                                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `acme.config.ts` | Configuração da fonte, lida do `.env` com o prefixo `ACME_` via `parseSourceEnv`. **Tudo com padrão**: a fonte funciona sem configurar nada.                                                                      |
+| `acme.schema.ts` | Só os campos que o mapper usa. `.nullish()` no que às vezes falta.                                                                                                                                                |
+| `acme.mapper.ts` | Função pura: item cru → `JobPosting` ou `null`. URL sempre via `canonicalUrl`. Dado ausente vira `null`, nunca palpite. Use as heurísticas de `core/normalize/` (texto, senioridade, stack).                      |
+| `acme.source.ts` | Requisições sempre por `ctx.http`, repassando `ctx.signal`. Uma busca por termo (`query.terms`). Teto fixo de páginas e pausa entre requisições. Formato inesperado encerra a paginação com `ctx.log`, não lança. |
+| `index.ts`       | Exporta a `SourceDefinition` (`id`, `displayName`, `kind`, `parseConfig`, `create`).                                                                                                                              |
+| `README.md`      | Endpoint, limites, manias do site e o que fazer quando quebrar.                                                                                                                                                   |
 
-## 4. Escreva os três arquivos
+## 4. Fixture e testes
 
-| Arquivo          | Regra                                                                                                                                              |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `acme.schema.ts` | Só os campos que o mapper usa. `.nullish()` no que às vezes falta.                                                                                 |
-| `acme.mapper.ts` | Função pura: item cru → `JobPosting` ou `null`. URL sempre via `canonicalUrl`. Dado ausente vira `null`, nunca palpite.                            |
-| `acme.source.ts` | Requisições sempre por `ctx.http`, repassando `ctx.signal`. Teto fixo de páginas. Formato inesperado encerra a paginação com `ctx.log`, não lança. |
-
-## 5. Teste
+Salve uma resposta (enxugada) em `acme/__fixtures__/` e inclua de propósito
+itens que devem ser descartados. Nenhum teste acessa a rede.
 
 No mínimo:
 
 - o mapper converte o item da fixture para o `JobPosting` esperado;
-- o mapper devolve `null` para o item quebrado;
-- a fonte monta as URLs certas e conta os descartados;
-- a fonte não lança quando a resposta muda de formato.
+- o mapper devolve `null` para os itens que não servem;
+- a fonte monta as URLs certas, para no fim da paginação e conta os descartados;
+- a fonte não lança quando a resposta muda de formato;
+- a configuração lê o prefixo certo e recusa valor inválido.
 
 ```bash
 pnpm --filter @busca-vagas/sources test
 ```
 
-## 6. Registre
+## 5. Registre
 
 Em `packages/sources/src/registry.ts`:
 
 ```ts
-import { AcmeSource } from './acme/acme.source';
+import { acmeSourceDefinition } from './acme';
 
-export const ALL_SOURCES: readonly JobSource[] = [
+export const SOURCE_DEFINITIONS = [
   // ...fontes existentes
-  new AcmeSource(),
+  acmeSourceDefinition as SourceDefinition<never>,
 ];
 ```
 
 A ordem importa: em vaga duplicada entre fontes, vence a que vem primeiro.
 Coloque antes as que trazem dados mais completos (com descrição).
 
-Depois rode `pnpm build:packages` para a API enxergar a fonte nova.
+## 6. Teste de verdade
+
+```bash
+pnpm --filter @busca-vagas/sources try acme "desenvolvedor"
+pnpm --filter @busca-vagas/sources try acme "desenvolvedor" --save-fixture
+```
+
+O primeiro roda a fonte contra o site real (sem gravar no banco) e mostra o
+que veio, o que foi descartado e quanto de cada campo foi preenchido. O
+segundo grava a resposta real em `__fixtures__/live-page.json` para os testes.
+
+Depois: `pnpm build:packages` e reinicie a API. A fonte aparece em
+`GET /api/discovery/sources` e entra na agenda automaticamente.
 
 ## Checklist
 
 - [ ] `robots.txt` e termos de uso conferidos
 - [ ] User-Agent padrão do projeto (o `ctx.http` já envia) — nunca se passar por navegador
-- [ ] Teto de páginas/requisições definido
-- [ ] Fixture real salva, com um item quebrado
-- [ ] Testes do mapper e da fonte passando
-- [ ] Fonte registrada em `registry.ts`
+- [ ] Teto de páginas/requisições e pausa entre requisições
+- [ ] Configuração com padrões e prefixo próprio
+- [ ] Fixture salva, com itens que devem ser descartados
+- [ ] Testes do mapper, da fonte e da configuração passando
+- [ ] `README.md` da fonte escrito
+- [ ] Definição registrada em `registry.ts`
+- [ ] `try` rodado contra o site real

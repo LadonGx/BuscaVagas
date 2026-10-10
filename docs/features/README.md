@@ -11,5 +11,6 @@ implementação divergir do plano, o plano é atualizado junto.
 | 02  | [Triagem: salvar/descartar](02-triage.md)        | ✅     |
 | 03  | [Candidaturas com histórico](03-applications.md) | ✅     |
 | 04  | [Currículo em blocos](04-resume.md)              | ✅     |
+| 05  | [Descoberta + fonte Gupy](05-discovery-gupy.md)  | ✅     |
 
-Ordem de dependência: 00 → 01 → 02 → 03 (usa a triagem) · 04 é independente.
+Ordem de dependência: 00 → 01 → 02 → 03 (usa a triagem) · 04 é independente · 05 usa o `ingest` de 01.

@@ -1,0 +1,103 @@
+{
+  "_comment": "Amostra montada a partir do formato documentado (job-tracker, career-ops), com os dois formatos: o antigo (employability-portal) e o do endpoint novo (portal.gupy.io/api/job-search/jobs, sem country/isConfidentialCareerPage). Complementar com live-page.json gerado por `pnpm --filter @busca-vagas/sources try gupy <termo> --save-fixture`.",
+  "data": [
+    {
+      "id": 8765432,
+      "name": "Desenvolvedor(a) Full Stack Júnior",
+      "jobUrl": "https://acme.gupy.io/job/eyJqb2JJZCI6ODc2NTQzMn0=?jobBoardSource=gupy_portal",
+      "careerPageName": "Acme Tecnologia",
+      "description": "<p>Buscamos pessoa desenvolvedora para atuar com <strong>Node.js</strong>, <strong>React</strong> e PostgreSQL.</p><ul><li>TypeScript</li><li>Docker</li></ul>",
+      "type": "vacancy_type_effective",
+      "publishedDate": "2026-10-05T13:22:10.000Z",
+      "workplaceType": "hybrid",
+      "isRemoteWork": false,
+      "city": "Campinas",
+      "state": "SP",
+      "country": "Brasil",
+      "isConfidentialCareerPage": false
+    },
+    {
+      "id": 8765433,
+      "name": "Pessoa Desenvolvedora Backend Pleno",
+      "jobUrl": "https://beta.gupy.io/job/eyJqb2JJZCI6ODc2NTQzM30=?jobBoardSource=gupy_portal",
+      "careerPageName": "Beta Pagamentos",
+      "description": "<p>Java, Spring Boot e Kafka. Contratação PJ.</p>",
+      "type": "vacancy_legal_entity",
+      "publishedDate": "2026-10-04T10:00:00.000Z",
+      "workplaceType": null,
+      "isRemoteWork": true,
+      "city": null,
+      "state": null,
+      "country": "Brasil",
+      "isConfidentialCareerPage": false
+    },
+    {
+      "id": 8765434,
+      "name": "Estágio em Desenvolvimento de Software",
+      "jobUrl": "https://gama.gupy.io/job/eyJqb2JJZCI6ODc2NTQzNH0=",
+      "careerPageName": "Gama Indústria",
+      "description": null,
+      "type": "vacancy_type_internship",
+      "publishedDate": "2026-10-03T09:00:00.000Z",
+      "workplaceType": "on-site",
+      "city": "Americana",
+      "state": "SP",
+      "country": "Brasil"
+    },
+    {
+      "id": 8765435,
+      "name": "Banco de Talentos - Tecnologia",
+      "jobUrl": "https://delta.gupy.io/job/eyJqb2JJZCI6ODc2NTQzNX0=",
+      "careerPageName": "Delta",
+      "type": "vacancy_type_talent_pool",
+      "publishedDate": "2026-10-01T09:00:00.000Z"
+    },
+    {
+      "id": 8765436,
+      "name": "Analista Desenvolvedor",
+      "jobUrl": "https://confidencial.gupy.io/job/eyJqb2JJZCI6ODc2NTQzNn0=",
+      "careerPageName": "Confidencial",
+      "type": "vacancy_type_effective"
+    },
+    {
+      "id": 8765437,
+      "name": "Desenvolvedor React",
+      "jobUrl": "https://site-falso.com/vaga/1",
+      "careerPageName": "Fora da Gupy",
+      "type": "vacancy_type_effective"
+    },
+    {
+      "id": 8765438,
+      "name": "   ",
+      "jobUrl": "https://epsilon.gupy.io/job/eyJqb2JJZCI6ODc2NTQzOH0=",
+      "careerPageName": "Epsilon"
+    },
+    {
+      "id": 8765439,
+      "name": "Desenvolvedor Node.js",
+      "jobUrl": "https://zeta-tech.gupy.io/job/eyJqb2JJZCI6ODc2NTQzOX0=?jobBoardSource=gupy_portal",
+      "careerPageName": "Empresa Parceira",
+      "careerPageLogo": "https://static.gupy.io/images/confidencial_logo.png",
+      "type": "vacancy_type_effective",
+      "workplaceType": "remote"
+    },
+    {
+      "id": 8765440,
+      "name": "Desenvolvedora Frontend Sênior",
+      "url": "https://omega.gupy.io/job/eyJqb2JJZCI6ODc2NTQ0MH0=?jobBoardSource=gupy_portal",
+      "careerPageName": "Omega Varejo",
+      "careerPageLogo": "https://static.gupy.io/omega/logo.png",
+      "description": "<p>React, Next.js e TypeScript.</p>",
+      "type": "vacancy_type_effective",
+      "publishedDate": "2026-10-06T12:00:00.000Z",
+      "workplaceType": "remote",
+      "city": "São Paulo",
+      "state": "São Paulo"
+    }
+  ],
+  "pagination": {
+    "offset": 0,
+    "limit": 100,
+    "total": 100
+  }
+}

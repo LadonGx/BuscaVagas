@@ -87,7 +87,15 @@ model SourceRun {
   id         String          @id @default(cuid())
   sourceId   String
   status     SourceRunStatus @default(running)
+  /// "manual" (POST /api/discovery/scan) ou "schedule" (agenda).
+  trigger    String          @default("manual")
+  /// Termos usados nesta execução.
+  terms      String[]        @default([])
+  /// Vagas válidas que a fonte devolveu.
   jobsFound  Int             @default(0)
+  /// Quantas delas eram novas no banco.
+  jobsNew    Int             @default(0)
+  /// Itens descartados pelo mapper (fora do formato ou fora das regras).
   dropped    Int             @default(0)
   durationMs Int?
   error      String?

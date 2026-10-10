@@ -1,10 +1,29 @@
 import { Module } from '@nestjs/common';
+import { JobsModule } from '../jobs/jobs.module';
+import { DiscoveryController } from './discovery.controller';
+import { sourceHttpClientProvider, sourcesProvider } from './discovery.providers';
+import { DiscoveryScheduler } from './discovery.scheduler';
+import { DiscoveryService } from './discovery.service';
+import { ScanRunner } from './scan-runner.service';
+import { SourceScanProcessor } from './source-scan.processor';
 
 /**
- * Descoberta: ponte entre a API e o pacote @busca-vagas/sources.
+ * Descoberta: roda QUALQUER fonte do pacote @busca-vagas/sources pela fila
+ * `source-scan`, grava as vagas e o histórico (SourceRun), e agenda as
+ * varreduras automáticas. Não conhece nenhuma fonte pelo nome.
  *
- * Aqui vão morar o processador da fila `source-scan` (um job por fonte, com
- * retry e registro em SourceRun) e o agendamento das varreduras. — Fase 1
+ * Plano: docs/features/05-discovery-gupy.md
  */
-@Module({})
+@Module({
+  imports: [JobsModule],
+  controllers: [DiscoveryController],
+  providers: [
+    sourcesProvider,
+    sourceHttpClientProvider,
+    ScanRunner,
+    DiscoveryService,
+    DiscoveryScheduler,
+    SourceScanProcessor,
+  ],
+})
 export class DiscoveryModule {}

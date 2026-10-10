@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "SourceRun" ADD COLUMN     "jobsNew" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "terms" TEXT[] DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN     "trigger" TEXT NOT NULL DEFAULT 'manual';

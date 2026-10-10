@@ -3,4 +3,7 @@ export * from './core/http';
 export * from './core/parse-each';
 export * from './core/canonical-url';
 export * from './core/run-sources';
+export * from './core/normalize/text';
+export * from './core/normalize/seniority';
+export * from './core/normalize/stack';
 export * from './registry';

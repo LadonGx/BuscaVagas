@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
 import { validateEnv } from './config/env';
 import { HealthModule } from './health/health.module';
 import { ApplicationsModule } from './modules/applications/applications.module';
@@ -25,5 +26,6 @@ import { QueueModule } from './queue/queue.module';
     ResumeModule,
     DiscoveryModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}

@@ -20,6 +20,8 @@ const TRACKING_PARAMS = new Set([
   'refid',
   'trk',
   'trackingid',
+  // Gupy: indica de qual vitrine veio o clique, não muda a vaga.
+  'jobboardsource',
 ]);
 
 export function canonicalUrl(raw: string): string | null {

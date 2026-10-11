@@ -43,7 +43,7 @@ Detalhes e decisões em [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Requisitos
 
-- **Node.js 22.12+** (recomendado: 24 LTS)
+- **Node.js 22.22+** (recomendado: 24 LTS) — o React Router 8 do front pede essa versão
 - **pnpm 12** — `npm install -g pnpm@12`
 - **Docker** (Docker Desktop no Windows/macOS)
 
@@ -67,8 +67,10 @@ pnpm dev:api              # API em http://127.0.0.1:3333/api
 pnpm dev:web              # telas em http://127.0.0.1:5173
 ```
 
-Abra **http://127.0.0.1:5173**: a página mostra se API, banco e fila estão de pé.
-O mesmo relatório sai em `GET http://127.0.0.1:3333/api/health`.
+Abra **http://127.0.0.1:5173**. O menu mostra quantas vagas há em cada tela e,
+no rodapé, a última busca e a próxima. Se a API, o banco ou a fila estiverem
+fora, aparece uma faixa vermelha no topo dizendo o que subir. O relatório de
+saúde sai em `GET http://127.0.0.1:3333/api/health`.
 
 Para testar a API à mão, abra [`apps/api/requests.http`](apps/api/requests.http)
 no VS Code com a extensão **REST Client** — há um exemplo para cada rota.
@@ -114,6 +116,16 @@ seguro porque nada fica exposto na rede:
 **Não publique esta API num servidor** sem antes adicionar autenticação.
 
 ## Problemas comuns
+
+**Aviso `Unsupported engine` no `pnpm install`, ou testes do front quebrando.**
+O Node está abaixo de 22.22 (`node -v`). O app pode até subir, mas o Vitest, o
+jsdom e o React Router pedem 22.22+. Instale o Node 24 LTS e rode `pnpm install`
+de novo.
+
+**`http proxy error ... ECONNREFUSED 127.0.0.1:3333` no terminal do front.**
+A API não estava no ar naquele instante — ainda subindo ou reiniciando (o modo
+watch reinicia quando `packages/*` é recompilado). Some sozinho quando ela
+termina de subir. Suba a API primeiro e o front depois.
 
 **Porta 5433 ou 6380 em uso.** Mude `POSTGRES_PORT`/`REDIS_PORT` no `.env` e
 ajuste `DATABASE_URL`/`REDIS_URL` para a mesma porta.

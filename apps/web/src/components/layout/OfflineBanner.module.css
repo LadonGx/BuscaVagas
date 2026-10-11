@@ -1,0 +1,15 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--bad);
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+  font-size: 14px;
+}
+
+.banner svg {
+  flex: none;
+}

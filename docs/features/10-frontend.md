@@ -11,7 +11,7 @@ divergir do protótipo, vale o código e este plano é atualizado.
 
 | Tema               | Escolha                                                  | Por quê                                                                                 |
 | ------------------ | -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Rotas              | React Router 7, modo declarativo (`createBrowserRouter`) | Filtros vão para a URL: voltar funciona e um filtro pode ser salvo nos favoritos        |
+| Rotas              | React Router 8, modo dados (`createBrowserRouter`)       | Filtros vão para a URL: voltar funciona e um filtro pode ser salvo nos favoritos        |
 | Dados do servidor  | TanStack Query 5                                         | Cache, paginação infinita, atualização otimista com desfazer, polling só quando precisa |
 | Estilo             | CSS Modules + variáveis CSS                              | Os tokens do protótipo viram variáveis; o tema troca com um atributo na raiz, sem lib   |
 | Ícones             | `lucide-react`                                           | Mesmo traço dos ícones do protótipo; só os ícones usados entram no build                |
@@ -25,25 +25,32 @@ divergir do protótipo, vale o código e este plano é atualizado.
 
 ```
 apps/web/src/
-  main.tsx                 QueryClient, Router, tema
-  router.tsx               rotas e layout
+  main.tsx                 fontes, estilos, QueryClient, avisos, Router
+  routes.tsx               rotas e layout (o menu segue a mesma ordem)
   styles/
     tokens.css             variáveis do tema (escuro e claro)
     base.css               reset, fontes, foco visível, prefers-reduced-motion
   api/
-    client.ts              fetch + ApiError + query string; erro da API vira mensagem em PT-BR
+    client.ts              fetch + ApiError/ApiOfflineError + query string; mensagens em PT-BR
     keys.ts                chaves do TanStack Query, num lugar só
-    jobs.ts applications.ts resume.ts preferences.ts discovery.ts dashboard.ts maintenance.ts
+    queryClient.ts         padrões: 15 s de cache, 4xx não tenta de novo
+    health.ts overview.ts discovery.ts   (base) · jobs.ts applications.ts resume.ts
+    preferences.ts dashboard.ts maintenance.ts   (chegam com as telas)
   components/              peças usadas em mais de uma tela
-    layout/ Sidebar, ThemeToggle, ScanStatus, OfflineBanner
-    ScoreBadge  ReasonList  JobChips  StackChips  StatusChip
-    Button  IconButton  Pill  Field  CopyButton  Drawer  Dialog  Toast  EmptyState
+    layout/  AppLayout, Sidebar (menu + tema), ScanStatus, OfflineBanner, nav.ts
+    toast/   ToastProvider + useToast
+    ui/      Button, PageHeader, EmptyState  (depois: IconButton, Pill, Field, Drawer, Dialog…)
+    ScanButton  (depois: ScoreBadge, ReasonList, JobChips, StackChips, StatusChip, CopyButton)
   features/
     inicio/ vagas/ deslizar/ candidaturas/ curriculo/ preferencias/
   lib/
     format.ts              datas relativas ("há 2 dias"), moeda, rótulos dos enums
     score.ts               faixa da nota → tom de cor; motivo principal do cartão
-    useHotkeys.ts  useInfiniteScroll.ts  theme.ts
+    theme.ts               tema salvo + useTheme
+    useNow.ts              relógio para "em 3 h 58 min"
+    useHotkeys.ts  useInfiniteScroll.ts   (chegam com as telas)
+  test/
+    setup.ts  render.tsx (app com providers e rota)  api-mock.ts (fetch por rota)  fixtures.ts
 ```
 
 Cada tela fica em `features/<tela>/` com a página, os componentes só dela e
@@ -196,8 +203,9 @@ Dados: `GET/PUT /api/preferences`, `GET /preferences/stacks`,
 
 Cada item é um passo com teste e revisão antes do próximo.
 
-1. **Base**: dependências, tokens e fontes, layout com menu e tema, rotas
-   vazias, cliente da API, QueryClient, avisos (toast), faixa de API fora do ar.
+1. ✅ **Base**: dependências, tokens e fontes, layout com menu e tema, rotas
+   vazias, cliente da API, QueryClient, avisos (toast), faixa de API fora do ar,
+   "Buscar agora" com o estado das fontes.
 2. **Componentes de vaga**: `ScoreBadge`, `ReasonList`, chips, `Drawer` — com
    testes das faixas de nota.
 3. **Vagas**: grade, filtros na URL, painel, triagem com desfazer, vaga manual.

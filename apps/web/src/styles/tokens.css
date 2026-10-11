@@ -1,0 +1,103 @@
+/*
+ * Tema Noite violeta — mesmos tokens do protótipo (canvas).
+ * Escuro é o padrão; `data-theme` na <html> troca. Ver src/lib/theme.ts.
+ *
+ * Cores de estado (great/good/weak/bad/info) sempre vêm com texto ou símbolo
+ * junto na tela: a cor nunca é a única informação.
+ */
+
+:root,
+:root[data-theme='escuro'] {
+  --bg: #0e0c18;
+  --sidebar: #12101f;
+  --line: #241f3a;
+  --surface: #17142a;
+  --surface2: #1d1933;
+  --column: #13101f;
+  --border: #2a2545;
+  --text: #eeeaf8;
+  --muted: #a49ebe;
+  --soft: #c9c3de;
+  --chip: #221e3a;
+  --chip-text: #d2cce8;
+  --accent: #8b7cf6;
+  --on-accent: #0f0b1f;
+  --accent-soft: #2a2352;
+  --accent-soft-text: #cfc6ff;
+  --input: #12101f;
+  --input-border: #2e2848;
+  --shadow: 0 10px 28px rgb(0 0 0 / 35%);
+  --overlay: rgb(0 0 0 / 50%);
+  --great-bg: #143428;
+  --great-fg: #86e8b6;
+  --great: #3dd68c;
+  --good-bg: #3a2d10;
+  --good-fg: #f4c870;
+  --good: #e0a93a;
+  --weak-bg: #24203a;
+  --weak-fg: #bdb7d3;
+  --weak: #5d5778;
+  --bad-bg: #3a1620;
+  --bad-fg: #ff9baa;
+  --bad: #f0566f;
+  --info-bg: #10283a;
+  --info-fg: #8ccbf5;
+  --info: #38bdf8;
+  --track: #2a2545;
+
+  color-scheme: dark;
+}
+
+:root[data-theme='claro'] {
+  --bg: #f5f5f8;
+  --sidebar: #fff;
+  --line: #e4e3ec;
+  --surface: #fff;
+  --surface2: #f7f6fb;
+  --column: #ecebf2;
+  --border: #e4e3ec;
+  --text: #16131f;
+  --muted: #5e5a6e;
+  --soft: #3d3950;
+  --chip: #f0eff5;
+  --chip-text: #3d3950;
+  --accent: #6d4fe0;
+  --on-accent: #fff;
+  --accent-soft: #ede9fd;
+  --accent-soft-text: #4a33b0;
+  --input: #fff;
+  --input-border: #cfcdda;
+  --shadow: 0 1px 3px rgb(22 19 31 / 7%);
+  --overlay: rgb(22 19 31 / 25%);
+  --great-bg: #e4f4ec;
+  --great-fg: #0e5e3e;
+  --great: #11734b;
+  --good-bg: #fdf0d9;
+  --good-fg: #7a4a00;
+  --good: #c98a1b;
+  --weak-bg: #eeedf3;
+  --weak-fg: #3d3950;
+  --weak: #9a97ab;
+  --bad-bg: #fde8e6;
+  --bad-fg: #a1251b;
+  --bad: #b42318;
+  --info-bg: #e6eefd;
+  --info-fg: #1d3f99;
+  --info: #1d4ed8;
+  --track: #e4e3ec;
+
+  color-scheme: light;
+}
+
+:root {
+  --font-heading: 'Sora Variable', system-ui, sans-serif;
+  --font-body: 'DM Sans Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --radius-sm: 8px;
+  --radius: 10px;
+  --radius-lg: 16px;
+
+  --sidebar-width: 240px;
+  --focus: 0 0 0 3px var(--accent-soft), 0 0 0 4px var(--accent);
+}

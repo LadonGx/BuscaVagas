@@ -61,7 +61,7 @@ Planos: [09 — dados para as telas](features/09-screen-data.md) e
 [10 — frontend](features/10-frontend.md). Tema Noite violeta, escuro e claro.
 
 - [x] Rotas que as telas pedem: contagens, `hasApplication`, próxima busca, painel ([09](features/09-screen-data.md))
-- [ ] Base: menu, tema escuro/claro, rotas, cliente da API, avisos
+- [x] Base: menu, tema escuro/claro, rotas, cliente da API, avisos
 - [ ] **Início**: atalhos, melhores vagas novas, próximas etapas, vagas por dia, funil (JS)
 - [ ] Vagas em cartões com filtros, salvar e descartar (com desfazer) e painel de detalhe com nota e motivos
 - [ ] **Modo deslizar**: direita = salvar, esquerda = descartar, setas do teclado, desfazer (VA)

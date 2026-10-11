@@ -1,0 +1,20 @@
+.status {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--chip);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.line {
+  overflow-wrap: anywhere;
+}
+
+@media (width < 860px) {
+  .status {
+    display: none;
+  }
+}

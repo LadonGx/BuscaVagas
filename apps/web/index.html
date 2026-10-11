@@ -1,9 +1,23 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="escuro">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>busca-vagas</title>
+    <meta name="color-scheme" content="dark light" />
+    <title>BuscaVagas</title>
+    <!--
+      Aplica o tema salvo antes do React montar, para a tela não piscar.
+      Mesma chave e valores de src/lib/theme.ts.
+    -->
+    <script>
+      (function () {
+        var theme = 'escuro';
+        try {
+          if (localStorage.getItem('busca-vagas:tema') === 'claro') theme = 'claro';
+        } catch (error) {}
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 const API_URL = process.env.VITE_API_PROXY ?? 'http://127.0.0.1:3333';
 
@@ -17,5 +17,12 @@ export default defineConfig({
   },
   preview: {
     host: '127.0.0.1',
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.spec.{ts,tsx}'],
+    restoreMocks: true,
+    unstubGlobals: true,
   },
 });

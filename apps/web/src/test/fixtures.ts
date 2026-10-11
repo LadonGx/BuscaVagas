@@ -1,6 +1,7 @@
 import type {
   ApplicationSummaryDto,
   JobCountsDto,
+  JobDto,
   SourceInfoDto,
   SourceRunDto,
 } from '@busca-vagas/shared';
@@ -65,3 +66,40 @@ export const inactiveBoard = (): SourceInfoDto =>
   });
 
 export const healthy = { status: 'ok', checks: { database: 'up', redis: 'up' }, uptimeSeconds: 10 };
+
+export const job = (overrides: Partial<JobDto> = {}): JobDto => ({
+  id: 'job-1',
+  source: 'gupy',
+  externalId: '1',
+  url: 'https://empresa.gupy.io/jobs/1',
+  title: 'Desenvolvedor(a) Full Stack Júnior',
+  company: 'Acme Pagamentos',
+  description: 'Descrição da vaga.',
+  location: 'Campinas, SP',
+  notes: null,
+  workModel: 'hybrid',
+  contractType: 'clt',
+  seniority: 'junior',
+  stack: ['node.js', 'react', 'typescript', 'postgresql'],
+  salaryMin: null,
+  salaryMax: null,
+  salaryCurrency: null,
+  salaryPeriod: null,
+  postedAt: null,
+  firstSeenAt: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+  lastSeenAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  triage: 'inbox',
+  triagedAt: null,
+  dismissReason: null,
+  application: null,
+  score: 912,
+  scoreCoverage: 100,
+  scoreReasons: [
+    { criterion: 'stack', kind: 'plus', text: 'Node.js, React, TypeScript (3 de 4 principais)' },
+    { criterion: 'seniority', kind: 'plus', text: 'Júnior' },
+  ],
+  incompatible: false,
+  scorePending: false,
+  ...overrides,
+});

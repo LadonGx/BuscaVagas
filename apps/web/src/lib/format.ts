@@ -14,6 +14,42 @@ export function formatNumber(value: number): string {
   return numberFormat.format(value);
 }
 
+const PERIOD_SUFFIX: Record<string, string> = { hour: '/h', month: '/mês', year: '/ano' };
+
+function money(value: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(value);
+  } catch {
+    // Moeda que o Intl não conhece: número com o código na frente.
+    return `${currency} ${numberFormat.format(value)}`;
+  }
+}
+
+/** "R$ 4.000 – R$ 6.000/mês", "até R$ 5.000/mês", "a partir de US$ 3.000/ano". */
+export function formatSalary(job: {
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string | null;
+  salaryPeriod: string | null;
+}): string | null {
+  const { salaryMin: min, salaryMax: max } = job;
+  if (min === null && max === null) return null;
+
+  const currency = job.salaryCurrency ?? 'BRL';
+  const suffix = job.salaryPeriod ? (PERIOD_SUFFIX[job.salaryPeriod] ?? '') : '';
+
+  if (min !== null && max !== null && min !== max) {
+    return `${money(min, currency)} – ${money(max, currency)}${suffix}`;
+  }
+  if (min !== null && max !== null) return `${money(min, currency)}${suffix}`;
+  if (max !== null) return `até ${money(max, currency)}${suffix}`;
+  return `a partir de ${money(min as number, currency)}${suffix}`;
+}
+
 /** Duração curta: "menos de 1 min", "45 min", "3 h 58 min", "2 dias". */
 export function formatDuration(ms: number): string {
   const total = Math.max(0, ms);

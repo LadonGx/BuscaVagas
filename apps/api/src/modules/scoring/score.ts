@@ -1,6 +1,8 @@
 import {
+  CONTRACT_LABELS,
   isPreferencesConfigured,
   MAX_SCORE,
+  SENIORITY_LABELS,
   SENIORITY_LEVELS,
   type ContractType,
   type PreferencesValues,
@@ -9,6 +11,7 @@ import {
   type ScoreReason,
   type SeniorityLevel,
   type WorkModel,
+  WORK_MODEL_LABELS,
 } from '@busca-vagas/shared';
 import { fold, stackFromText } from '@busca-vagas/sources';
 
@@ -70,29 +73,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const FRESH_DAYS = 7;
 /** Horas por mês, para comparar salário por hora (22 dias × 8 h). */
 const HOURS_PER_MONTH = 176;
-
-export const SENIORITY_LABELS: Record<SeniorityLevel, string> = {
-  intern: 'Estágio',
-  trainee: 'Trainee',
-  junior: 'Júnior',
-  mid: 'Pleno',
-  senior: 'Sênior',
-  lead: 'Liderança',
-};
-
-export const WORK_MODEL_LABELS: Record<WorkModel, string> = {
-  remote: 'Remota',
-  hybrid: 'Híbrida',
-  onsite: 'Presencial',
-};
-
-export const CONTRACT_LABELS: Record<ContractType, string> = {
-  clt: 'CLT',
-  pj: 'PJ',
-  internship: 'Estágio',
-  temporary: 'Temporário',
-  other: 'Outro contrato',
-};
 
 export function scoreJob(job: ScorableJob, prefs: PreferencesValues, now: Date): ScoreResult {
   if (!isPreferencesConfigured(prefs)) {

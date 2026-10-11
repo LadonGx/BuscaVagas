@@ -39,8 +39,9 @@ apps/web/src/
   components/              peças usadas em mais de uma tela
     layout/  AppLayout, Sidebar (menu + tema), ScanStatus, OfflineBanner, nav.ts
     toast/   ToastProvider + useToast
-    ui/      Button, PageHeader, EmptyState  (depois: IconButton, Pill, Field, Drawer, Dialog…)
-    ScanButton  (depois: ScoreBadge, ReasonList, JobChips, StackChips, StatusChip, CopyButton)
+    ui/      Button, PageHeader, EmptyState, Drawer  (depois: IconButton, Pill, Field, Dialog…)
+    job/     ScoreBadge, ReasonList (+ ReasonLine), Chips (JobChips, StackChips, StatusChip)
+    ScanButton  (depois: CopyButton)
   features/
     inicio/ vagas/ deslizar/ candidaturas/ curriculo/ preferencias/
   lib/
@@ -116,8 +117,10 @@ Dados: `GET /api/jobs` (infinito), `GET /api/jobs/:id` no painel.
 
 - Grade de cartões (`auto-fill, minmax(300px, 1fr)`): empresa, título, nota
   com cobertura, chips (modalidade, local, contrato, senioridade), até 4
-  stacks + "+N", motivo principal em uma linha, status, "há X dias" e ações
-  (salvar, descartar, detalhes, abrir no site).
+  stacks + "+N", até dois motivos (`cardReasons`: o a favor mais importante e
+  o primeiro contra; incompatível mostra só o bloqueio; cobertura abaixo de 60%
+  troca o contra por "nota sobre X% dos critérios"), status, "há X dias" e
+  ações (salvar, descartar, detalhes, abrir no site).
 - Barra: busca (`q`, com 300 ms de espera), modalidade, nota mínima, ordem.
   Pílulas: Caixa · Salvas · Com candidatura (`hasApplication`) · Descartadas,
   com as contagens de `/jobs/counts`. Tudo na URL.
@@ -206,8 +209,10 @@ Cada item é um passo com teste e revisão antes do próximo.
 1. ✅ **Base**: dependências, tokens e fontes, layout com menu e tema, rotas
    vazias, cliente da API, QueryClient, avisos (toast), faixa de API fora do ar,
    "Buscar agora" com o estado das fontes.
-2. **Componentes de vaga**: `ScoreBadge`, `ReasonList`, chips, `Drawer` — com
-   testes das faixas de nota.
+2. ✅ **Componentes de vaga**: `ScoreBadge`, `ReasonList`/`ReasonLine`,
+   `JobChips`, `StackChips`, `StatusChip`, `Drawer` — com testes das faixas de
+   nota. Vitrine com dados de exemplo em `/dev/componentes` (só no
+   `pnpm dev:web`, fica fora do build).
 3. **Vagas**: grade, filtros na URL, painel, triagem com desfazer, vaga manual.
 4. **Deslizar**.
 5. **Candidaturas**: quadro, mover de coluna, linha do tempo.
@@ -217,7 +222,7 @@ Cada item é um passo com teste e revisão antes do próximo.
 
 ## Testes
 
-- `lib/score.ts`: faixas nas bordas e motivo principal (bloqueio > positivo).
+- `lib/score.ts`: faixas nas bordas e motivos do cartão (bloqueio, a favor/contra, cobertura baixa).
 - Triagem otimista: some na hora, volta com erro da API, desfazer chama `inbox`.
 - Deslizar: setas, `Ctrl+Z`, busca a próxima página com 5 restantes.
 - Currículo: copiar campo copia só o valor; salvar envia só o que mudou.

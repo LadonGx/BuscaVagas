@@ -15,6 +15,8 @@ export const routes: RouteObject[] = [
     path: '/',
     element: <AppLayout />,
     errorElement: <RouteError />,
+    // Tela carregada sob demanda (ex.: vitrine do modo dev) aberta direto pela URL.
+    HydrateFallback: () => null,
     children: [
       { index: true, element: <InicioPage /> },
       { path: 'vagas', element: <VagasPage /> },
@@ -23,6 +25,17 @@ export const routes: RouteObject[] = [
       { path: 'candidaturas/:id', element: <CandidaturasPage /> },
       { path: 'curriculo', element: <CurriculoPage /> },
       { path: 'preferencias', element: <PreferenciasPage /> },
+      // Vitrine dos componentes: só no `pnpm dev:web`, fora do build.
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: 'dev/componentes',
+              lazy: async () => ({
+                Component: (await import('./features/dev/ComponentesPage')).ComponentesPage,
+              }),
+            },
+          ]
+        : []),
       { path: '*', element: <NotFoundPage /> },
     ],
   },

@@ -30,3 +30,41 @@ export type TriageStatus = z.infer<typeof triageStatusSchema>;
 
 /** O que a listagem mostra quando o filtro `triage` não é informado. */
 export const DEFAULT_TRIAGE_FILTER: TriageStatus[] = ['inbox', 'saved'];
+
+/* ---------------------------------------------------------------- rótulos */
+/* Texto em PT-BR de cada valor. A nota (API) e as telas usam os mesmos. */
+
+export const WORK_MODEL_LABELS: Record<WorkModel, string> = {
+  remote: 'Remota',
+  hybrid: 'Híbrida',
+  onsite: 'Presencial',
+};
+
+export const CONTRACT_LABELS: Record<ContractType, string> = {
+  clt: 'CLT',
+  pj: 'PJ',
+  internship: 'Estágio',
+  temporary: 'Temporário',
+  other: 'Outro contrato',
+};
+
+export const SENIORITY_LABELS: Record<SeniorityLevel, string> = {
+  intern: 'Estágio',
+  trainee: 'Trainee',
+  junior: 'Júnior',
+  mid: 'Pleno',
+  senior: 'Sênior',
+  lead: 'Liderança',
+};
+
+export const TRIAGE_LABELS: Record<TriageStatus, string> = {
+  inbox: 'Caixa',
+  saved: 'Salva',
+  dismissed: 'Descartada',
+};
+
+export const SALARY_PERIOD_LABELS: Record<SalaryPeriod, string> = {
+  hour: 'hora',
+  month: 'mês',
+  year: 'ano',
+};

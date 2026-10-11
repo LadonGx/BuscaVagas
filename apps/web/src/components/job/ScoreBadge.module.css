@@ -1,0 +1,76 @@
+.badge {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 60px;
+  height: 50px;
+  border-radius: 12px;
+  border: 0;
+}
+
+.badge[data-size='lg'] {
+  width: 84px;
+  height: 64px;
+  gap: 8px;
+}
+
+.value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.badge[data-size='lg'] .value {
+  font-size: 28px;
+}
+
+.track {
+  display: block;
+  width: 38px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.badge[data-size='lg'] .track {
+  width: 56px;
+}
+
+.coverage {
+  display: block;
+  height: 100%;
+  background: currentColor;
+}
+
+.badge[data-tone='great'] {
+  background: var(--great-bg);
+  color: var(--great-fg);
+}
+
+.badge[data-tone='good'] {
+  background: var(--good-bg);
+  color: var(--good-fg);
+}
+
+.badge[data-tone='weak'] {
+  background: var(--weak-bg);
+  color: var(--weak-fg);
+}
+
+.badge[data-tone='bad'] {
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+  border: 1.5px solid var(--bad);
+}
+
+.badge[data-tone='pending'],
+.badge[data-tone='none'] {
+  background: transparent;
+  color: var(--muted);
+  border: 1.5px dashed var(--weak);
+}

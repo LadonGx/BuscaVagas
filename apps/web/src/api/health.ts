@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { ApiError, apiRequest } from './client';
 import { keys } from './keys';
 
@@ -35,4 +36,27 @@ export function useHealth() {
     refetchInterval: (query) =>
       query.state.status === 'error' || query.state.data?.status === 'degraded' ? 5_000 : 30_000,
   });
+}
+
+/**
+ * Quando a API volta (estava fora ou com banco/fila caídos e agora está ok),
+ * busca de novo tudo que está na tela. Sem isso, o que falhou durante a queda
+ * (números do menu, fontes) ficava vazio até trocar de aba.
+ */
+export function useRefetchWhenBackOnline(): void {
+  const queryClient = useQueryClient();
+  const { data, isError } = useHealth();
+  const healthy = !isError && data?.status === 'ok';
+  const wasDown = useRef(false);
+
+  useEffect(() => {
+    if (!healthy && (isError || data)) {
+      wasDown.current = true;
+      return;
+    }
+    if (healthy && wasDown.current) {
+      wasDown.current = false;
+      void queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] !== 'health' });
+    }
+  }, [healthy, isError, data, queryClient]);
 }

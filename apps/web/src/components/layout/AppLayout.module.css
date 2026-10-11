@@ -3,6 +3,12 @@
   min-height: 100vh;
 }
 
+.rail {
+  flex: none;
+  background: var(--sidebar);
+  border-right: 1px solid var(--line);
+}
+
 .main {
   display: flex;
   flex: 1;
@@ -15,6 +21,10 @@
 @media (width < 860px) {
   .app {
     flex-direction: column;
+  }
+
+  .rail {
+    border-right: 0;
   }
 
   .main {

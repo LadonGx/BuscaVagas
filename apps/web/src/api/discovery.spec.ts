@@ -43,6 +43,16 @@ describe('descoberta no front', () => {
     expect(
       describeScan({ queued: [], alreadyQueued: [], inactive: [], unknown: [], terms: [] }),
     ).toBe('Nenhuma fonte ativa para buscar.');
+    // Lista de fontes ainda não carregada: usa o id com inicial maiúscula.
+    expect(
+      describeScan({
+        queued: [{ sourceId: 'gupy', jobId: '1' }],
+        alreadyQueued: [],
+        inactive: [{ sourceId: 'lever', reason: 'x' }],
+        unknown: [],
+        terms: [],
+      }),
+    ).toBe('Buscando em Gupy. Lever está desligada (o motivo aparece em Preferências → Fontes).');
   });
 
   it('rodando e próxima busca', () => {

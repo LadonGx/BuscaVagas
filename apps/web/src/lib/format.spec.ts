@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatAgo, formatDuration, formatNumber, formatUntil } from './format';
+import { formatAgo, formatDuration, formatNumber, formatSalary, formatUntil } from './format';
 
 const NOW = new Date('2026-10-11T15:00:00.000Z');
 const minus = (ms: number) => new Date(NOW.getTime() - ms);
@@ -33,5 +33,29 @@ describe('format', () => {
 
   it('número com separador de milhar', () => {
     expect(formatNumber(12345)).toBe('12.345');
+  });
+});
+
+describe('salário', () => {
+  const salary = (
+    salaryMin: number | null,
+    salaryMax: number | null,
+    salaryCurrency: string | null = 'BRL',
+    salaryPeriod: string | null = 'month',
+  ) => formatSalary({ salaryMin, salaryMax, salaryCurrency, salaryPeriod });
+
+  // O Intl usa espaço especial entre "R$" e o número; normaliza para comparar.
+  const plain = (text: string | null) => text?.replace(/\s/g, ' ');
+
+  it('faixa, só máximo, só mínimo, valor único e sem salário', () => {
+    expect(plain(salary(4000, 6000))).toBe('R$ 4.000 – R$ 6.000/mês');
+    expect(plain(salary(null, 5000))).toBe('até R$ 5.000/mês');
+    expect(plain(salary(3000, null, 'USD', 'year'))).toBe('a partir de US$ 3.000/ano');
+    expect(plain(salary(4500, 4500))).toBe('R$ 4.500/mês');
+    expect(salary(null, null)).toBeNull();
+  });
+
+  it('moeda desconhecida não quebra', () => {
+    expect(plain(salary(100, null, 'XYZ1', null))).toBe('a partir de XYZ1 100');
   });
 });

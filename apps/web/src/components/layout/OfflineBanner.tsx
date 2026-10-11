@@ -1,5 +1,5 @@
 import { TriangleAlert } from 'lucide-react';
-import { useHealth } from '../../api/health';
+import { useHealth, useRefetchWhenBackOnline } from '../../api/health';
 import styles from './OfflineBanner.module.css';
 
 /**
@@ -8,6 +8,7 @@ import styles from './OfflineBanner.module.css';
  */
 export function OfflineBanner() {
   const { data, isError } = useHealth();
+  useRefetchWhenBackOnline();
 
   if (isError) {
     return (

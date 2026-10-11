@@ -8,8 +8,6 @@
   height: 100vh;
   padding: 20px 14px;
   overflow-y: auto;
-  background: var(--sidebar);
-  border-right: 1px solid var(--line);
 }
 
 .brand {
@@ -113,7 +111,6 @@
     width: 100%;
     height: auto;
     padding: 10px 12px;
-    border-right: 0;
     border-bottom: 1px solid var(--line);
   }
 

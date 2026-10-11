@@ -66,7 +66,10 @@ export function describeScan(
   result: ScanResultDto,
   sources: readonly SourceInfoDto[] = [],
 ): string {
-  const name = (id: string) => sources.find((source) => source.id === id)?.displayName ?? id;
+  // Sem a lista de fontes carregada, "gupy" vira "Gupy".
+  const name = (id: string) =>
+    sources.find((source) => source.id === id)?.displayName ??
+    id.charAt(0).toUpperCase() + id.slice(1);
   const parts: string[] = [];
 
   const started = [...result.queued.map((q) => q.sourceId), ...result.alreadyQueued];

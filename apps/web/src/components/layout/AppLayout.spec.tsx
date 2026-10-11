@@ -101,6 +101,27 @@ describe('API fora do ar', () => {
     expect(alert).not.toHaveTextContent('Postgres');
   });
 
+  it('quando a API volta, busca de novo o que tinha falhado (números do menu)', async () => {
+    let online = false;
+    mockApi(
+      baseRoutes({
+        'GET /health': () => {
+          if (!online) throw new TypeError('Failed to fetch');
+          return healthy;
+        },
+        'GET /jobs/counts': () => (online ? counts() : reply(502, {})),
+      }),
+    );
+    const { queryClient } = renderApp('/');
+    expect(await screen.findByRole('alert')).toHaveTextContent('pnpm dev:api');
+    expect(within(nav()).getByRole('link', { name: 'Vagas' })).toBeVisible();
+
+    online = true;
+    await queryClient.invalidateQueries({ queryKey: ['health'] });
+    expect(await within(nav()).findByRole('link', { name: 'Vagas, 142 na caixa' })).toBeVisible();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('tudo no ar: sem faixa', async () => {
     mockApi(baseRoutes());
     renderApp('/');

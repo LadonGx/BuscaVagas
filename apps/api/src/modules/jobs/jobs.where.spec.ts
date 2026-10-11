@@ -48,4 +48,16 @@ describe('buildJobWhere', () => {
     });
     expect(buildJobWhere({ hideIncompatible: false })).toEqual({ AND: [defaultTriage] });
   });
+
+  it('com candidatura: sem triagem padrão, a não ser que seja pedida', () => {
+    expect(buildJobWhere({ hasApplication: true })).toEqual({
+      AND: [{ application: { isNot: null } }],
+    });
+    expect(buildJobWhere({ hasApplication: true, triage: ['saved'] })).toEqual({
+      AND: [{ triage: { in: ['saved'] } }, { application: { isNot: null } }],
+    });
+    expect(buildJobWhere({ hasApplication: false })).toEqual({
+      AND: [defaultTriage, { application: { is: null } }],
+    });
+  });
 });

@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { validateEnv } from './config/env';
 import { HealthModule } from './health/health.module';
 import { ApplicationsModule } from './modules/applications/applications.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
@@ -31,6 +32,7 @@ import { QueueModule } from './queue/queue.module';
     DiscoveryModule,
     PreferencesModule,
     MaintenanceModule,
+    DashboardModule,
   ],
   controllers: [AppController],
 })

@@ -10,12 +10,13 @@ export class AppController {
       docs: 'docs/features/ no repositório; exemplos em apps/api/requests.http',
       health: '/api/health',
       resources: {
-        jobs: '/api/jobs',
+        jobs: '/api/jobs · /api/jobs/counts',
         triage: '/api/jobs/:id/triage · /api/jobs/triage',
         applications: '/api/applications · /api/applications/summary',
         resume: '/api/resume · /api/resume/export',
         discovery: '/api/discovery/sources · /api/discovery/scan · /api/discovery/runs',
         preferences: '/api/preferences · /api/preferences/stacks · /api/preferences/rescore',
+        dashboard: '/api/dashboard',
         maintenance: '/api/maintenance/retention (GET = prévia, POST = rodar agora)',
       },
     };

@@ -2,10 +2,12 @@ import {
   isPreferencesConfigured,
   MANUAL_SOURCE,
   normalizeStack,
+  SCORE_TIER_MIN,
   type BulkTriageInput,
   type BulkTriageResult,
   type CreateJobInput,
   type IngestResult,
+  type JobCountsDto,
   type JobDto,
   type JobListQuery,
   type JobPosting,
@@ -112,6 +114,49 @@ export class JobsService {
     });
 
     return toPage(rows, query.limit, (row) => row.firstSeenAt, toJobDto);
+  }
+
+  /**
+   * Contagens numa consulta só (`count FILTER`). As faixas seguem a mesma
+   * ordem de `scoreTier`: pendente > incompatível > sem nota > faixa.
+   */
+  async counts(): Promise<JobCountsDto> {
+    const { great, good } = SCORE_TIER_MIN;
+    const [row] = await this.prisma.$queryRaw<Record<string, bigint>[]>`
+      WITH visible AS (
+        SELECT *,
+          "scoredVersion" IS NULL AS pending
+        FROM "Job" WHERE triage IN ('inbox', 'saved')
+      )
+      SELECT
+        (SELECT count(*) FROM "Job" WHERE triage = 'inbox') AS inbox,
+        (SELECT count(*) FROM "Job" WHERE triage = 'saved') AS saved,
+        (SELECT count(*) FROM "Job" WHERE triage = 'dismissed') AS dismissed,
+        (SELECT count(*) FROM "Application") AS "withApplication",
+        (SELECT count(*) FROM "Job" WHERE triage = 'inbox' AND NOT incompatible) AS swipeable,
+        count(*) FILTER (WHERE pending) AS pending,
+        count(*) FILTER (WHERE NOT pending AND incompatible) AS incompatible,
+        count(*) FILTER (WHERE NOT pending AND NOT incompatible AND score IS NULL) AS unscored,
+        count(*) FILTER (WHERE NOT pending AND NOT incompatible AND score >= ${great}) AS great,
+        count(*) FILTER (WHERE NOT pending AND NOT incompatible AND score >= ${good} AND score < ${great}) AS good,
+        count(*) FILTER (WHERE NOT pending AND NOT incompatible AND score < ${good}) AS weak
+      FROM visible
+    `;
+    const n = (key: string) => Number(row?.[key] ?? 0);
+
+    return {
+      triage: { inbox: n('inbox'), saved: n('saved'), dismissed: n('dismissed') },
+      withApplication: n('withApplication'),
+      score: {
+        great: n('great'),
+        good: n('good'),
+        weak: n('weak'),
+        incompatible: n('incompatible'),
+        pending: n('pending'),
+        unscored: n('unscored'),
+      },
+      swipeable: n('swipeable'),
+    };
   }
 
   async get(id: string): Promise<JobDto> {

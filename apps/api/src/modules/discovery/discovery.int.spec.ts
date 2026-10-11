@@ -70,6 +70,8 @@ const boardSource: JobSource = {
 const queue = {
   add: vi.fn(async (_name: string, data: { sourceId: string }) => ({ id: `job-${data.sourceId}` })),
   getDeduplicationJobId: vi.fn(async (_id: string): Promise<string | null> => null),
+  getJobSchedulers: vi.fn(async (): Promise<{ key: string; next?: number }[]> => []),
+  getJobs: vi.fn(async (): Promise<{ data: { sourceId: string } }[]> => []),
 };
 
 const http: HttpClient = { getJson: async () => ({}), getText: async () => '' };
@@ -118,6 +120,8 @@ describeDb('Descoberta (integração)', () => {
     boardQueries.length = 0;
     queue.add.mockClear();
     queue.getDeduplicationJobId.mockReset().mockResolvedValue(null);
+    queue.getJobSchedulers.mockReset().mockResolvedValue([]);
+    queue.getJobs.mockReset().mockResolvedValue([]);
   });
 
   const api = () => request(t.http);
@@ -186,6 +190,8 @@ describeDb('Descoberta (integração)', () => {
         active: true,
         reason: null,
         lastRun: null,
+        nextRunAt: null,
+        running: false,
       },
       {
         id: 'board',
@@ -194,6 +200,8 @@ describeDb('Descoberta (integração)', () => {
         active: true,
         reason: null,
         lastRun: null,
+        nextRunAt: null,
+        running: false,
       },
       {
         id: 'parado',
@@ -202,6 +210,8 @@ describeDb('Descoberta (integração)', () => {
         active: false,
         reason: 'PARADO_COMPANIES vazio — nenhuma empresa para buscar',
         lastRun: null,
+        nextRunAt: null,
+        running: false,
       },
     ]);
 
@@ -211,6 +221,37 @@ describeDb('Descoberta (integração)', () => {
 
     sources = (await api().get('/api/discovery/sources').expect(200)).body;
     expect(sources[0]?.lastRun?.terms).toEqual(['b']);
+  });
+
+  it('GET /discovery/sources traz a próxima busca agendada e o que está rodando', async () => {
+    const next = Date.parse('2026-10-11T18:00:00.000Z');
+    queue.getJobSchedulers.mockResolvedValue([
+      { key: 'schedule:fake', next },
+      { key: 'schedule:outra-coisa', next: next + 1 },
+    ]);
+    queue.getJobs.mockResolvedValue([{ data: { sourceId: 'board' } }]);
+
+    const sources = (await api().get('/api/discovery/sources').expect(200)).body as SourceInfoDto[];
+    expect(sources.map(({ id, nextRunAt, running }) => ({ id, nextRunAt, running }))).toEqual([
+      { id: 'fake', nextRunAt: '2026-10-11T18:00:00.000Z', running: false },
+      { id: 'board', nextRunAt: null, running: true },
+      { id: 'parado', nextRunAt: null, running: false },
+    ]);
+    expect(queue.getJobs).toHaveBeenCalledWith(['waiting', 'active', 'prioritized']);
+  });
+
+  it('GET /discovery/sources responde mesmo com a fila fora do ar', async () => {
+    queue.getJobSchedulers.mockRejectedValue(new Error('Connection is closed.'));
+    const sources = (await api().get('/api/discovery/sources').expect(200)).body as SourceInfoDto[];
+    expect(sources.every((source) => source.nextRunAt === null && !source.running)).toBe(true);
+  });
+
+  it('GET /discovery/sources não espera uma fila que não responde', async () => {
+    queue.getJobSchedulers.mockReturnValue(new Promise(() => {}));
+    const started = Date.now();
+    const sources = (await api().get('/api/discovery/sources').expect(200)).body as SourceInfoDto[];
+    expect(Date.now() - started).toBeLessThan(4_000);
+    expect(sources[0]?.running).toBe(false);
   });
 
   it('POST /discovery/scan enfileira com os termos do .env ou os pedidos', async () => {
@@ -274,14 +315,23 @@ describeDb('Descoberta (integração)', () => {
     await runner.run('fake', ['primeira'], 'manual');
     await runner.run('fake', ['segunda'], 'schedule');
 
+    // Referência: tudo numa página. Comparar objetos inteiros faz a diferença,
+    // se houver, mostrar id e startedAt — o que importa num erro de cursor.
+    const all = (await api().get('/api/discovery/runs?limit=10').expect(200))
+      .body as Page<SourceRunDto>;
+    expect(all.items.map((run) => run.terms[0])).toEqual(['segunda', 'primeira']);
+
     const first = (await api().get('/api/discovery/runs?limit=1').expect(200))
       .body as Page<SourceRunDto>;
-    expect(first.items.map((run) => run.terms[0])).toEqual(['segunda']);
+    expect(first.items).toEqual(all.items.slice(0, 1));
 
     const second = (
       await api().get(`/api/discovery/runs?limit=1&cursor=${first.nextCursor}`).expect(200)
     ).body as Page<SourceRunDto>;
-    expect(second.items.map((run) => run.terms[0])).toEqual(['primeira']);
+    expect({ cursor: first.nextCursor, items: second.items }).toEqual({
+      cursor: first.nextCursor,
+      items: all.items.slice(1, 2),
+    });
     expect(second.nextCursor).toBeNull();
 
     const none = (await api().get('/api/discovery/runs?sourceId=gupy').expect(200)).body;

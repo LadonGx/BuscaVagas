@@ -219,3 +219,18 @@ GET {{api}}/maintenance/retention
 
 ### Rodar a limpeza agora
 POST {{api}}/maintenance/retention
+
+############################################################ Dados para as telas
+# docs/features/09-screen-data.md
+
+### Contagens: triagem, faixas da nota, número do Deslizar
+GET {{api}}/jobs/counts
+
+### Vagas com candidatura (qualquer triagem)
+GET {{api}}/jobs?hasApplication=true
+
+### Fontes com a próxima busca agendada e se estão rodando
+GET {{api}}/discovery/sources
+
+### Painel do Início
+GET {{api}}/dashboard

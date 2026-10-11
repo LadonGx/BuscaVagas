@@ -127,6 +127,14 @@ export const jobListQuerySchema = pageQuerySchema.extend({
     .enum(['true', 'false'])
     .transform((value) => value === 'true')
     .optional(),
+  /**
+   * `true` = só vagas com candidatura; `false` = só sem. Com `true` e sem
+   * `triage`, o filtro padrão de triagem não se aplica.
+   */
+  hasApplication: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .optional(),
 });
 export type JobListQuery = z.output<typeof jobListQuerySchema>;
 
@@ -200,4 +208,43 @@ export interface BulkTriageResult {
   updated: number;
   /** Ids não alterados: inexistentes ou com candidatura (não podem ser descartados). */
   skipped: string[];
+}
+
+/* ------------------------------------------------------- faixas da nota */
+
+/** Limites das faixas da nota. Front (cor do selo) e `/jobs/counts` usam os mesmos. */
+export const SCORE_TIER_MIN = { great: 800, good: 600 } as const;
+
+export const SCORE_TIERS = [
+  'great',
+  'good',
+  'weak',
+  'incompatible',
+  'pending',
+  'unscored',
+] as const;
+export type ScoreTier = (typeof SCORE_TIERS)[number];
+
+/**
+ * Faixa de uma vaga. A ordem importa: nota na fila vem antes de tudo (a nota
+ * antiga pode estar desatualizada), depois incompatível, depois sem nota.
+ */
+export function scoreTier(job: Pick<JobDto, 'score' | 'incompatible' | 'scorePending'>): ScoreTier {
+  if (job.scorePending) return 'pending';
+  if (job.incompatible) return 'incompatible';
+  if (job.score === null) return 'unscored';
+  if (job.score >= SCORE_TIER_MIN.great) return 'great';
+  if (job.score >= SCORE_TIER_MIN.good) return 'good';
+  return 'weak';
+}
+
+/** `GET /api/jobs/counts` — números do menu e da prévia das preferências. */
+export interface JobCountsDto {
+  triage: Record<TriageStatus, number>;
+  /** Vagas com candidatura (qualquer status). */
+  withApplication: number;
+  /** Faixas da nota, só caixa + salvas (o que ainda aparece na lista). */
+  score: Record<ScoreTier, number>;
+  /** Caixa de entrada sem as incompatíveis — o número do Deslizar. */
+  swipeable: number;
 }

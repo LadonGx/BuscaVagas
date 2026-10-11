@@ -57,12 +57,17 @@ Planos detalhados de cada feature: [`docs/features/`](features/README.md).
 
 ## Fase 2 — Frontend
 
-- [ ] Lista de vagas com filtros, salvar e descartar (com desfazer)
+Planos: [09 — dados para as telas](features/09-screen-data.md) e
+[10 — frontend](features/10-frontend.md). Tema Noite violeta, escuro e claro.
+
+- [x] Rotas que as telas pedem: contagens, `hasApplication`, próxima busca, painel ([09](features/09-screen-data.md))
+- [ ] Base: menu, tema escuro/claro, rotas, cliente da API, avisos
+- [ ] **Início**: atalhos, melhores vagas novas, próximas etapas, vagas por dia, funil (JS)
+- [ ] Vagas em cartões com filtros, salvar e descartar (com desfazer) e painel de detalhe com nota e motivos
 - [ ] **Modo deslizar**: direita = salvar, esquerda = descartar, setas do teclado, desfazer (VA)
-- [ ] Detalhe da vaga com nota, motivos e stack detectada
 - [ ] Candidaturas: quadro por status e linha do tempo
-- [ ] **Gaveta do currículo**: blocos com botão de copiar e edição no lugar (VA)
-- [ ] Preferências de busca e lista de empresas acompanhadas (hoje no `.env`: `*_COMPANIES`)
+- [ ] **Currículo** em formulário com copiar por campo, "Ver e salvar PDF" e a caixa de importar PDF (só visual) (JT)
+- [ ] Preferências de busca, estado das fontes e prévia da limpeza
 
 ## Fase 3 — Ajustes e melhorias
 

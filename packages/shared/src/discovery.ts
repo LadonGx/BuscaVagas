@@ -62,6 +62,10 @@ export interface SourceInfoDto {
   active: boolean;
   reason: string | null;
   lastRun: SourceRunDto | null;
+  /** Próxima execução agendada. `null` = inativa, sem agenda ou fila fora do ar. */
+  nextRunAt: string | null;
+  /** Há um job desta fonte esperando ou rodando agora. */
+  running: boolean;
 }
 
 /** Fonte pedida (ou existente) que não rodou, e por quê. */

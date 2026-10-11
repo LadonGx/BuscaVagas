@@ -4,6 +4,7 @@ import {
   createJobInputSchema,
   jobListQuerySchema,
   normalizeStack,
+  scoreTier,
   triageInputSchema,
   updateJobInputSchema,
 } from './jobs';
@@ -90,5 +91,40 @@ describe('triagem', () => {
 
   it('filtro de triagem na listagem', () => {
     expect(jobListQuerySchema.parse({ triage: 'dismissed' }).triage).toEqual(['dismissed']);
+  });
+});
+
+describe('jobListQuerySchema.hasApplication', () => {
+  it('converte o texto e fica ausente quando não informado', () => {
+    expect(jobListQuerySchema.parse({ hasApplication: 'true' }).hasApplication).toBe(true);
+    expect(jobListQuerySchema.parse({ hasApplication: 'false' }).hasApplication).toBe(false);
+    expect(jobListQuerySchema.parse({}).hasApplication).toBeUndefined();
+    expect(jobListQuerySchema.safeParse({ hasApplication: 'sim' }).success).toBe(false);
+  });
+});
+
+describe('scoreTier', () => {
+  const job = (
+    score: number | null,
+    extra: { incompatible?: boolean; scorePending?: boolean } = {},
+  ) => ({
+    score,
+    incompatible: extra.incompatible ?? false,
+    scorePending: extra.scorePending ?? false,
+  });
+
+  it('faixas nas bordas', () => {
+    expect(scoreTier(job(1000))).toBe('great');
+    expect(scoreTier(job(800))).toBe('great');
+    expect(scoreTier(job(799))).toBe('good');
+    expect(scoreTier(job(600))).toBe('good');
+    expect(scoreTier(job(599))).toBe('weak');
+    expect(scoreTier(job(0))).toBe('weak');
+  });
+
+  it('pendente vem antes de tudo; depois incompatível; depois sem nota', () => {
+    expect(scoreTier(job(900, { scorePending: true, incompatible: true }))).toBe('pending');
+    expect(scoreTier(job(0, { incompatible: true }))).toBe('incompatible');
+    expect(scoreTier(job(null))).toBe('unscored');
   });
 });

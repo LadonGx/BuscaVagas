@@ -129,8 +129,10 @@ exist...`). Desde o Prisma 7, `migrate dev` não regenera o client. `pnpm dev:ap
 e `pnpm test` já rodam `pnpm db:generate` antes; em outro caso, rode-o à mão.
 
 **Mexi em `packages/shared` ou `packages/sources` e a API não viu.** A API usa
-o código compilado deles (`dist/`). `pnpm dev:api` recompila os pacotes ao
-subir; se a API já estiver rodando, rode `pnpm build:packages` e reinicie.
+o código compilado deles (`dist/`). `pnpm dev:api` e `pnpm test` recompilam os
+pacotes antes; se a API já estiver rodando, rode `pnpm build:packages` e
+reinicie. Sintoma típico nos testes: `Cannot read properties of undefined`
+numa constante nova do `shared`, ou um filtro novo sendo ignorado.
 (`pnpm --filter @busca-vagas/sources try` lê o código-fonte direto, por isso
 pode funcionar enquanto a API ainda usa a versão antiga.)
 

@@ -7,6 +7,7 @@ import {
   type BulkTriageInput,
   type BulkTriageResult,
   type CreateJobInput,
+  type JobCountsDto,
   type JobDto,
   type JobListQuery,
   type Page,
@@ -53,6 +54,12 @@ export class JobsController {
     @Query(new ZodValidationPipe(jobListQuerySchema)) query: JobListQuery,
   ): Promise<Page<JobDto>> {
     return this.jobs.list(query);
+  }
+
+  /** Contagens para o menu e a prévia das preferências. Antes de ':id'. */
+  @Get('counts')
+  counts(): Promise<JobCountsDto> {
+    return this.jobs.counts();
   }
 
   @Get(':id')

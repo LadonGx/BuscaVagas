@@ -19,12 +19,23 @@ import { QUEUES } from '../../queue/queue.constants';
 import {
   SCAN_JOB_NAME,
   scanDedupId,
+  schedulerId,
   SOURCES,
   UNAVAILABLE_SOURCES,
   type ScanJobData,
   type UnavailableSource,
 } from './discovery.constants';
 import { toSourceRunDto } from './discovery.mapper';
+
+/** Fila fora do ar não pode travar a lista de fontes: desiste depois disso. */
+const QUEUE_STATE_TIMEOUT_MS = 1_500;
+
+interface QueueState {
+  /** Próxima execução agendada por fonte (ms). */
+  nextRun: Map<string, number>;
+  /** Fontes com job esperando ou rodando. */
+  running: Set<string>;
+}
 
 /**
  * Fachada da descoberta para a API: listar fontes, enfileirar varreduras e
@@ -49,16 +60,22 @@ export class DiscoveryService {
       distinct: ['sourceId'],
     });
     const lastBySource = new Map(lastRuns.map((run) => [run.sourceId, toSourceRunDto(run)]));
+    const state = await this.queueState();
 
     return [
-      ...this.sources.map((source) => ({
-        id: source.id,
-        displayName: source.displayName,
-        kind: source.kind,
-        active: true,
-        reason: null,
-        lastRun: lastBySource.get(source.id) ?? null,
-      })),
+      ...this.sources.map((source) => {
+        const next = state.nextRun.get(source.id);
+        return {
+          id: source.id,
+          displayName: source.displayName,
+          kind: source.kind,
+          active: true,
+          reason: null,
+          lastRun: lastBySource.get(source.id) ?? null,
+          nextRunAt: next ? new Date(next).toISOString() : null,
+          running: state.running.has(source.id),
+        };
+      }),
       ...this.unavailable.map((source) => ({
         id: source.id,
         displayName: source.displayName,
@@ -66,8 +83,49 @@ export class DiscoveryService {
         active: false,
         reason: source.reason,
         lastRun: lastBySource.get(source.id) ?? null,
+        nextRunAt: null,
+        running: false,
       })),
     ];
+  }
+
+  /**
+   * Agenda e jobs em andamento, lidos do Redis. Os agendados ficam como
+   * `delayed` até a hora — por isso só `waiting`/`active`/`prioritized`
+   * contam como "rodando". Sem Redis, devolve vazio em vez de falhar.
+   */
+  private async queueState(): Promise<QueueState> {
+    const empty: QueueState = { nextRun: new Map(), running: new Set() };
+    const bySchedulerId = new Map(
+      this.sources.map((source) => [schedulerId(source.id), source.id]),
+    );
+
+    const read = async (): Promise<QueueState> => {
+      const [schedulers, jobs] = await Promise.all([
+        this.queue.getJobSchedulers(0, -1),
+        this.queue.getJobs(['waiting', 'active', 'prioritized']),
+      ]);
+      const nextRun = new Map<string, number>();
+      for (const scheduler of schedulers) {
+        const sourceId = bySchedulerId.get(scheduler.key);
+        if (sourceId && scheduler.next) nextRun.set(sourceId, scheduler.next);
+      }
+      const running = new Set(jobs.filter(Boolean).map((job) => job.data.sourceId));
+      return { nextRun, running };
+    };
+
+    let timer: NodeJS.Timeout | undefined;
+    const timeout = new Promise<QueueState>((resolve) => {
+      timer = setTimeout(() => resolve(empty), QUEUE_STATE_TIMEOUT_MS);
+    });
+
+    try {
+      return await Promise.race([read(), timeout]);
+    } catch {
+      return empty;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   async scan(input: ScanInput): Promise<ScanResultDto> {

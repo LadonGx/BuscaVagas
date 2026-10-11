@@ -14,10 +14,16 @@ export function buildJobWhere(
   query: Omit<JobListQuery, 'limit' | 'cursor'>,
   now: Date = new Date(),
 ): Prisma.JobWhereInput {
-  const and: Prisma.JobWhereInput[] = [
-    // Descartadas ficam fora, a não ser que sejam pedidas.
-    { triage: { in: query.triage ?? DEFAULT_TRIAGE_FILTER } },
-  ];
+  const and: Prisma.JobWhereInput[] = [];
+
+  // Descartadas ficam fora, a não ser que sejam pedidas. "Com candidatura"
+  // sem triagem explícita mostra todas: a candidatura é o que importa ali.
+  const triage = query.triage ?? (query.hasApplication === true ? null : DEFAULT_TRIAGE_FILTER);
+  if (triage) and.push({ triage: { in: triage } });
+
+  if (query.hasApplication !== undefined) {
+    and.push({ application: query.hasApplication ? { isNot: null } : { is: null } });
+  }
 
   if (query.q) {
     and.push({

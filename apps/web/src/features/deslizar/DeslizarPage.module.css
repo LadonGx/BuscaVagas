@@ -1,0 +1,147 @@
+.tally {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.tally strong {
+  color: var(--text);
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.progress {
+  width: 100%;
+  max-width: 600px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--track);
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 200ms ease-out;
+}
+
+.deck {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+/* A próxima vaga, aparecendo por trás. */
+.behind {
+  position: absolute;
+  inset: 16px 16px -12px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  opacity: 0.5;
+}
+
+.placeholder {
+  width: 100%;
+  max-width: 600px;
+  height: 480px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+}
+
+.wide {
+  width: 100%;
+  max-width: 600px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.round {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border: 1px solid var(--input-border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--soft);
+  transition:
+    transform 120ms,
+    border-color 120ms;
+}
+
+.round:not(:disabled):hover {
+  transform: scale(1.05);
+}
+
+.round:disabled {
+  opacity: 0.45;
+}
+
+.round[data-kind='dismiss'] {
+  color: var(--bad-fg);
+}
+
+.round[data-kind='dismiss']:not(:disabled):hover {
+  border-color: var(--bad);
+}
+
+.round[data-kind='undo'] {
+  width: 48px;
+  height: 48px;
+}
+
+.round[data-kind='save'] {
+  border: 0;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.keys {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.keys kbd {
+  padding: 1px 6px;
+  border: 1px solid var(--input-border);
+  border-radius: 5px;
+  background: var(--chip);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.last {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 600px;
+  padding: 8px 8px 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--chip);
+  font-size: 14px;
+}
+
+.last button {
+  flex: none;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+}

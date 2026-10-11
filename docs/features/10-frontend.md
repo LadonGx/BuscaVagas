@@ -155,14 +155,22 @@ Dados: `GET /api/jobs` (infinito), `GET /api/jobs/:id` no painel.
 
 ### Deslizar — `/deslizar`
 
-Dados: `GET /api/jobs?triage=inbox&sort=score&hideIncompatible=true`.
+Dados: `GET /api/jobs?triage=inbox&hideIncompatible=true` (ordem automática:
+pela nota com preferências, senão pela entrada no app).
 
 - Um cartão por vez, com a próxima por trás; barra de progresso; contadores
   de salvas e descartadas da sessão.
 - `→` salva, `←` descarta, `↑` ou espaço abre o detalhe, `Ctrl+Z` desfaz.
   Botões grandes fazem o mesmo. Arrastar o cartão com mouse ou toque também
   (limite de 120 px; animação desligada com `prefers-reduced-motion`).
-- Desfazer guarda as últimas 20 ações da sessão (pilha local).
+- Desfazer guarda as últimas 20 ações da sessão (pilha local) e volta a vaga
+  exatamente como estava; ela reaparece como atual. A última ação fica numa
+  linha "Salva: … · Desfazer" (sem aviso a cada vaga, para não poluir).
+- A triagem é a mesma otimista da tela de Vagas: a vaga sai da caixa na hora,
+  então a atual é sempre a primeira da lista. Tecla repetida rápido não manda
+  a mesma vaga duas vezes; erro da API devolve a vaga e mostra o aviso.
+- Com o painel de detalhe aberto, as setas não triam (atalhos ficam
+  desligados com diálogo na frente ou digitando num campo — `useHotkeys`).
 - Busca a próxima página quando faltam 5 cartões. Caixa vazia mostra
   "Tudo triado" e a hora da próxima busca.
 
@@ -235,7 +243,7 @@ Cada item é um passo com teste e revisão antes do próximo.
    nota. Vitrine com dados de exemplo em `/dev/componentes` (só no
    `pnpm dev:web`, fica fora do build).
 3. ✅ **Vagas**: grade, filtros na URL, painel, triagem com desfazer, vaga manual.
-4. **Deslizar**.
+4. ✅ **Deslizar**.
 5. **Candidaturas**: quadro, mover de coluna, linha do tempo.
 6. **Currículo**: formulário, copiar, salvar, impressão.
 7. **Preferências**: formulário, fontes, histórico, limpeza.

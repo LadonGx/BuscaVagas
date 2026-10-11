@@ -1,0 +1,101 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 600px;
+  min-height: 480px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  touch-action: pan-y;
+  user-select: none;
+  cursor: grab;
+  transition:
+    transform 180ms ease-out,
+    border-color 120ms;
+}
+
+.card[data-dragging] {
+  cursor: grabbing;
+  transition: none;
+}
+
+.card[data-intent='save'] {
+  border-color: var(--great);
+}
+
+.card[data-intent='dismiss'] {
+  border-color: var(--bad);
+}
+
+.stamp {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  padding: 4px 14px;
+  border: 2px solid currentColor;
+  border-radius: 10px;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  transform: translateX(-50%);
+}
+
+.card[data-intent='save'] .stamp {
+  color: var(--great-fg);
+  background: var(--great-bg);
+}
+
+.card[data-intent='dismiss'] .stamp {
+  color: var(--bad-fg);
+  background: var(--bad-bg);
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.company,
+.meta {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.title {
+  font-size: 25px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.excerpt {
+  flex-grow: 1;
+  color: var(--soft);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.more {
+  align-self: flex-start;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+}

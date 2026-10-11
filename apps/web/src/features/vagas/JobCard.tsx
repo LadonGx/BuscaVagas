@@ -62,7 +62,7 @@ export function JobCard({ job, now, onOpen, onTriage }: JobCardProps) {
         <time
           className={styles.date}
           dateTime={date}
-          title={new Date(date).toLocaleString('pt-BR')}
+          title={`${job.postedAt ? 'Publicada' : 'Entrou no app'} em ${new Date(date).toLocaleString('pt-BR')}`}
         >
           {formatAgo(date, now)}
         </time>

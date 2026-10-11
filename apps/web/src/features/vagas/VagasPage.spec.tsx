@@ -247,6 +247,6 @@ describe('Vagas', () => {
     });
     renderApp('/vagas');
     expect(await screen.findByText(/Sem preferências, as vagas não têm nota/)).toBeVisible();
-    expect(screen.getByText(/ordenadas pelas mais recentes/)).toBeVisible();
+    expect(screen.getByText(/pela ordem em que entraram no app/)).toBeVisible();
   });
 });

@@ -107,7 +107,7 @@ export function VagasToolbar(props: VagasToolbarProps) {
           >
             <option value="">Ordem automática</option>
             <option value="score">Melhor nota</option>
-            <option value="recent">Mais recentes</option>
+            <option value="recent">Entrada mais recente</option>
           </select>
         </label>
 

@@ -59,7 +59,7 @@ export function VagasPage() {
   const effectiveSort = filters.sort ?? (scoreOn ? 'score' : 'recent');
   const subtitle = [
     counts && `${formatNumber(counts.triage.inbox)} na caixa`,
-    effectiveSort === 'score' ? 'ordenadas pela sua nota' : 'ordenadas pelas mais recentes',
+    effectiveSort === 'score' ? 'ordenadas pela sua nota' : 'pela ordem em que entraram no app',
   ]
     .filter(Boolean)
     .join(' · ');

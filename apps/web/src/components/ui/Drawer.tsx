@@ -12,6 +12,8 @@ interface DrawerProps {
   eyebrow?: ReactNode;
   /** Botões fixos no rodapé do painel. */
   footer?: ReactNode;
+  /** `side` = painel à direita (padrão); `center` = diálogo no meio da tela. */
+  placement?: 'side' | 'center';
   children: ReactNode;
 }
 
@@ -23,7 +25,15 @@ const FOCUSABLE =
  * entra no painel, Tab circula dentro dele, Esc ou clicar fora fecha, e ao
  * fechar o foco volta para quem abriu.
  */
-export function Drawer({ open, onClose, title, eyebrow, footer, children }: DrawerProps) {
+export function Drawer({
+  open,
+  onClose,
+  title,
+  eyebrow,
+  footer,
+  placement = 'side',
+  children,
+}: DrawerProps) {
   const titleId = useId();
   const panel = useRef<HTMLElement>(null);
   const onCloseRef = useRef(onClose);
@@ -79,6 +89,7 @@ export function Drawer({ open, onClose, title, eyebrow, footer, children }: Draw
       <aside
         ref={panel}
         className={styles.panel}
+        data-placement={placement}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

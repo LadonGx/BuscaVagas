@@ -63,7 +63,7 @@ Planos: [09 — dados para as telas](features/09-screen-data.md) e
 - [x] Rotas que as telas pedem: contagens, `hasApplication`, próxima busca, painel ([09](features/09-screen-data.md))
 - [x] Base: menu, tema escuro/claro, rotas, cliente da API, avisos
 - [ ] **Início**: atalhos, melhores vagas novas, próximas etapas, vagas por dia, funil (JS)
-- [ ] Vagas em cartões com filtros, salvar e descartar (com desfazer) e painel de detalhe com nota e motivos
+- [x] Vagas em cartões com filtros, salvar e descartar (com desfazer) e painel de detalhe com nota e motivos
 - [ ] **Modo deslizar**: direita = salvar, esquerda = descartar, setas do teclado, desfazer (VA)
 - [ ] Candidaturas: quadro por status e linha do tempo
 - [ ] **Currículo** em formulário com copiar por campo, "Ver e salvar PDF" e a caixa de importar PDF (só visual) (JT)

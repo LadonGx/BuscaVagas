@@ -1,0 +1,126 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 250px;
+  padding: 19px 16px 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+/* Faixa fina no topo com a cor da nota. */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--weak);
+}
+
+.card[data-tone='great']::before {
+  background: var(--great);
+}
+
+.card[data-tone='good']::before {
+  background: var(--good);
+}
+
+.card[data-tone='bad']::before {
+  background: var(--bad);
+}
+
+.card[data-dim] {
+  opacity: 0.72;
+}
+
+.card:hover {
+  border-color: var(--input-border);
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.company {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.titleWrap {
+  font-size: inherit;
+}
+
+.title {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.title:hover {
+  color: var(--accent);
+}
+
+.note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.date {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  gap: 2px;
+}
+
+.iconButton {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.iconButton:hover {
+  background: var(--chip);
+  color: var(--text);
+}
+
+.iconButton[data-active] {
+  color: var(--accent);
+}

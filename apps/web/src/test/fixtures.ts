@@ -103,3 +103,29 @@ export const job = (overrides: Partial<JobDto> = {}): JobDto => ({
   scorePending: false,
   ...overrides,
 });
+
+export const preferences = (configured = true) => ({
+  stacksCore: configured ? ['node.js'] : [],
+  stacksPlus: [],
+  stacksAvoid: [],
+  seniorities: [],
+  workModels: [],
+  cities: [],
+  contractTypes: [],
+  maxAgeDays: null,
+  minMonthlySalary: null,
+  blockedCompanies: [],
+  configured,
+  version: 1,
+  updatedAt: null,
+  unknownStacks: [],
+});
+
+/** O que o layout (menu, rodapé, faixa) busca em toda tela. */
+export const layoutRoutes = () => ({
+  'GET /health': () => healthy,
+  'GET /jobs/counts': () => counts(),
+  'GET /applications/summary': () => summary(),
+  'GET /discovery/sources': () => [source(), inactiveBoard()],
+  'GET /preferences': () => preferences(),
+});

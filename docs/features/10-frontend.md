@@ -121,16 +121,37 @@ Dados: `GET /api/jobs` (infinito), `GET /api/jobs/:id` no painel.
   o primeiro contra; incompatível mostra só o bloqueio; cobertura abaixo de 60%
   troca o contra por "nota sobre X% dos critérios"), status, "há X dias" e
   ações (salvar, descartar, detalhes, abrir no site).
-- Barra: busca (`q`, com 300 ms de espera), modalidade, nota mínima, ordem.
-  Pílulas: Caixa · Salvas · Com candidatura (`hasApplication`) · Descartadas,
-  com as contagens de `/jobs/counts`. Tudo na URL.
-- Painel lateral (`Drawer`): nota grande, cobertura, motivos com + − ? ×,
-  stack, descrição em texto (quebras de linha mantidas), e Salvar /
-  Me candidatei / Descartar… (motivo opcional).
-- "Me candidatei" cria a candidatura (`POST /applications`) e oferece ir para
-  Candidaturas.
+- Barra: busca (`q`, com 300 ms de espera), modalidade, nota mínima, ordem,
+  "Esconder incompatíveis". Pílulas: Caixa · Salvas · Com candidatura
+  (`hasApplication`) · Descartadas, com as contagens de `/jobs/counts`.
+- **Tudo na URL**, em português: `aba` (`salvas`, `candidatura`,
+  `descartadas`; ausente = caixa), `busca`, `modelo` (`remote,hybrid`), `nota`,
+  `ordem` (`nota`/`recentes`), `incompativeis=ocultar` e `vaga=<id>` (painel
+  aberto). Ex.: `/vagas?aba=salvas&modelo=remote&nota=700`.
+- Ações do cartão: Salvar (ou Tirar dos salvos), Descartar (some se a vaga tem
+  candidatura — a API recusa), Voltar para a caixa (na aba Descartadas),
+  detalhes e abrir no site em nova aba.
+- Triagem otimista (`useTriageAction`, reaproveitado no Deslizar): o cartão
+  sai da aba na hora; o aviso "Vaga salva · Desfazer" volta exatamente ao
+  estado anterior (caixa ou salva, com o motivo de descarte se havia). Se a API
+  recusar, o cartão volta e o erro aparece.
+- Painel lateral (`?vaga=`): nota grande, cobertura e situação, chips, motivos
+  com + − ? ×, stack detectada, descrição como **texto puro** (conteúdo
+  externo nunca vira HTML), link para o site. Rodapé: Salvar / Tirar dos
+  salvos, Me candidatei (ou Ver candidatura) e Descartar… com motivo opcional
+  e sugestões de um clique (Presencial, Sênior demais, Stack diferente,
+  Salário baixo).
+- "Me candidatei" cria a candidatura (`POST /applications`) e o aviso oferece
+  abrir Candidaturas.
 - "+ Vaga manual": diálogo com título, empresa, link, local, modalidade,
-  contrato, senioridade e notas, validado com `createJobInputSchema`.
+  contrato, senioridade, stack (separada por vírgula) e anotações, validado
+  com `createJobInputSchema` antes de enviar; link repetido (409) vira mensagem
+  no próprio formulário. Ao criar, abre a vaga no painel.
+- Notas pendentes: enquanto alguma vaga da página está com `scorePending`, a
+  lista recarrega a cada 3 s. Sem preferências, um aviso explica que não há
+  nota e a ordem é por data.
+- Rolagem infinita (30 por página) com "Carregar mais" de reserva; estados
+  vazios diferentes para cada aba e para "nada com esses filtros".
 
 ### Deslizar — `/deslizar`
 
@@ -213,7 +234,7 @@ Cada item é um passo com teste e revisão antes do próximo.
    `JobChips`, `StackChips`, `StatusChip`, `Drawer` — com testes das faixas de
    nota. Vitrine com dados de exemplo em `/dev/componentes` (só no
    `pnpm dev:web`, fica fora do build).
-3. **Vagas**: grade, filtros na URL, painel, triagem com desfazer, vaga manual.
+3. ✅ **Vagas**: grade, filtros na URL, painel, triagem com desfazer, vaga manual.
 4. **Deslizar**.
 5. **Candidaturas**: quadro, mover de coluna, linha do tempo.
 6. **Currículo**: formulário, copiar, salvar, impressão.

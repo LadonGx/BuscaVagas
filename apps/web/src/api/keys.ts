@@ -7,6 +7,9 @@ export const keys = {
   jobs: {
     all: ['jobs'] as const,
     counts: ['jobs', 'counts'] as const,
+    lists: ['jobs', 'list'] as const,
+    list: (filters: object) => ['jobs', 'list', filters] as const,
+    detail: (id: string) => ['jobs', 'detail', id] as const,
   },
   applications: {
     all: ['applications'] as const,
@@ -16,4 +19,5 @@ export const keys = {
     sources: ['discovery', 'sources'] as const,
   },
   dashboard: ['dashboard'] as const,
+  preferences: ['preferences'] as const,
 };

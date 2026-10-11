@@ -25,6 +25,20 @@
   animation: slide 200ms ease-out;
 }
 
+.panel[data-placement='center'] {
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  width: min(600px, calc(100% - 32px));
+  max-height: calc(100vh - 48px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  transform: translate(-50%, -50%);
+  animation: pop 160ms ease-out;
+}
+
 .panel:focus-visible {
   box-shadow: inset var(--focus);
 }
@@ -98,6 +112,13 @@
 @keyframes slide {
   from {
     transform: translateX(24px);
+    opacity: 0;
+  }
+}
+
+@keyframes pop {
+  from {
+    transform: translate(-50%, -48%);
     opacity: 0;
   }
 }

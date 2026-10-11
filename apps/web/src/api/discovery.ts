@@ -1,4 +1,4 @@
-import type { ScanResultDto, SourceInfoDto } from '@busca-vagas/shared';
+import { MANUAL_SOURCE, type ScanResultDto, type SourceInfoDto } from '@busca-vagas/shared';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { api } from './client';
@@ -15,6 +15,18 @@ export function useSources() {
     refetchInterval: (query) =>
       query.state.data?.some((source) => source.running) ? POLL_RUNNING_MS : POLL_IDLE_MS,
   });
+}
+
+/** Nome de exibição da fonte de uma vaga ("gupy" → "Gupy"; manual → "cadastro manual"). */
+export function useSourceName(): (sourceId: string) => string {
+  const { data: sources } = useSources();
+  return (sourceId) => {
+    if (sourceId === MANUAL_SOURCE) return 'cadastro manual';
+    return (
+      sources?.find((source) => source.id === sourceId)?.displayName ??
+      sourceId.charAt(0).toUpperCase() + sourceId.slice(1)
+    );
+  };
 }
 
 export function isScanning(sources: readonly SourceInfoDto[] | undefined): boolean {

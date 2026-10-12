@@ -3,11 +3,17 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import { keys } from './keys';
 
-/** Contagens de vagas: menu e prévia das preferências. */
-export function useJobCounts() {
+/**
+ * Contagens de vagas: menu e prévia das preferências. Com
+ * `pollWhilePending`, confere a cada 3 s enquanto houver nota na fila
+ * (ex.: recálculo depois de salvar as preferências).
+ */
+export function useJobCounts({ pollWhilePending = false } = {}) {
   return useQuery({
     queryKey: keys.jobs.counts,
     queryFn: ({ signal }) => api.get<JobCountsDto>('/jobs/counts', undefined, signal),
+    refetchInterval: (query) =>
+      pollWhilePending && (query.state.data?.score.pending ?? 0) > 0 ? 3_000 : false,
   });
 }
 

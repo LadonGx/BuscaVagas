@@ -273,7 +273,7 @@ describe('Currículo', () => {
     await user.click(screen.getByRole('link', { name: /Preferências/ }));
 
     const dialog = await screen.findByRole('dialog', { name: 'Sair sem salvar?' });
-    expect(dialog).toHaveTextContent('1 alteração ainda não foi salva');
+    expect(dialog).toHaveTextContent('1 alteração ainda não foi salva e vai se perder.');
     await user.click(within(dialog).getByRole('button', { name: 'Continuar editando' }));
     expect(router.state.location.pathname).toBe('/curriculo');
     expect(screen.getByRole('textbox', { name: /^E-mail/ })).toHaveValue('ana@email.comr');

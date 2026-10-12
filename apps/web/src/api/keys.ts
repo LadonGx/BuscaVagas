@@ -19,8 +19,11 @@ export const keys = {
   },
   discovery: {
     sources: ['discovery', 'sources'] as const,
+    runs: (sourceId: string | null) => ['discovery', 'runs', sourceId ?? 'todas'] as const,
   },
+  retention: ['maintenance', 'retention'] as const,
   dashboard: ['dashboard'] as const,
   preferences: ['preferences'] as const,
+  stackOptions: ['preferences', 'stacks'] as const,
   resume: ['resume'] as const,
 };

@@ -100,6 +100,7 @@ Detalhes, regras e códigos de erro de cada uma: [`docs/features/`](docs/feature
 | `pnpm db:migrate --name <nome>`               | Cria migration após mudar o `schema.prisma`       |
 | `pnpm db:deploy`                              | Aplica as migrations existentes                   |
 | `pnpm db:studio`                              | Navega pelo banco no navegador                    |
+| `pnpm scores:rescore`                         | Recalcula a nota de todas as vagas (API rodando)  |
 
 ## Segurança
 

@@ -34,7 +34,11 @@ import {
 } from '../../common/pagination/cursor';
 import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { loadPreferences } from '../preferences/preferences.store';
+import {
+  loadPreferences,
+  loadScoreVersion,
+  PREFERENCES_ID,
+} from '../preferences/preferences.store';
 import { SCORE_REQUESTER, type ScoreRequester } from '../scoring/scoring.constants';
 import { jobInclude, toJobDto } from './jobs.mapper';
 import { buildJobWhere } from './jobs.where';
@@ -63,7 +67,7 @@ export class JobsService {
     });
 
     this.requestScoring('job:create');
-    return toJobDto(job);
+    return toJobDto(job, await this.scoreVersion());
   }
 
   /**
@@ -74,6 +78,8 @@ export class JobsService {
     const where: Prisma.JobWhereInput = buildJobWhere(query);
     const and = (where.AND as Prisma.JobWhereInput[] | undefined) ?? [];
     const sort = query.sort ?? ((await this.hasPreferences()) ? 'score' : 'recent');
+    const version = await this.scoreVersion();
+    const toDto = (row: Parameters<typeof toJobDto>[0]) => toJobDto(row, version);
 
     if (sort === 'score') {
       if (query.cursor) {
@@ -94,7 +100,7 @@ export class JobsService {
       const page = hasMore ? rows.slice(0, query.limit) : rows;
       const last = page.at(-1);
       return {
-        items: page.map(toJobDto),
+        items: page.map(toDto),
         nextCursor: hasMore && last ? encodeScoreCursor({ s: last.score, id: last.id }) : null,
       };
     }
@@ -113,20 +119,25 @@ export class JobsService {
       include: jobInclude,
     });
 
-    return toPage(rows, query.limit, (row) => row.firstSeenAt, toJobDto);
+    return toPage(rows, query.limit, (row) => row.firstSeenAt, toDto);
   }
 
   /**
    * Contagens numa consulta só (`count FILTER`). As faixas seguem a mesma
    * ordem de `scoreTier`: pendente > incompatível > sem nota > faixa.
+   * Pendente = nunca pontuada ou pontuada com preferências antigas (a mesma
+   * regra do `scorePending` de cada vaga, em `isScorePending`).
    */
   async counts(): Promise<JobCountsDto> {
     const { great, good } = SCORE_TIER_MIN;
     const [row] = await this.prisma.$queryRaw<Record<string, bigint>[]>`
-      WITH visible AS (
-        SELECT *,
-          "scoredVersion" IS NULL AS pending
-        FROM "Job" WHERE triage IN ('inbox', 'saved')
+      WITH prefs AS (
+        SELECT COALESCE((SELECT version FROM "Preferences" WHERE id = ${PREFERENCES_ID}), 0) AS version
+      ),
+      visible AS (
+        SELECT j.*,
+          (j."scoredVersion" IS NULL OR j."scoredVersion" < prefs.version) AS pending
+        FROM "Job" j, prefs WHERE j.triage IN ('inbox', 'saved')
       )
       SELECT
         (SELECT count(*) FROM "Job" WHERE triage = 'inbox') AS inbox,
@@ -160,7 +171,7 @@ export class JobsService {
   }
 
   async get(id: string): Promise<JobDto> {
-    return toJobDto(await this.findOrThrow(id));
+    return toJobDto(await this.findOrThrow(id), await this.scoreVersion());
   }
 
   async update(id: string, input: UpdateJobInput): Promise<JobDto> {
@@ -192,7 +203,7 @@ export class JobsService {
 
     const job = await this.prisma.job.update({ where: { id }, data, include: jobInclude });
     this.requestScoring('job:update');
-    return toJobDto(job);
+    return toJobDto(job, await this.scoreVersion());
   }
 
   async remove(id: string): Promise<void> {
@@ -228,7 +239,7 @@ export class JobsService {
       data: triageData(input),
       include: jobInclude,
     });
-    return toJobDto(job);
+    return toJobDto(job, await this.scoreVersion());
   }
 
   async bulkTriage(input: BulkTriageInput): Promise<BulkTriageResult> {
@@ -333,6 +344,10 @@ export class JobsService {
   /** Sem esperar: a nota é trabalho de fundo e nunca segura a resposta. */
   private requestScoring(reason: string): void {
     void this.scoring?.request(reason);
+  }
+
+  private scoreVersion(): Promise<number> {
+    return loadScoreVersion(this.prisma);
   }
 
   private async hasPreferences(): Promise<boolean> {

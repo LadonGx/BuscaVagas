@@ -3,6 +3,7 @@ import type {
   ApplicationSummaryDto,
   JobCountsDto,
   JobDto,
+  PreferencesDto,
   ResumeDto,
   ResumeItemData,
   ResumeSectionDto,
@@ -109,7 +110,7 @@ export const job = (overrides: Partial<JobDto> = {}): JobDto => ({
   ...overrides,
 });
 
-export const preferences = (configured = true) => ({
+export const preferences = (configured = true): PreferencesDto => ({
   stacksCore: configured ? ['node.js'] : [],
   stacksPlus: [],
   stacksAvoid: [],

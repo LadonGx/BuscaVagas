@@ -38,3 +38,15 @@ export function toValues(row: Preferences): PreferencesValues {
     blockedCompanies: row.blockedCompanies,
   };
 }
+
+/**
+ * Só a versão atual (0 = nunca salvas). Vaga pontuada com versão menor está
+ * com a nota desatualizada: conta como "nota na fila" até a fila recalcular.
+ */
+export async function loadScoreVersion(prisma: PrismaService): Promise<number> {
+  const row = await prisma.preferences.findUnique({
+    where: { id: PREFERENCES_ID },
+    select: { version: true },
+  });
+  return row?.version ?? 0;
+}

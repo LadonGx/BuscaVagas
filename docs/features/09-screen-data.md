@@ -46,7 +46,9 @@ interface JobCountsDto {
   função `scoreTier(job)`. O front usa a mesma função para colorir o selo
   da nota, então número e cor nunca divergem.
 - Ordem das faixas, igual à de `scoreTier`: **na fila** (`scoredVersion`
-  nulo) vem antes de tudo, porque a nota antiga pode estar desatualizada;
+  nulo ou menor que a versão atual das preferências — ver o
+  [07](07-preferences-score.md)) vem antes de tudo, porque a nota antiga pode
+  estar desatualizada;
   depois **incompatível**; depois **sem nota**; depois a faixa pela nota.
 - O Deslizar esconde as incompatíveis por padrão, por isso o menu usa
   `swipeable` e não `triage.inbox`.

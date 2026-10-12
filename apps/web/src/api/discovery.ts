@@ -1,5 +1,17 @@
-import { MANUAL_SOURCE, type ScanResultDto, type SourceInfoDto } from '@busca-vagas/shared';
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import {
+  MANUAL_SOURCE,
+  type Page,
+  type ScanResultDto,
+  type SourceInfoDto,
+  type SourceRunDto,
+} from '@busca-vagas/shared';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { api } from './client';
 import { keys } from './keys';
@@ -29,6 +41,22 @@ export function useSourceName(): (sourceId: string) => string {
   };
 }
 
+/** Histórico de buscas, da mais recente para trás. `null` = todas as fontes. */
+export function useSourceRuns(sourceId: string | null, enabled = true) {
+  return useInfiniteQuery({
+    queryKey: keys.discovery.runs(sourceId),
+    queryFn: ({ signal, pageParam }) =>
+      api.get<Page<SourceRunDto>>(
+        '/discovery/runs',
+        { limit: 20, cursor: pageParam, sourceId: sourceId ?? undefined },
+        signal,
+      ),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    enabled,
+  });
+}
+
 export function isScanning(sources: readonly SourceInfoDto[] | undefined): boolean {
   return Boolean(sources?.some((source) => source.running));
 }
@@ -39,6 +67,7 @@ export function invalidateAfterScan(queryClient: QueryClient): Promise<unknown> 
     queryClient.invalidateQueries({ queryKey: keys.jobs.all }),
     queryClient.invalidateQueries({ queryKey: keys.dashboard }),
     queryClient.invalidateQueries({ queryKey: keys.discovery.sources }),
+    queryClient.invalidateQueries({ queryKey: ['discovery', 'runs'] }),
   ]);
 }
 

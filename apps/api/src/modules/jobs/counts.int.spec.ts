@@ -62,6 +62,29 @@ describeDb('Contagens e filtro "com candidatura" (integração)', () => {
     });
   });
 
+  it('nota de preferências antigas conta como pendente, na contagem e na vaga', async () => {
+    await t.prisma.preferences.create({ data: { id: 1, version: 3 } });
+    await job({ title: 'Atual', score: 900, scoredVersion: 3 });
+    await job({ title: 'Antiga', score: 900, scoredVersion: 2 });
+    await job({ title: 'Nunca', score: null, scoredVersion: null });
+
+    const counts = (await api().get('/api/jobs/counts').expect(200)).body as JobCountsDto;
+    expect(counts.score).toMatchObject({ great: 1, pending: 2 });
+
+    const items = (await api().get('/api/jobs?sort=recent').expect(200)).body.items as JobDto[];
+    const pending = Object.fromEntries(items.map((item) => [item.title, item.scorePending]));
+    expect(pending).toEqual({ Atual: false, Antiga: true, Nunca: true });
+
+    // Detalhe e triagem respondem com a mesma regra.
+    const antiga = items.find((item) => item.title === 'Antiga')!;
+    expect((await api().get(`/api/jobs/${antiga.id}`).expect(200)).body.scorePending).toBe(true);
+    const triaged = await api()
+      .put(`/api/jobs/${antiga.id}/triage`)
+      .send({ status: 'saved' })
+      .expect(200);
+    expect(triaged.body.scorePending).toBe(true);
+  });
+
   it('sem vagas, tudo zero', async () => {
     const counts = (await api().get('/api/jobs/counts').expect(200)).body as JobCountsDto;
     expect(counts.triage).toEqual({ inbox: 0, saved: 0, dismissed: 0 });

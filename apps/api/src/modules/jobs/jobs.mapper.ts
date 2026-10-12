@@ -6,8 +6,22 @@ export const jobInclude = {
   application: { select: { id: true, status: true } },
 } satisfies Prisma.JobInclude;
 
-/** Linha do banco -> DTO público. Explícito para não vazar campo interno. */
-export function toJobDto(job: Prisma.JobGetPayload<{ include: typeof jobInclude }>): JobDto {
+/**
+ * A nota está na fila: a vaga nunca foi pontuada (nova ou editada) ou foi
+ * pontuada com uma versão antiga das preferências. Mesma regra das contagens.
+ */
+export function isScorePending(scoredVersion: number | null, scoreVersion: number): boolean {
+  return scoredVersion === null || scoredVersion < scoreVersion;
+}
+
+/**
+ * Linha do banco -> DTO público. Explícito para não vazar campo interno.
+ * `scoreVersion` = versão atual das preferências (`loadScoreVersion`).
+ */
+export function toJobDto(
+  job: Prisma.JobGetPayload<{ include: typeof jobInclude }>,
+  scoreVersion: number,
+): JobDto {
   return {
     id: job.id,
     source: job.source,
@@ -40,6 +54,6 @@ export function toJobDto(job: Prisma.JobGetPayload<{ include: typeof jobInclude 
       ? (job.scoreReasons as unknown as ScoreReason[])
       : [],
     incompatible: job.incompatible,
-    scorePending: job.scoredVersion === null,
+    scorePending: isScorePending(job.scoredVersion, scoreVersion),
   };
 }

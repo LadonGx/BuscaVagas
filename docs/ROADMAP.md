@@ -67,7 +67,7 @@ Planos: [09 — dados para as telas](features/09-screen-data.md) e
 - [x] **Modo deslizar**: direita = salvar, esquerda = descartar, setas do teclado, desfazer (VA)
 - [x] Candidaturas: quadro por status e linha do tempo
 - [x] **Currículo** em formulário com copiar por campo, "Ver e salvar PDF" e a caixa de importar PDF (só visual) (JT)
-- [ ] Preferências de busca, estado das fontes e prévia da limpeza
+- [x] Preferências de busca, estado das fontes e prévia da limpeza
 
 ## Fase 3 — Ajustes e melhorias
 

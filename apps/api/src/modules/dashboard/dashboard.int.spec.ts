@@ -111,6 +111,17 @@ describeDb('Painel (integração)', () => {
     expect(dashboard.highScoreInbox).toBe(3); // A, B e a velha
   });
 
+  it('nota de preferências antigas fica fora até a fila recalcular', async () => {
+    await t.prisma.preferences.create({ data: { id: 1, version: 2 } });
+    await job({ title: 'Atual', score: 850, scoredVersion: 2 });
+    await job({ title: 'Antiga', score: 990, scoredVersion: 1 });
+
+    const dashboard = await service.get(NOW, SP);
+    expect(dashboard.topNew.map((j) => j.title)).toEqual(['Atual']);
+    expect(dashboard.topNew[0]?.scorePending).toBe(false);
+    expect(dashboard.highScoreInbox).toBe(1);
+  });
+
   it('próximas etapas: de hoje (meia-noite local) em diante, só abertas, da mais próxima', async () => {
     const todayMorning = new Date('2026-10-10T11:00:00.000Z'); // 8h em SP, já passou
     await application([['applied', 0]], {

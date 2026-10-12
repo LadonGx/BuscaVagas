@@ -9,6 +9,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { applicationInclude, toApplicationDto } from '../applications/applications.mapper';
 import { jobInclude, toJobDto } from '../jobs/jobs.mapper';
+import { loadScoreVersion } from '../preferences/preferences.store';
 import { lastLocalDays, localTimeZone, startOfLocalDay } from './local-day';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -22,6 +23,9 @@ export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async get(now: Date = new Date(), timeZone: string = localTimeZone()): Promise<DashboardDto> {
+    // Nota de preferências antigas ainda vai ser recalculada: fica de fora
+    // das contas de "nota alta" até a fila passar.
+    const version = await loadScoreVersion(this.prisma);
     const [newJobsPerDay, newLast24h, highScoreInbox, topNew, upcomingSteps, funnel, median] =
       await Promise.all([
         this.newJobsPerDay(now, timeZone),
@@ -32,11 +36,11 @@ export class DashboardService {
           where: {
             triage: 'inbox',
             incompatible: false,
-            scoredVersion: { not: null },
+            scoredVersion: { gte: version },
             score: { gte: SCORE_TIER_MIN.great },
           },
         }),
-        this.topNew(now),
+        this.topNew(now, version),
         this.upcomingSteps(now, timeZone),
         this.funnel(),
         this.medianDaysToFirstResponse(),
@@ -73,12 +77,12 @@ export class DashboardService {
     return days.map((date) => ({ date, count: byDay.get(date) ?? 0 }));
   }
 
-  private async topNew(now: Date): Promise<DashboardDto['topNew']> {
+  private async topNew(now: Date, version: number): Promise<DashboardDto['topNew']> {
     const rows = await this.prisma.job.findMany({
       where: {
         triage: 'inbox',
         incompatible: false,
-        scoredVersion: { not: null },
+        scoredVersion: { gte: version },
         score: { not: null },
         firstSeenAt: { gte: new Date(now.getTime() - TOP_NEW_DAYS * DAY_MS) },
       },
@@ -86,7 +90,7 @@ export class DashboardService {
       take: DASHBOARD_LIST_SIZE,
       include: jobInclude,
     });
-    return rows.map(toJobDto);
+    return rows.map((row) => toJobDto(row, version));
   }
 
   /** Abertas (sem recusa nem desistência), com etapa de hoje em diante. */

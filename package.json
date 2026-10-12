@@ -25,7 +25,8 @@
     "db:generate": "pnpm --filter @busca-vagas/api prisma:generate",
     "db:migrate": "pnpm --filter @busca-vagas/api prisma:migrate",
     "db:deploy": "pnpm --filter @busca-vagas/api prisma:deploy",
-    "db:studio": "pnpm --filter @busca-vagas/api prisma:studio"
+    "db:studio": "pnpm --filter @busca-vagas/api prisma:studio",
+    "scores:rescore": "node scripts/rescore.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

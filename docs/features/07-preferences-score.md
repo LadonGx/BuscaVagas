@@ -144,6 +144,17 @@ ordenação (`{ s: score, id }` ou `{ t: data, id }`) — cursor de uma ordenaç
 usado na outra é 400. A vaga (`JobDto`) ganha `score`, `scoreCoverage`,
 `scoreReasons`, `incompatible` e `scorePending`.
 
+**`scorePending`** = a nota está na fila: a vaga nunca foi pontuada
+(`scoredVersion` nulo — nova ou editada) **ou** foi pontuada com uma versão
+antiga das preferências (`scoredVersion < version`). A mesma regra vale para
+o `pending` de `/jobs/counts` e para o painel (nota alta e "melhores novas"
+só contam notas da versão atual). Assim a tela de Preferências sabe quando o
+recálculo depois do `PUT` terminou.
+
+**Recalcular tudo sem mudar as preferências** (quando a regra da nota muda
+no código): `pnpm scores:rescore` com a API rodando. Não há botão na tela
+enquanto as regras não forem editáveis por lá.
+
 ## Onde fica o código
 
 - `apps/api/src/modules/scoring/score.ts` — **função pura**

@@ -1,11 +1,11 @@
 import { FileDown, FileText, Upload } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { useBlocker, useNavigate } from 'react-router';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { useResume } from '../../api/resume';
 import { useToast } from '../../components/toast/toast-context';
+import { unsavedLabel, useUnsavedChanges } from '../../components/UnsavedChanges';
 import { Button } from '../../components/ui/Button';
 import { CopyButton } from '../../components/ui/CopyButton';
-import { Drawer } from '../../components/ui/Drawer';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { AddSection } from './AddSection';
@@ -49,23 +49,6 @@ export function CurriculoPage() {
   const [organizing, setOrganizing] = useState<string | null>(null);
   const dirty = draft.dirtyCount > 0;
 
-  /** Navegação que já tratou o rascunho (ex.: salvou antes de abrir o PDF). */
-  const allowLeave = useRef(false);
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      dirty && !allowLeave.current && currentLocation.pathname !== nextLocation.pathname,
-  );
-
-  // Fechar a aba ou recarregar com algo não salvo: o navegador pergunta.
-  useEffect(() => {
-    if (!dirty) return;
-    const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-    };
-    window.addEventListener('beforeunload', onBeforeUnload);
-    return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, [dirty]);
-
   async function save(): Promise<boolean> {
     if (draft.saving) return false;
     if (!dirty) return true;
@@ -75,26 +58,11 @@ export function CurriculoPage() {
     return result.tone === 'success';
   }
 
-  // Ctrl+S salva, inclusive com o cursor dentro de um campo.
-  const saveRef = useRef(save);
-  useEffect(() => {
-    saveRef.current = save;
-  });
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== 's') {
-        return;
-      }
-      event.preventDefault();
-      void saveRef.current();
-    }
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, []);
+  const unsaved = useUnsavedChanges({ count: draft.dirtyCount, saving: draft.saving, save });
 
   async function openPrint() {
     if (!(await save())) return;
-    allowLeave.current = true;
+    unsaved.allowNextLeave();
     void navigate('/curriculo/imprimir');
   }
 
@@ -102,7 +70,7 @@ export function CurriculoPage() {
   const status = draft.saving
     ? 'Salvando…'
     : dirty
-      ? `${draft.dirtyCount} ${plural(draft.dirtyCount, 'alteração não salva', 'alterações não salvas')} · Ctrl+S salva`
+      ? `${unsavedLabel(draft.dirtyCount)} · Ctrl+S salva`
       : '';
 
   return (
@@ -185,47 +153,7 @@ export function CurriculoPage() {
 
       {resume && <AddSection />}
 
-      <Drawer
-        open={blocker.state === 'blocked'}
-        onClose={() => blocker.reset?.()}
-        placement="center"
-        title="Sair sem salvar?"
-        footer={
-          <>
-            <Button
-              variant="primary"
-              disabled={draft.saving}
-              onClick={async () => {
-                if (await save()) blocker.proceed?.();
-                else blocker.reset?.();
-              }}
-            >
-              Salvar e sair
-            </Button>
-            <Button
-              onClick={() => {
-                draft.discard();
-                blocker.proceed?.();
-              }}
-            >
-              Sair sem salvar
-            </Button>
-            <Button variant="ghost" onClick={() => blocker.reset?.()}>
-              Continuar editando
-            </Button>
-          </>
-        }
-      >
-        <p className={styles.muted}>
-          {draft.dirtyCount}{' '}
-          {plural(
-            draft.dirtyCount,
-            'alteração ainda não foi salva',
-            'alterações ainda não foram salvas',
-          )}{' '}
-          no currículo.
-        </p>
-      </Drawer>
+      {unsaved.dialog}
     </div>
   );
 }

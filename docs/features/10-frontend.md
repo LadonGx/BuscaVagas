@@ -275,20 +275,43 @@ igual; muda só a apresentação (formulário centralizado, como no job-tracker)
 ### Preferências — `/preferencias`
 
 Dados: `GET/PUT /api/preferences`, `GET /preferences/stacks`,
-`GET /discovery/sources`, `GET /discovery/runs`, `GET /maintenance/retention`.
+`GET /jobs/counts`, `GET /discovery/sources`, `GET /discovery/runs`,
+`GET/POST /maintenance/retention`.
 
-- Stacks em três grupos (principais, ganham pontos, evitar) com sugestões
-  vindas de `/preferences/stacks`; a mesma stack não entra em dois grupos
-  (a regra já está no schema).
-- Senioridade, contrato e modalidade como botões liga/desliga; cidades,
-  idade máxima, salário mínimo e empresas bloqueadas.
-- "Salvar e recalcular" → `PUT`; aviso "Notas sendo recalculadas" e a prévia
-  ("Com estas preferências") atualiza quando a fila termina.
-- Fontes: estado de cada uma, última execução, próxima busca e o motivo
-  quando inativa. "Ver histórico de buscas" abre o painel com `/discovery/runs`.
-- Limpeza: prévia da próxima limpeza (`GET /maintenance/retention`).
-- As empresas dos boards continuam no `.env` nesta fase; a tela só mostra
-  quais estão configuradas.
+Formulário à esquerda; à direita, numa coluna que acompanha a rolagem
+(abaixo de 1180 px vai para baixo): prévia + "Salvar e recalcular", Fontes e
+Limpeza.
+
+- **Stacks** em três grupos (Principais, Ganham pontos, Evitar). Sugestões de
+  `/preferences/stacks` (lista do campo, com quantas vagas citam cada uma);
+  nome fora da lista é aceito com o aviso "o detector ainda não conhece".
+  **A mesma tecnologia fica num grupo só**: adicionar noutro grupo move, e
+  uma linha diz de onde saiu. Enter ou vírgula adiciona.
+- Senioridade, contrato e modalidade: botões liga/desliga (nenhum = critério
+  desligado). Cidades e empresas bloqueadas: etiquetas (Enter, vírgula ou
+  colar uma lista). Idade máxima e salário mínimo: número; vazio desliga.
+- **Salvar**: um `PUT` com tudo, validado antes com o schema do `shared`
+  (erro aparece no campo). Rascunho igual ao do Currículo: "N alterações não
+  salvas", `Ctrl+S`, aviso ao sair (`components/UnsavedChanges`). Depois de
+  salvar, o formulário recomeça do que a API guardou (já normalizado).
+- **Prévia "Com estas preferências"**: nota ≥ 800, 600–799 e incompatíveis
+  das vagas na caixa e salvas, com as preferências **salvas** (com o
+  formulário alterado, diz isso). Depois do `PUT` as notas viram "na fila"
+  (`scorePending` inclui versão antiga — ver o 07): a prévia mostra
+  "Recalculando notas… faltam N", confere a cada 3 s e, quando zera,
+  recarrega as listas e o painel. Fila fora do ar: salva e avisa.
+- **Fontes**: ativa/desligada/falhou, última busca (vagas e novas), próxima
+  busca, motivo quando desligada e o erro da última falha. As empresas dos
+  boards continuam no `.env`. "Ver histórico de buscas" abre o painel com
+  `/discovery/runs`: fonte, status, manual/agendada, data, duração,
+  encontradas/novas/filtradas/fora do formato, termos e erro; filtro por
+  fonte e "Carregar mais".
+- **Limpeza**: prévia (`GET`). "Limpar agora" abre uma confirmação que diz,
+  item por item, o que vai ser apagado (descartadas, esquecidas na caixa,
+  histórico antigo, bloqueios expirados) e que salvas e com candidatura
+  ficam; só "Apagar agora" chama o `POST`. Desligada com `RETENTION_DAYS=0`.
+- **Sem botão de recalcular tudo**: só faz sentido quando as regras da nota
+  forem editáveis na tela. Até lá, `pnpm scores:rescore`.
 
 ## Ordem de execução
 
@@ -305,7 +328,7 @@ Cada item é um passo com teste e revisão antes do próximo.
 4. ✅ **Deslizar**.
 5. ✅ **Candidaturas**: quadro, mover de coluna, linha do tempo.
 6. ✅ **Currículo**: formulário, copiar, salvar, impressão.
-7. **Preferências**: formulário, fontes, histórico, limpeza.
+7. ✅ **Preferências**: formulário, fontes, histórico, limpeza.
 8. **Início**: painel.
 
 ## Testes
@@ -315,6 +338,9 @@ Cada item é um passo com teste e revisão antes do próximo.
 - Deslizar: setas, `Ctrl+Z`, busca a próxima página com 5 restantes.
 - Currículo: copiar campo copia só o valor; salvar envia só o que mudou;
   item inválido não vai; `Ctrl+S`; aviso ao sair; o que entra no PDF.
+- Preferências: salvar manda tudo e acompanha o recálculo; mover stack entre
+  grupos; número fora da faixa não salva; histórico paginado e filtrado;
+  "Limpar agora" só apaga depois de confirmar.
 - Tema: o atributo muda na raiz e a escolha fica salva.
 - Acessibilidade: cada tela renderiza sem botão sem nome (checagem simples
   com Testing Library).

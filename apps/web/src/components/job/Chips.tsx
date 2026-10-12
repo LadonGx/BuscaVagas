@@ -75,7 +75,7 @@ export function StackChips({ stack, max = 4 }: { stack: readonly string[]; max?:
 
 type StatusKey = TriageStatus | ApplicationStatus;
 
-const STATUS_TONE: Record<StatusKey, string> = {
+export const STATUS_TONE: Record<StatusKey, string> = {
   inbox: 'weak',
   saved: 'accent',
   dismissed: 'bad',
@@ -106,6 +106,16 @@ export function StatusChip({ job }: { job: Pick<JobDto, 'triage' | 'application'
     <span className={styles.status}>
       <span className={styles.dot} data-tone={STATUS_TONE[key]} aria-hidden="true" />
       {label}
+    </span>
+  );
+}
+
+/** Status de uma candidatura, com a mesma bolinha de cor do resto do app. */
+export function ApplicationStatusChip({ status }: { status: ApplicationStatus }) {
+  return (
+    <span className={styles.status}>
+      <span className={styles.dot} data-tone={STATUS_TONE[status]} aria-hidden="true" />
+      {APPLICATION_STATUS_LABELS[status]}
     </span>
   );
 }

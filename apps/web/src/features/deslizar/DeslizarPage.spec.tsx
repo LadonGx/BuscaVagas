@@ -68,6 +68,17 @@ describe('Deslizar', () => {
     expect(screen.getByText(/Nesta sessão:/)).toHaveTextContent('1 salva · 1 descartada');
   });
 
+  it('mostra o total salvo e descartado (a sessão zera ao recarregar)', async () => {
+    setup();
+    renderApp('/deslizar');
+    const link = await screen.findByRole('link', { name: '25 descartadas' });
+    expect(link).toHaveAttribute('href', '/vagas?aba=descartadas');
+    expect(screen.getByRole('link', { name: '18 salvas' })).toHaveAttribute(
+      'href',
+      '/vagas?aba=salvas',
+    );
+  });
+
   it('Ctrl+Z desfaz a última e a vaga volta a ser a atual', async () => {
     const { puts } = setup();
     renderApp('/deslizar');

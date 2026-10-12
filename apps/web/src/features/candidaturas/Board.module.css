@@ -1,0 +1,74 @@
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 12px;
+  min-width: 920px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 520px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--column);
+  transition:
+    border-color 120ms,
+    background-color 120ms;
+}
+
+.column[data-over] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.columnTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.dot[data-column='applied'] {
+  background: var(--info);
+}
+
+.dot[data-column='in_process'] {
+  background: var(--good);
+}
+
+.dot[data-column='offer'] {
+  background: var(--great);
+}
+
+.dot[data-column='closed'] {
+  background: var(--weak);
+}
+
+.count {
+  margin-left: auto;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.empty,
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.empty {
+  padding: 16px 4px;
+  text-align: center;
+}

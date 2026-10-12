@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { formatAgo, formatDuration, formatNumber, formatSalary, formatUntil } from './format';
+import {
+  formatAgo,
+  formatDuration,
+  formatNumber,
+  formatSalary,
+  formatUntil,
+  fromLocalInput,
+  toLocalInput,
+} from './format';
 
 const NOW = new Date('2026-10-11T15:00:00.000Z');
 const minus = (ms: number) => new Date(NOW.getTime() - ms);
@@ -57,5 +65,14 @@ describe('salário', () => {
 
   it('moeda desconhecida não quebra', () => {
     expect(plain(salary(100, null, 'XYZ1', null))).toBe('a partir de XYZ1 100');
+  });
+});
+
+describe('datetime-local', () => {
+  it('ida e volta mantém o instante', () => {
+    const iso = '2026-10-15T17:30:00.000Z';
+    const local = toLocalInput(iso);
+    expect(local).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+    expect(fromLocalInput(local)).toBe(iso);
   });
 });

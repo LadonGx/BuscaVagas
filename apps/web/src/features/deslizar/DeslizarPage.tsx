@@ -117,10 +117,22 @@ export function DeslizarPage() {
         title="Deslizar"
         subtitle={`Caixa de entrada, ${scoreOn === false ? 'pela ordem de entrada' : 'da maior nota para a menor'} · ${formatNumber(remaining)} para triar`}
         actions={
-          <p className={styles.tally} aria-live="polite">
-            Nesta sessão: <strong>{saved}</strong> {saved === 1 ? 'salva' : 'salvas'} ·{' '}
-            <strong>{dismissed}</strong> {dismissed === 1 ? 'descartada' : 'descartadas'}
-          </p>
+          <div className={styles.tallies}>
+            <p className={styles.tally} aria-live="polite">
+              Nesta sessão: <strong>{saved}</strong> {saved === 1 ? 'salva' : 'salvas'} ·{' '}
+              <strong>{dismissed}</strong> {dismissed === 1 ? 'descartada' : 'descartadas'}
+            </p>
+            {/* A contagem da sessão zera ao recarregar; o total vem do banco. */}
+            {counts && (
+              <p className={styles.tally}>
+                No total:{' '}
+                <Link to="/vagas?aba=salvas">{formatNumber(counts.triage.saved)} salvas</Link> ·{' '}
+                <Link to="/vagas?aba=descartadas">
+                  {formatNumber(counts.triage.dismissed)} descartadas
+                </Link>
+              </p>
+            )}
+          </div>
         }
       />
 

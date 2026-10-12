@@ -1,0 +1,36 @@
+.toggle {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+.toggle button[aria-pressed='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-weight: 600;
+}
+
+.scroll {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.muted {
+  color: var(--muted);
+}

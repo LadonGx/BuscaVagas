@@ -9,6 +9,7 @@ export default defineConfig({
   // obsoleta. O aviso é interno ao tsup, não ao nosso código — silenciado só aqui.
   dts: { compilerOptions: { ignoreDeprecations: '6.0' } },
   sourcemap: true,
-  clean: true,
+  // Sem `clean`: ver o comentário em packages/shared/tsup.config.ts.
+  clean: false,
   target: 'es2023',
 });

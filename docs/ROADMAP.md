@@ -65,7 +65,7 @@ Planos: [09 — dados para as telas](features/09-screen-data.md) e
 - [ ] **Início**: atalhos, melhores vagas novas, próximas etapas, vagas por dia, funil (JS)
 - [x] Vagas em cartões com filtros, salvar e descartar (com desfazer) e painel de detalhe com nota e motivos
 - [x] **Modo deslizar**: direita = salvar, esquerda = descartar, setas do teclado, desfazer (VA)
-- [ ] Candidaturas: quadro por status e linha do tempo
+- [x] Candidaturas: quadro por status e linha do tempo
 - [ ] **Currículo** em formulário com copiar por campo, "Ver e salvar PDF" e a caixa de importar PDF (só visual) (JT)
 - [ ] Preferências de busca, estado das fontes e prévia da limpeza
 

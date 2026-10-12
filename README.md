@@ -148,6 +148,14 @@ numa constante nova do `shared`, ou um filtro novo sendo ignorado.
 (`pnpm --filter @busca-vagas/sources try` lê o código-fonte direto, por isso
 pode funcionar enquanto a API ainda usa a versão antiga.)
 
+**`Could not find a declaration file for module '@busca-vagas/shared'` no
+editor.** O VS Code lê os tipos de `packages/shared/dist/index.d.ts`. Se ele
+olhou o pacote no meio de uma compilação (antiga, de antes do ajuste no tsup) ou
+antes do primeiro `pnpm install`, guarda o erro mesmo depois de o arquivo
+existir. Confira que `packages/shared/dist/index.d.ts` existe (senão rode
+`pnpm build:packages`) e, no VS Code, `Ctrl+Shift+P` → **TypeScript: Restart TS
+Server**. O `pnpm typecheck` é a referência: se ele passa, o código está certo.
+
 ## Licença
 
 [MIT](LICENSE)

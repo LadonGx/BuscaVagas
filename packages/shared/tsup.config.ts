@@ -8,6 +8,10 @@ export default defineConfig({
   // obsoleta. O aviso é interno ao tsup, não ao nosso código — silenciado só aqui.
   dts: { compilerOptions: { ignoreDeprecations: '6.0' } },
   sourcemap: true,
-  clean: true,
+  // Sem `clean`: apagar a pasta antes deixava o index.js pronto alguns segundos
+  // antes do index.d.ts, e o editor (que lê o dist) acusava "implicitly has an
+  // any type" e guardava o erro. Com uma entrada só, os nomes dos arquivos não
+  // mudam, então sobrescrever basta.
+  clean: false,
   target: 'es2023',
 });

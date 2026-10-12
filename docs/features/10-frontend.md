@@ -9,17 +9,17 @@ divergir do protótipo, vale o código e este plano é atualizado.
 
 ## Decisões
 
-| Tema               | Escolha                                                  | Por quê                                                                                 |
-| ------------------ | -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Rotas              | React Router 8, modo dados (`createBrowserRouter`)       | Filtros vão para a URL: voltar funciona e um filtro pode ser salvo nos favoritos        |
-| Dados do servidor  | TanStack Query 5                                         | Cache, paginação infinita, atualização otimista com desfazer, polling só quando precisa |
-| Estilo             | CSS Modules + variáveis CSS                              | Os tokens do protótipo viram variáveis; o tema troca com um atributo na raiz, sem lib   |
-| Ícones             | `lucide-react`                                           | Mesmo traço dos ícones do protótipo; só os ícones usados entram no build                |
-| Fontes             | Sora, DM Sans e JetBrains Mono via `@fontsource`         | App local: funciona sem internet e não chama o Google a cada abertura                   |
-| Contratos          | `@busca-vagas/shared` como dependência do web            | Mesmos tipos, enums, rótulos, faixas de nota e `resumeItemToText` da API                |
-| Formulários        | Estado local + schema Zod do `shared` no envio           | Os formulários são pequenos; uma lib de formulário não paga o peso aqui                 |
-| Arrastar no quadro | `@dnd-kit/core`, com menu "Mover para…" como alternativa | Arrastar com teclado e leitor de tela já vem pronto                                     |
-| Testes             | Vitest + Testing Library + jsdom, `fetch` simulado       | O mesmo Vitest do resto do monorepo                                                     |
+| Tema               | Escolha                                                   | Por quê                                                                                 |
+| ------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Rotas              | React Router 8, modo dados (`createBrowserRouter`)        | Filtros vão para a URL: voltar funciona e um filtro pode ser salvo nos favoritos        |
+| Dados do servidor  | TanStack Query 5                                          | Cache, paginação infinita, atualização otimista com desfazer, polling só quando precisa |
+| Estilo             | CSS Modules + variáveis CSS                               | Os tokens do protótipo viram variáveis; o tema troca com um atributo na raiz, sem lib   |
+| Ícones             | `lucide-react`                                            | Mesmo traço dos ícones do protótipo; só os ícones usados entram no build                |
+| Fontes             | Sora, DM Sans e JetBrains Mono via `@fontsource`          | App local: funciona sem internet e não chama o Google a cada abertura                   |
+| Contratos          | `@busca-vagas/shared` como dependência do web             | Mesmos tipos, enums, rótulos, faixas de nota e `resumeItemToText` da API                |
+| Formulários        | Estado local + schema Zod do `shared` no envio            | Os formulários são pequenos; uma lib de formulário não paga o peso aqui                 |
+| Arrastar no quadro | `@dnd-kit/core` (mouse e toque) + "Mover para…" no cartão | O seletor é o caminho do teclado e do leitor de tela                                    |
+| Testes             | Vitest + Testing Library + jsdom, `fetch` simulado        | O mesmo Vitest do resto do monorepo                                                     |
 
 ## Estrutura
 
@@ -163,6 +163,9 @@ pela nota com preferências, senão pela entrada no app).
 - `→` salva, `←` descarta, `↑` ou espaço abre o detalhe, `Ctrl+Z` desfaz.
   Botões grandes fazem o mesmo. Arrastar o cartão com mouse ou toque também
   (limite de 120 px; animação desligada com `prefers-reduced-motion`).
+- No topo, a contagem da sessão (zera ao recarregar) e o **total** salvo e
+  descartado, com links para as abas de Vagas — para conferir o que já foi
+  triado em sessões anteriores.
 - Desfazer guarda as últimas 20 ações da sessão (pilha local) e volta a vaga
   exatamente como estava; ela reaparece como atual. A última ação fica numa
   linha "Salva: … · Desfazer" (sem aviso a cada vaga, para não poluir).
@@ -176,17 +179,33 @@ pela nota com preferências, senão pela entrada no app).
 
 ### Candidaturas — `/candidaturas` e `/candidaturas/:id`
 
-Dados: `GET /api/applications` por coluna, `GET /api/applications/:id`.
+Dados: `GET /api/applications` (todas de uma vez, página a página — são
+dezenas), `GET /api/applications/:id` no painel.
 
 - Quadro: Aplicada · Em processo · Proposta · Encerradas (Recusada +
-  Desisti). Cartão com título, empresa, status, "há X dias" e a próxima etapa
-  em destaque.
-- Mover de coluna (arrastar ou menu "Mover para…") registra um evento de
-  status com a data de hoje (`POST /applications/:id/events`); a data pode
-  ser corrigida depois na linha do tempo.
-- Painel da direita: linha do tempo, próxima etapa, "Registrar etapa"
-  (status, data, nota, próxima etapa) e editar/apagar evento.
-- Alternância Quadro / Lista; a lista é uma tabela ordenável.
+  Desisti). Cartão com título, empresa, status, "há X tempo" (última
+  atualização) e a próxima etapa em destaque (só nas abertas).
+- Mover de coluna registra um evento de status com a data de agora
+  (`POST /applications/:id/events`), otimista no quadro. O aviso diz para onde
+  foi ("Movida para Encerradas (Desisti).") e o "Desfazer" apaga o evento
+  recém-criado. A data pode ser corrigida depois na linha do tempo.
+  - **Arrastar** (`@dnd-kit/core`, mouse e toque): o arrasto só começa depois
+    de 6 px, então clicar no título continua abrindo o detalhe. Soltar em
+    Encerradas pergunta "A empresa recusou" ou "Eu desisti".
+  - **Teclado**: o seletor "Mover para…" em cada cartão (o arrasto pelo
+    teclado do dnd-kit move em pixels, ruim para colunas).
+- Painel (`/candidaturas/:id`, `Esc` volta para `/candidaturas`):
+  - status, data da candidatura, links "Ver vaga" (`/vagas?vaga=`) e site;
+  - próxima etapa: marcar, editar e limpar (data/hora + o quê);
+  - "Registrar etapa": status (sugere o próximo), quando aconteceu (não pode
+    ser futuro — futuro é próxima etapa) e anotação;
+  - linha do tempo do mais recente para o mais antigo, com "(antes: …)",
+    editar data/anotação e apagar (o único evento não pode ser apagado);
+  - dados do processo: onde se candidatou, pretensão e anotações;
+  - "Apagar candidatura" pede um segundo clique em até 5 s. A vaga continua
+    salva.
+- Alternância Quadro / Lista (`?vista=lista`); a lista é uma tabela ordenável
+  pelo cabeçalho (`aria-sort`).
 
 ### Currículo — `/curriculo` e `/curriculo/imprimir`
 
@@ -244,7 +263,7 @@ Cada item é um passo com teste e revisão antes do próximo.
    `pnpm dev:web`, fica fora do build).
 3. ✅ **Vagas**: grade, filtros na URL, painel, triagem com desfazer, vaga manual.
 4. ✅ **Deslizar**.
-5. **Candidaturas**: quadro, mover de coluna, linha do tempo.
+5. ✅ **Candidaturas**: quadro, mover de coluna, linha do tempo.
 6. **Currículo**: formulário, copiar, salvar, impressão.
 7. **Preferências**: formulário, fontes, histórico, limpeza.
 8. **Início**: painel.

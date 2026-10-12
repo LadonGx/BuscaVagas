@@ -1,4 +1,5 @@
 import type {
+  ApplicationDetailDto,
   ApplicationSummaryDto,
   JobCountsDto,
   JobDto,
@@ -128,4 +129,39 @@ export const layoutRoutes = () => ({
   'GET /applications/summary': () => summary(),
   'GET /discovery/sources': () => [source(), inactiveBoard()],
   'GET /preferences': () => preferences(),
+});
+
+export const application = (
+  overrides: Partial<ApplicationDetailDto> = {},
+): ApplicationDetailDto => ({
+  id: 'app-1',
+  jobId: 'job-1',
+  status: 'applied',
+  appliedAt: '2026-10-04T13:00:00.000Z',
+  appliedVia: null,
+  salaryExpectation: null,
+  notes: null,
+  nextStepAt: null,
+  nextStepNote: null,
+  createdAt: '2026-10-04T13:00:00.000Z',
+  updatedAt: '2026-10-04T13:00:00.000Z',
+  job: {
+    id: 'job-1',
+    title: 'Back-end Jr (NestJS)',
+    company: 'Lumen Saúde',
+    url: 'https://lumen.example/vaga',
+    location: null,
+    workModel: 'remote',
+  },
+  events: [
+    {
+      id: 'ev-1',
+      status: 'applied',
+      previousStatus: null,
+      occurredAt: '2026-10-04T13:00:00.000Z',
+      note: 'Pela Gupy.',
+      createdAt: '2026-10-04T13:00:00.000Z',
+    },
+  ],
+  ...overrides,
 });

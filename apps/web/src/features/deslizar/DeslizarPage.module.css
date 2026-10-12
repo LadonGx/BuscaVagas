@@ -1,3 +1,14 @@
+.tallies {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.tally a {
+  color: var(--accent);
+}
+
 .tally {
   color: var(--muted);
   font-size: 13px;

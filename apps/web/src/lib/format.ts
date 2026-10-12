@@ -85,3 +85,39 @@ export function formatUntil(date: Date | string, now: Date = new Date()): string
   const diff = then.getTime() - now.getTime();
   return diff <= 0 ? 'a qualquer momento' : `em ${formatDuration(diff)}`;
 }
+
+const dateTimeFormat = new Intl.DateTimeFormat('pt-BR', {
+  weekday: 'short',
+  day: '2-digit',
+  month: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+const dateFormat = new Intl.DateTimeFormat('pt-BR', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+});
+
+/** "qui., 15/10, 14:00" — próximas etapas e eventos. */
+export function formatDateTime(date: Date | string): string {
+  return dateTimeFormat.format(typeof date === 'string' ? new Date(date) : date);
+}
+
+/** "15/10/2026". */
+export function formatDate(date: Date | string): string {
+  return dateFormat.format(typeof date === 'string' ? new Date(date) : date);
+}
+
+const pad = (value: number) => String(value).padStart(2, '0');
+
+/** Data → valor de `<input type="datetime-local">` no fuso do navegador. */
+export function toLocalInput(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** Valor do `datetime-local` (hora local) → ISO com fuso, como a API espera. */
+export function fromLocalInput(value: string): string {
+  return new Date(value).toISOString();
+}

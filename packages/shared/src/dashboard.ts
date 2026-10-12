@@ -10,6 +10,8 @@ import type { JobDto } from './jobs';
 export const DASHBOARD_DAYS = 14;
 /** Janela de "melhores vagas novas". */
 export const TOP_NEW_DAYS = 7;
+/** Janela de "etapas nos próximos dias" (hoje incluído). */
+export const UPCOMING_DAYS = 7;
 /** Itens em "melhores vagas novas" e em "próximas etapas". */
 export const DASHBOARD_LIST_SIZE = 5;
 
@@ -24,6 +26,8 @@ export interface DashboardDto {
   topNew: JobDto[];
   /** Candidaturas abertas com próxima etapa de hoje em diante, da mais próxima. */
   upcomingSteps: ApplicationDto[];
+  /** Candidaturas abertas com etapa de hoje até o fim do 7º dia (calendário local). */
+  stepsNextDays: number;
   /** Quantas candidaturas chegaram a cada etapa, pelo histórico. */
   funnel: { applied: number; inProcess: number; offer: number };
   /** Mediana de dias entre a candidatura e o primeiro evento seguinte. `null` sem dados. */

@@ -96,20 +96,35 @@ os testes. Componente que aparece em duas telas sobe para `components/`.
 
 ### Início — `/`
 
-Dados: `GET /api/dashboard` + `GET /api/jobs/counts`.
+Dados: `GET /api/dashboard` + contagens, resumo das candidaturas,
+preferências, currículo e fontes (já carregados pelo app).
 
-- Atalhos: Triar no deslizar (com o número), Ver vagas (salvas), + Vaga
-  manual (abre o mesmo diálogo da tela de Vagas), Currículo.
-- "Esta semana": vagas novas desde ontem, caixa com nota ≥ 800, etapas até
-  sexta, propostas.
-- Melhores vagas novas (`topNew`): clicar abre o painel da vaga, como em Vagas.
-- Próximas etapas (`upcomingSteps`): clicar leva para Candidaturas com a
-  candidatura aberta.
-- Vagas novas por dia: barras de uma série só, sem legenda (o título diz o que
-  é), número no pico e em todas ao passar o mouse; tabela escondida para
-  leitor de tela.
-- Funil: Aplicada → Em processo → Proposta, com a % da etapa anterior, e a
-  mediana de dias até a primeira resposta.
+- Cabeçalho: data de hoje e "N vagas novas desde ontem"; "Buscar agora".
+- **Primeiros passos** (só enquanto falta algo): primeira busca (alguma fonte
+  terminou uma busca), preferências salvas, currículo começado (algum campo,
+  texto ou entrada preenchido). Cada item marca sozinho; com os três feitos,
+  o cartão some.
+- Atalhos: Triar no deslizar (com o número), Ver vagas (salvas), Vaga manual
+  (o mesmo diálogo da tela de Vagas), Currículo.
+- **Esta semana**: vagas novas nas últimas 24 h; caixa com nota ≥ 800 ("—"
+  com link quando não há preferências); **etapas nos próximos 7 dias**
+  (`stepsNextDays` — "até sexta" não funcionava no fim de semana); propostas
+  em aberto.
+- Melhores vagas novas (`topNew`): clicar abre o painel da vaga ali mesmo
+  (`?vaga=id`, como em Vagas).
+- Próximas etapas (`upcomingSteps`): dia em destaque (hoje, amanhã, "qui"),
+  o que é e a hora (quando marcada), a vaga e o status; leva para
+  `/candidaturas/:id`.
+- **Vagas novas por dia** (14 dias): colunas de uma série só, cor de
+  destaque (validada contra a superfície nos dois temas), sem legenda — o
+  título diz o que é. Eixo com passos redondos, número só no pico, dica ao
+  passar o mouse (a coluna inteira é a área) ou com ←/→ no gráfico focado
+  (lido pelo leitor de tela); tabela escondida com todos os dias.
+- **Funil**: Aplicada → Em processo → Proposta em barras horizontais, todo
+  valor escrito (com a % da etapa anterior), e a mediana de dias até a
+  primeira resposta.
+- Sem dados, cada bloco diz o que fazer (buscar, ajustar preferências,
+  marcar etapa, candidatar).
 
 ### Vagas — `/vagas`
 
@@ -337,7 +352,7 @@ Cada item é um passo com teste e revisão antes do próximo.
 5. ✅ **Candidaturas**: quadro, mover de coluna, linha do tempo.
 6. ✅ **Currículo**: formulário, copiar, salvar, impressão.
 7. ✅ **Preferências**: formulário, fontes, histórico, limpeza.
-8. **Início**: painel.
+8. ✅ **Início**: painel.
 
 ## Testes
 
@@ -349,6 +364,8 @@ Cada item é um passo com teste e revisão antes do próximo.
 - Preferências: salvar manda tudo e acompanha o recálculo; mover stack entre
   grupos; número fora da faixa não salva; histórico paginado e filtrado;
   "Limpar agora" só apaga depois de confirmar.
+- Início: blocos e números, painel da vaga pela URL, gráfico pelo teclado,
+  primeiros passos, estados vazios.
 - Tema: o atributo muda na raiz e a escolha fica salva.
 - Acessibilidade: cada tela renderiza sem botão sem nome (checagem simples
   com Testing Library).

@@ -144,8 +144,26 @@ describeDb('Painel (integração)', () => {
       { nextStepAt: new Date(NOW.getTime() + DAY), nextStepNote: 'recusada' },
     );
 
-    const { upcomingSteps } = await service.get(NOW, SP);
+    const { upcomingSteps, stepsNextDays } = await service.get(NOW, SP);
     expect(upcomingSteps.map((a) => a.nextStepNote)).toEqual(['hoje', 'depois']);
+    expect(stepsNextDays).toBe(2);
+  });
+
+  it('etapas nos próximos 7 dias: de hoje até o fim do 7º dia, no calendário local', async () => {
+    // NOW = sábado 10/10, 15h em SP. A janela vai até sexta 16/10, 23h59.
+    await application([['applied', 0]], {
+      nextStepAt: new Date('2026-10-17T02:00:00.000Z'), // sexta 16/10, 23h em SP
+      nextStepNote: 'sexta à noite',
+    });
+    await application([['applied', 0]], {
+      nextStepAt: new Date('2026-10-17T03:30:00.000Z'), // sábado 17/10, 0h30 em SP
+      nextStepNote: 'fora',
+    });
+
+    const { upcomingSteps, stepsNextDays } = await service.get(NOW, SP);
+    expect(stepsNextDays).toBe(1);
+    // A lista não tem limite de dias: só de quantidade.
+    expect(upcomingSteps).toHaveLength(2);
   });
 
   it('funil pelo histórico e mediana até a primeira resposta', async () => {
@@ -187,6 +205,7 @@ describeDb('Painel (integração)', () => {
       'medianDaysToFirstResponse',
       'newJobsPerDay',
       'newLast24h',
+      'stepsNextDays',
       'topNew',
       'upcomingSteps',
     ]);

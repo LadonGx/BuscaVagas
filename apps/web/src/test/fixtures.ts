@@ -1,6 +1,7 @@
 import type {
   ApplicationDetailDto,
   ApplicationSummaryDto,
+  DashboardDto,
   JobCountsDto,
   JobDto,
   PreferencesDto,
@@ -223,3 +224,31 @@ export const resume = (): ResumeDto => ({
     ]),
   ],
 });
+
+/** Painel do Início: 14 dias terminando hoje (data local), com pico no dia 10. */
+export const dashboard = (overrides: Partial<DashboardDto> = {}): DashboardDto => {
+  const counts = [1, 0, 3, 4, 3, 2, 1, 3, 4, 1, 9, 2, 5, 2];
+  const today = new Date();
+  return {
+    newJobsPerDay: counts.map((count, index) => {
+      const day = new Date(today);
+      day.setDate(today.getDate() - (counts.length - 1 - index));
+      const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+      return { date: iso, count };
+    }),
+    newLast24h: 2,
+    highScoreInbox: 6,
+    topNew: [job()],
+    upcomingSteps: [
+      application({
+        status: 'in_process',
+        nextStepAt: new Date(Date.now() + 2 * 86_400_000).toISOString(),
+        nextStepNote: 'Entrevista técnica',
+      }),
+    ],
+    stepsNextDays: 2,
+    funnel: { applied: 9, inProcess: 3, offer: 1 },
+    medianDaysToFirstResponse: 4.5,
+    ...overrides,
+  };
+};

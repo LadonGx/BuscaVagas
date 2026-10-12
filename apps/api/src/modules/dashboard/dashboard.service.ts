@@ -3,6 +3,7 @@ import {
   DASHBOARD_LIST_SIZE,
   SCORE_TIER_MIN,
   TOP_NEW_DAYS,
+  UPCOMING_DAYS,
   type DashboardDto,
 } from '@busca-vagas/shared';
 import { Injectable } from '@nestjs/common';
@@ -26,25 +27,34 @@ export class DashboardService {
     // Nota de preferências antigas ainda vai ser recalculada: fica de fora
     // das contas de "nota alta" até a fila passar.
     const version = await loadScoreVersion(this.prisma);
-    const [newJobsPerDay, newLast24h, highScoreInbox, topNew, upcomingSteps, funnel, median] =
-      await Promise.all([
-        this.newJobsPerDay(now, timeZone),
-        this.prisma.job.count({
-          where: { firstSeenAt: { gte: new Date(now.getTime() - DAY_MS) } },
-        }),
-        this.prisma.job.count({
-          where: {
-            triage: 'inbox',
-            incompatible: false,
-            scoredVersion: { gte: version },
-            score: { gte: SCORE_TIER_MIN.great },
-          },
-        }),
-        this.topNew(now, version),
-        this.upcomingSteps(now, timeZone),
-        this.funnel(),
-        this.medianDaysToFirstResponse(),
-      ]);
+    const [
+      newJobsPerDay,
+      newLast24h,
+      highScoreInbox,
+      topNew,
+      upcomingSteps,
+      stepsNextDays,
+      funnel,
+      median,
+    ] = await Promise.all([
+      this.newJobsPerDay(now, timeZone),
+      this.prisma.job.count({
+        where: { firstSeenAt: { gte: new Date(now.getTime() - DAY_MS) } },
+      }),
+      this.prisma.job.count({
+        where: {
+          triage: 'inbox',
+          incompatible: false,
+          scoredVersion: { gte: version },
+          score: { gte: SCORE_TIER_MIN.great },
+        },
+      }),
+      this.topNew(now, version),
+      this.upcomingSteps(now, timeZone),
+      this.prisma.application.count({ where: stepsWindow(now, timeZone, UPCOMING_DAYS) }),
+      this.funnel(),
+      this.medianDaysToFirstResponse(),
+    ]);
 
     return {
       newJobsPerDay,
@@ -52,6 +62,7 @@ export class DashboardService {
       highScoreInbox,
       topNew,
       upcomingSteps,
+      stepsNextDays,
       funnel,
       medianDaysToFirstResponse: median,
     };
@@ -96,10 +107,7 @@ export class DashboardService {
   /** Abertas (sem recusa nem desistência), com etapa de hoje em diante. */
   private async upcomingSteps(now: Date, timeZone: string): Promise<DashboardDto['upcomingSteps']> {
     const rows = await this.prisma.application.findMany({
-      where: {
-        status: { in: ['applied', 'in_process', 'offer'] },
-        nextStepAt: { gte: startOfLocalDay(now, timeZone) },
-      },
+      where: stepsWindow(now, timeZone),
       orderBy: [{ nextStepAt: 'asc' }, { id: 'asc' }],
       take: DASHBOARD_LIST_SIZE,
       include: applicationInclude,
@@ -150,4 +158,22 @@ export class DashboardService {
     const median = row?.median;
     return median === null || median === undefined ? null : Math.round(Number(median) * 10) / 10;
   }
+}
+
+/**
+ * Candidaturas abertas (sem recusa nem desistência) com etapa de hoje
+ * (meia-noite local) em diante; com `days`, só até o fim do último dia.
+ */
+function stepsWindow(now: Date, timeZone: string, days?: number) {
+  const from = startOfLocalDay(now, timeZone);
+  return {
+    status: { in: ['applied' as const, 'in_process' as const, 'offer' as const] },
+    nextStepAt: {
+      gte: from,
+      // Meia-noite do dia seguinte ao último: conta no calendário, não em blocos de 24 h.
+      ...(days
+        ? { lt: startOfLocalDay(new Date(from.getTime() + (days + 0.5) * DAY_MS), timeZone) }
+        : {}),
+    },
+  };
 }

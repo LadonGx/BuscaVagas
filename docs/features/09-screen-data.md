@@ -100,6 +100,8 @@ interface DashboardDto {
   topNew: JobDto[]; // até 5
   /** Candidaturas abertas com próxima etapa de hoje (meia-noite local) em diante. */
   upcomingSteps: ApplicationDto[]; // até 5
+  /** Abertas com etapa de hoje até o fim do 7º dia (calendário local). */
+  stepsNextDays: number;
   /** Quantas candidaturas já passaram por cada etapa (pelo histórico, não pelo status atual). */
   funnel: { applied: number; inProcess: number; offer: number };
   /** Mediana de dias entre a candidatura e o primeiro evento que não é "Aplicada". */

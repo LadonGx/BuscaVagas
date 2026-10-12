@@ -167,6 +167,15 @@ Content-Type: application/json
 ### Histórico de execuções (paginado: use o nextCursor da resposta em &cursor=)
 GET {{api}}/discovery/runs?limit=10
 
+### Outras vezes em que a vaga apareceu (repostagens) — docs/features/11-reposts.md
+GET {{api}}/jobs/{{createJob.response.body.id}}/history
+
+### Repostagens desta vaga entram já descartadas
+PUT {{api}}/jobs/{{createJob.response.body.id}}/reposts
+Content-Type: application/json
+
+{ "muted": true }
+
 ### Vagas que vieram da Gupy
 GET {{api}}/jobs?source=gupy&limit=20
 

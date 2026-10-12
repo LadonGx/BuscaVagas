@@ -2,6 +2,7 @@ import type {
   ApplicationDetailDto,
   CreateJobInput,
   JobDto,
+  JobHistoryDto,
   JobSort,
   Page,
   TriageStatus,
@@ -174,5 +175,23 @@ export function useApply() {
         queryClient.invalidateQueries({ queryKey: keys.applications.all }),
         queryClient.invalidateQueries({ queryKey: keys.dashboard }),
       ]),
+  });
+}
+
+/** As outras vezes em que a vaga apareceu e se as repostagens estão silenciadas. */
+export function useJobHistory(id: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.jobs.history(id),
+    queryFn: ({ signal }) => api.get<JobHistoryDto>(`/jobs/${id}/history`, undefined, signal),
+    enabled,
+  });
+}
+
+/** "Descartar sozinha se for repostada" (liga/desliga). */
+export function useMuteReposts(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (muted: boolean) => api.put<JobHistoryDto>(`/jobs/${id}/reposts`, { muted }),
+    onSuccess: (history) => queryClient.setQueryData(keys.jobs.history(id), history),
   });
 }

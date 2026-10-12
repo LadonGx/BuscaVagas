@@ -192,7 +192,63 @@ export interface JobDto {
   incompatible: boolean;
   /** A nota está na fila para ser calculada (vaga nova ou editada). */
   scorePending: boolean;
+
+  /* Repostadas e duplicadas — docs/features/11-reposts.md */
+  /** Já tinha aparecido antes com outro link. `null` = inédita. */
+  repost: JobRepostDto | null;
+  /** A mesma vaga em outros links (outras fontes). Não viram outra vaga. */
+  alsoOn: { source: string; url: string }[];
 }
+
+/** Janela em que uma vaga com a mesma impressão conta como "já apareceu". */
+export const REPOST_WINDOW_DAYS = 180;
+/**
+ * A anterior foi vista há menos que isto: a nova é a MESMA vaga em outro
+ * link (duplicada, vira `alsoOn`); senão, é uma repostagem (vaga nova ligada).
+ */
+export const DUPLICATE_LIVE_DAYS = 7;
+/** Motivo gravado na repostagem que entra já descartada. */
+export const MUTED_REPOST_REASON = 'Repostagem de vaga que você pediu para descartar sempre';
+
+export interface JobRepostDto {
+  /** Quantas vezes já tinha aparecido (nos últimos `REPOST_WINDOW_DAYS` dias). */
+  count: number;
+  /** Última vez que a anterior foi vista. */
+  previousSeenAt: string | null;
+  /** A anterior, se ainda existir no app (a limpeza pode ter apagado). */
+  previous: {
+    id: string;
+    triage: TriageStatus;
+    triagedAt: string | null;
+    application: { id: string; status: ApplicationStatus } | null;
+  } | null;
+}
+
+/** Uma vez em que a vaga apareceu (outra linha com a mesma impressão). */
+export interface JobOccurrenceDto {
+  /** `null` = a limpeza já apagou; só o link ficou lembrado. */
+  jobId: string | null;
+  source: string;
+  url: string | null;
+  /** Quando entrou no app (`null` nas apagadas). */
+  firstSeenAt: string | null;
+  /** Última vez vista; nas apagadas, quando a limpeza apagou. */
+  lastSeenAt: string;
+  /** `forgotten` = descartada e apagada pela limpeza. */
+  triage: TriageStatus | 'forgotten';
+  triagedAt: string | null;
+  application: { id: string; status: ApplicationStatus; appliedAt: string } | null;
+}
+
+export interface JobHistoryDto {
+  /** Repostagens desta vaga entram já descartadas. */
+  repostsMuted: boolean;
+  /** As outras vezes, da mais recente para a mais antiga (sem a própria vaga). */
+  occurrences: JobOccurrenceDto[];
+}
+
+export const muteRepostsInputSchema = z.object({ muted: z.boolean() });
+export type MuteRepostsInput = z.output<typeof muteRepostsInputSchema>;
 
 /** Resultado de `JobsService.ingest` — usado pelas fontes. */
 export interface IngestResult {
@@ -202,6 +258,10 @@ export interface IngestResult {
   seen: number;
   /** Vagas descartadas e já apagadas pela retenção: a fonte trouxe, foram ignoradas. */
   ignored: number;
+  /** Links novos de uma vaga que já existe (outra fonte): viraram `alsoOn`. */
+  duplicates: number;
+  /** Das criadas, quantas já tinham aparecido antes com outro link. */
+  reposts: number;
 }
 
 export interface BulkTriageResult {

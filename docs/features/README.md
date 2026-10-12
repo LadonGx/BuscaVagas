@@ -17,5 +17,6 @@ implementação divergir do plano, o plano é atualizado junto.
 | 08  | [Retenção e volume](08-retention.md)                                | ✅     |
 | 09  | [Dados para as telas](09-screen-data.md)                            | ✅     |
 | 10  | [Frontend](10-frontend.md)                                          | ✅     |
+| 11  | [Vaga repostada e duplicada entre fontes](11-reposts.md)            | ✅     |
 
-Ordem de dependência: 00 → 01 → 02 → 03 (usa a triagem) · 04 é independente · 05 usa o `ingest` de 01 · 06 usa a descoberta de 05 · 07 usa 01 (vagas) e o `ingest` · 08 usa 02 (triagem) e o `ingest` · 09 usa 01, 03, 05 e 07 · 10 usa todas.
+Ordem de dependência: 00 → 01 → 02 → 03 (usa a triagem) · 04 é independente · 05 usa o `ingest` de 01 · 06 usa a descoberta de 05 · 07 usa 01 (vagas) e o `ingest` · 08 usa 02 (triagem) e o `ingest` · 09 usa 01, 03, 05 e 07 · 10 usa todas · 11 usa o `ingest` de 01 e a limpeza de 08.

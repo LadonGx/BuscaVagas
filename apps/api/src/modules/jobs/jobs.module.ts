@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
+import { FingerprintBackfill } from './fingerprint-backfill';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
 
 /**
- * Vagas: cadastro manual, listagem com filtros e `ingest` para as fontes.
- * Plano: docs/features/01-jobs.md
+ * Vagas: cadastro manual, listagem com filtros e `ingest` para as fontes,
+ * com a detecção de repostadas e duplicadas.
+ * Planos: docs/features/01-jobs.md, docs/features/11-reposts.md
  */
 @Module({
   controllers: [JobsController],
-  providers: [JobsService],
+  providers: [JobsService, FingerprintBackfill],
   exports: [JobsService],
 })
 export class JobsModule {}

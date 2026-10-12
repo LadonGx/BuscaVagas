@@ -79,7 +79,8 @@ Ordem combinada, em blocos.
       empresas verificadas por ATS; o `.env` só semeia a primeira vez (JS) ([06](features/06-company-boards.md))
 - [x] Portais BR (InfoJobs, Vagas.com) e grandes (Indeed, Glassdoor, LinkedIn): termos de uso
       conferidos — todos proíbem coleta automática. Caminhos permitidos abaixo.
-- [ ] Detecção de vaga repostada (VG)
+- [x] Detecção de vaga repostada e da mesma vaga em duas fontes: selo, histórico e
+      "descartar sozinha se for repostada" (VG) ([11](features/11-reposts.md))
 
 **Bloco B — candidatura**
 

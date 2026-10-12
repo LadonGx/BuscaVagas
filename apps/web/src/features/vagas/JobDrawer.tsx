@@ -15,6 +15,7 @@ import { Drawer } from '../../components/ui/Drawer';
 import { formatAgo } from '../../lib/format';
 import { scoreLabel } from '../../lib/score';
 import { jobDate } from './JobCard';
+import { JobHistory } from './JobHistory';
 import styles from './JobDrawer.module.css';
 
 /** Motivos comuns para descartar — um clique em vez de digitar. */
@@ -83,6 +84,8 @@ function JobDetails({ job }: { job: JobDto }) {
       )}
 
       {job.dismissReason && <p className={styles.muted}>Descartada: {job.dismissReason}</p>}
+
+      <JobHistory job={job} />
 
       <section className={styles.block}>
         <h3 className={styles.label}>Descrição</h3>

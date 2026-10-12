@@ -69,6 +69,12 @@ describe('chips', () => {
     ).toEqual(['Híbrida', 'Campinas, SP', 'Júnior', 'R$ 4.000 – R$ 6.000/mês']);
   });
 
+  it('estágio como contrato e como nível aparece uma vez só', () => {
+    expect(
+      jobChipTexts(job({ contractType: 'internship', seniority: 'intern', location: null })),
+    ).toEqual(['Híbrida', 'Estágio']);
+  });
+
   it('JobChips vira lista', () => {
     render(<JobChips job={job()} />);
     expect(

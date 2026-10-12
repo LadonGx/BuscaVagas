@@ -110,6 +110,8 @@ export const job = (overrides: Partial<JobDto> = {}): JobDto => ({
   ],
   incompatible: false,
   scorePending: false,
+  repost: null,
+  alsoOn: [],
   ...overrides,
 });
 

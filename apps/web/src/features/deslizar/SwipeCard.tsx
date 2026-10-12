@@ -1,6 +1,8 @@
 import type { JobDto } from '@busca-vagas/shared';
 import { useRef, useState, type PointerEvent } from 'react';
+import { useSourceName } from '../../api/discovery';
 import { JobChips, StackChips } from '../../components/job/Chips';
+import { JobFlags } from '../../components/job/JobFlags';
 import { ReasonList } from '../../components/job/ReasonList';
 import { ScoreBadge } from '../../components/job/ScoreBadge';
 import { formatAgo } from '../../lib/format';
@@ -30,6 +32,7 @@ function excerpt(text: string | null): string | null {
  * direita salva, para a esquerda descarta; soltando antes, volta ao centro.
  */
 export function SwipeCard({ job, sourceName, onSwipe, onOpen }: SwipeCardProps) {
+  const sourceNameOf = useSourceName();
   const [dx, setDx] = useState(0);
   const start = useRef<number | null>(null);
   const text = excerpt(job.description);
@@ -90,6 +93,7 @@ export function SwipeCard({ job, sourceName, onSwipe, onOpen }: SwipeCardProps) 
       </p>
 
       <JobChips job={job} />
+      <JobFlags job={job} sourceName={sourceNameOf} />
       <ReasonList reasons={job.scoreReasons} />
       <StackChips stack={job.stack} max={8} />
 

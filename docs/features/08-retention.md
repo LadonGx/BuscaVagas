@@ -16,8 +16,10 @@ conferida (prévia) ou disparada à mão.
   descartada segue a regra das descartadas.
 - **Prazo único:** `RETENTION_DAYS=30` no `.env`; `0` desliga a limpeza.
 - **Descartada apagada não volta.** Antes de apagar, a URL vai para
-  `ForgottenJob` (só URL, fonte e data). Quando uma fonte trouxer a vaga de
-  novo, ela é ignorada no `ingest`. Esse registro expira em 6 meses
+  `ForgottenJob` (URL, fonte, data e — desde o [11](11-reposts.md) — a
+  impressão da vaga; os outros links dela também entram). Quando uma fonte
+  trouxer o link de novo, ele é ignorado no `ingest`; com link novo, é
+  reconhecida como repostagem. Esse registro expira em 6 meses
   (`RETENTION_FORGET_DAYS=180`) — vaga reaberta depois disso é praticamente
   outra vaga.
 - **Caixa esquecida pode voltar.** Ela não foi recusada por você, só sumiu da
@@ -48,7 +50,9 @@ model ForgottenJob {
   url         String   @id      // canônica
   source      String
   forgottenAt DateTime @default(now())
+  fingerprint String?             // 11-reposts: reconhecer a repostagem
   @@index([forgottenAt])
+  @@index([fingerprint])
 }
 ```
 

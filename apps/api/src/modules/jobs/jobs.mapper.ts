@@ -4,6 +4,15 @@ import type { Prisma } from '../../generated/prisma/client';
 /** O que toda consulta de vaga traz junto, para montar o `JobDto`. */
 export const jobInclude = {
   application: { select: { id: true, status: true } },
+  repostOf: {
+    select: {
+      id: true,
+      triage: true,
+      triagedAt: true,
+      application: { select: { id: true, status: true } },
+    },
+  },
+  aliases: { select: { source: true, url: true }, orderBy: { firstSeenAt: 'asc' } },
 } satisfies Prisma.JobInclude;
 
 /**
@@ -55,5 +64,21 @@ export function toJobDto(
       : [],
     incompatible: job.incompatible,
     scorePending: isScorePending(job.scoredVersion, scoreVersion),
+    repost:
+      job.repostCount > 0
+        ? {
+            count: job.repostCount,
+            previousSeenAt: job.previousSeenAt?.toISOString() ?? null,
+            previous: job.repostOf
+              ? {
+                  id: job.repostOf.id,
+                  triage: job.repostOf.triage,
+                  triagedAt: job.repostOf.triagedAt?.toISOString() ?? null,
+                  application: job.repostOf.application,
+                }
+              : null,
+          }
+        : null,
+    alsoOn: job.aliases,
   };
 }

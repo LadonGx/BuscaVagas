@@ -2,6 +2,7 @@ import {
   bulkTriageInputSchema,
   createJobInputSchema,
   jobListQuerySchema,
+  muteRepostsInputSchema,
   triageInputSchema,
   updateJobInputSchema,
   type BulkTriageInput,
@@ -9,7 +10,9 @@ import {
   type CreateJobInput,
   type JobCountsDto,
   type JobDto,
+  type JobHistoryDto,
   type JobListQuery,
+  type MuteRepostsInput,
   type Page,
   type TriageInput,
   type UpdateJobInput,
@@ -88,5 +91,20 @@ export class JobsController {
     @Body(new ZodValidationPipe(triageInputSchema)) body: TriageInput,
   ): Promise<JobDto> {
     return this.jobs.setTriage(id, body);
+  }
+
+  /** Outras vezes em que a vaga apareceu (repostagens). Plano: docs/features/11-reposts.md */
+  @Get(':id/history')
+  history(@Param('id') id: string): Promise<JobHistoryDto> {
+    return this.jobs.history(id);
+  }
+
+  /** `{ muted: true }` = repostagens desta vaga entram já descartadas. */
+  @Put(':id/reposts')
+  muteReposts(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(muteRepostsInputSchema)) body: MuteRepostsInput,
+  ): Promise<JobHistoryDto> {
+    return this.jobs.muteReposts(id, body);
   }
 }

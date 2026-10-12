@@ -43,6 +43,8 @@ const base: JobDto = {
   ],
   incompatible: false,
   scorePending: false,
+  repost: null,
+  alsoOn: [],
 };
 
 export const SAMPLE_JOBS: { label: string; job: JobDto }[] = [

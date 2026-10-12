@@ -14,8 +14,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  *   caixa esquecida   nunca triadas (`inbox`) que a fonte não traz há N dias
  *
  * Nunca toca em: salvas, vagas com candidatura, vagas manuais na caixa.
- * A URL de cada descartada apagada vai para `ForgottenJob`, para a fonte não
- * trazê-la de volta. Plano: docs/features/08-retention.md
+ * A URL de cada descartada apagada (e dos outros links dela) vai para
+ * `ForgottenJob`, com a impressão digital, para a fonte não trazê-la de volta
+ * e a repostagem ser reconhecida. Plano: docs/features/08-retention.md
  */
 @Injectable()
 export class RetentionService {
@@ -47,16 +48,25 @@ export class RetentionService {
     if (!plan) return this.disabled(false);
 
     const result = await this.prisma.$transaction(async (tx) => {
-      // 1. Lembrar as URLs das descartadas antes de apagar.
+      // 1. Lembrar as URLs das descartadas antes de apagar — as dos outros
+      //    links (duplicadas) também — e a impressão, para reconhecer a
+      //    repostagem com link novo (docs/features/11-reposts.md).
       const toForget = await tx.job.findMany({
-        where: { ...plan.dismissed, url: { not: null } },
-        select: { url: true, source: true },
+        where: plan.dismissed,
+        select: {
+          url: true,
+          source: true,
+          fingerprint: true,
+          aliases: { select: { url: true, source: true } },
+        },
       });
-      if (toForget.length > 0) {
-        await tx.forgottenJob.createMany({
-          data: toForget.map((job) => ({ url: job.url!, source: job.source, forgottenAt: now })),
-          skipDuplicates: true,
-        });
+      const forgotten = toForget.flatMap((job) =>
+        [...(job.url ? [{ url: job.url, source: job.source }] : []), ...job.aliases].map(
+          (item) => ({ ...item, fingerprint: job.fingerprint, forgottenAt: now }),
+        ),
+      );
+      if (forgotten.length > 0) {
+        await tx.forgottenJob.createMany({ data: forgotten, skipDuplicates: true });
       }
 
       // 2. Apagar. As condições se repetem no delete: o que mudou no meio

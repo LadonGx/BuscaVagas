@@ -136,7 +136,7 @@ model Job {
   workModel    WorkModel?
   contractType ContractType?
   seniority    SeniorityLevel?
-  stack        String[]       @default([])
+  stack        String[]        @default([])
 
   salaryMin      Int?
   salaryMax      Int?
@@ -175,7 +175,22 @@ model Job {
   scoredVersion Int?
   scoredAt      DateTime?
 
+  /// Repostagem e duplicada entre fontes — docs/features/11-reposts.md.
+  /// Empresa + título + lugar normalizados. `null` = sem o que comparar.
+  fingerprint    String?
+  /// A vaga anterior com a mesma impressão (a mais recente), se ainda existir.
+  repostOfId     String?
+  repostOf       Job?       @relation("Reposts", fields: [repostOfId], references: [id], onDelete: SetNull)
+  reposts        Job[]      @relation("Reposts")
+  /// Quantas vezes já tinha aparecido (vagas e descartadas apagadas, 180 dias). 0 = inédita.
+  repostCount    Int        @default(0)
+  /// Última vez que a anterior foi vista (sobrevive à anterior ser apagada).
+  previousSeenAt DateTime?
+  /// Os outros links da mesma vaga (outras fontes): não viram outra vaga.
+  aliases        JobAlias[]
+
   @@unique([source, externalId])
+  @@index([fingerprint])
   @@index([company])
   @@index([triage, firstSeenAt])
   @@index([triage, score])
@@ -304,8 +319,40 @@ model ForgottenJob {
   url         String   @id
   source      String
   forgottenAt DateTime @default(now())
+  /// Impressão da vaga apagada: a repostagem (com outro link) é reconhecida.
+  fingerprint String?
 
   @@index([forgottenAt])
+  @@index([fingerprint])
+}
+
+// ---------------------------------------------------------------------------
+// Repostadas e duplicadas — docs/features/11-reposts.md
+// ---------------------------------------------------------------------------
+
+/// Outro link da mesma vaga (outra fonte, ou a empresa publicou duas vezes ao
+/// mesmo tempo). A fonte trazer este link atualiza `lastSeenAt` da vaga.
+model JobAlias {
+  /// Canônica. Nunca é a URL de uma `Job`.
+  url         String   @id
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  source      String
+  externalId  String?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  @@index([jobId])
+}
+
+/// "Descartar sozinha se for repostada": a repostagem com esta impressão já
+/// entra descartada. Sobrevive à limpeza apagar a vaga original.
+model MutedRepost {
+  fingerprint String   @id
+  /// Para mostrar o que foi silenciado.
+  title       String
+  company     String
+  createdAt   DateTime @default(now())
 }
 
 // ---------------------------------------------------------------------------

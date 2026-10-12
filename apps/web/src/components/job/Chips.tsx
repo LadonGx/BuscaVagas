@@ -23,15 +23,19 @@ type ChipJob = Pick<
   | 'salaryPeriod'
 >;
 
-/** O que se sabe da vaga, na ordem em que se decide: modalidade, local, contrato, nível, salário. */
+/**
+ * O que se sabe da vaga, na ordem em que se decide: modalidade, local,
+ * contrato, nível, salário. Sem repetir: contrato e nível "Estágio" viram um só.
+ */
 export function jobChipTexts(job: ChipJob): string[] {
-  return [
+  const texts = [
     job.workModel && WORK_MODEL_LABELS[job.workModel],
     job.location,
     job.contractType && CONTRACT_LABELS[job.contractType],
     job.seniority && SENIORITY_LABELS[job.seniority],
     formatSalary(job),
   ].filter((text): text is string => Boolean(text));
+  return [...new Set(texts)];
 }
 
 export function JobChips({ job }: { job: ChipJob }) {

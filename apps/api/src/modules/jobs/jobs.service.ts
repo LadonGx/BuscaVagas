@@ -1,6 +1,9 @@
 import {
+  DUPLICATE_LIVE_DAYS,
   isPreferencesConfigured,
   MANUAL_SOURCE,
+  MUTED_REPOST_REASON,
+  REPOST_WINDOW_DAYS,
   normalizeStack,
   SCORE_TIER_MIN,
   type BulkTriageInput,
@@ -9,8 +12,11 @@ import {
   type IngestResult,
   type JobCountsDto,
   type JobDto,
+  type JobHistoryDto,
+  type JobOccurrenceDto,
   type JobListQuery,
   type JobPosting,
+  type MuteRepostsInput,
   type Page,
   type TriageInput,
   type UpdateJobInput,
@@ -40,6 +46,7 @@ import {
   PREFERENCES_ID,
 } from '../preferences/preferences.store';
 import { SCORE_REQUESTER, type ScoreRequester } from '../scoring/scoring.constants';
+import { jobFingerprint } from './fingerprint';
 import { jobInclude, toJobDto } from './jobs.mapper';
 import { buildJobWhere } from './jobs.where';
 
@@ -62,7 +69,18 @@ export class JobsService {
     }
 
     const job = await this.prisma.job.create({
-      data: { ...input, url, source: MANUAL_SOURCE, externalId: null },
+      data: {
+        ...input,
+        url,
+        source: MANUAL_SOURCE,
+        externalId: null,
+        fingerprint: jobFingerprint({
+          title: input.title,
+          company: input.company,
+          location: input.location ?? null,
+          workModel: input.workModel ?? null,
+        }),
+      },
       include: jobInclude,
     });
 
@@ -201,6 +219,14 @@ export class JobsService {
       });
     }
 
+    // Mudou o que forma a impressão: recalcula (as ligações antigas ficam).
+    data.fingerprint = jobFingerprint({
+      title: input.title ?? current.title,
+      company: input.company ?? current.company,
+      location: input.location !== undefined ? input.location : current.location,
+      workModel: input.workModel !== undefined ? input.workModel : current.workModel,
+    });
+
     const job = await this.prisma.job.update({ where: { id }, data, include: jobInclude });
     this.requestScoring('job:update');
     return toJobDto(job, await this.scoreVersion());
@@ -267,6 +293,13 @@ export class JobsService {
   /**
    * Porta de entrada das fontes. Grava as vagas novas e marca como vistas as
    * que já existiam — sem sobrescrever nada delas (você pode ter editado).
+   *
+   * Link novo com a mesma impressão de uma vaga que já passou pelo app
+   * (docs/features/11-reposts.md):
+   *  - a anterior foi vista há menos de DUPLICATE_LIVE_DAYS → é a MESMA vaga
+   *    em outro link: vira `JobAlias` da anterior, não outra vaga;
+   *  - senão → repostagem: vaga nova, ligada à anterior e com a contagem.
+   *    Se você silenciou essa impressão, ela já entra descartada.
    */
   async ingest(postings: readonly JobPosting[]): Promise<IngestResult> {
     const now = new Date();
@@ -297,49 +330,288 @@ export class JobsService {
         postedAt: posting.postedAt ? new Date(posting.postedAt) : null,
         firstSeenAt: now,
         lastSeenAt: now,
+        fingerprint: jobFingerprint(posting),
       });
     }
+
+    const result: IngestResult = {
+      received: postings.length,
+      created: 0,
+      seen: 0,
+      ignored: 0,
+      duplicates: 0,
+      reposts: 0,
+    };
+    if (byUrl.size === 0) return result;
 
     // Descartadas que a retenção já apagou: a fonte trouxe de novo, mas você
     // já disse não. Ver docs/features/08-retention.md.
-    let ignored = 0;
-    if (byUrl.size > 0) {
-      const forgotten = await this.prisma.forgottenJob.findMany({
-        where: { url: { in: [...byUrl.keys()] } },
-        select: { url: true },
-      });
-      for (const { url } of forgotten) {
-        byUrl.delete(url);
-        ignored += 1;
-      }
+    const urls = [...byUrl.keys()];
+    const [forgottenUrls, knownJobs, knownAliases] = await Promise.all([
+      this.prisma.forgottenJob.findMany({ where: { url: { in: urls } }, select: { url: true } }),
+      this.prisma.job.findMany({ where: { url: { in: urls } }, select: { url: true } }),
+      this.prisma.jobAlias.findMany({
+        where: { url: { in: urls } },
+        select: { url: true, jobId: true },
+      }),
+    ]);
+    for (const { url } of forgottenUrls) {
+      byUrl.delete(url);
+      result.ignored += 1;
     }
 
-    if (byUrl.size === 0) {
-      return { received: postings.length, created: 0, seen: 0, ignored };
+    // 1. Links que já conhecemos: só "visto". Nada da vaga é sobrescrito.
+    const known = knownJobs.map((job) => job.url!).filter((url) => byUrl.has(url));
+    if (known.length > 0) {
+      const { count } = await this.prisma.job.updateMany({
+        where: { url: { in: known }, firstSeenAt: { lt: now } },
+        data: { lastSeenAt: now },
+      });
+      result.seen += count;
+    }
+    const aliasHits = knownAliases.filter((alias) => byUrl.has(alias.url));
+    if (aliasHits.length > 0) {
+      await this.prisma.jobAlias.updateMany({
+        where: { url: { in: aliasHits.map((alias) => alias.url) } },
+        data: { lastSeenAt: now },
+      });
+      await this.touch(
+        aliasHits.map((alias) => alias.jobId),
+        now,
+      );
+      result.seen += aliasHits.length;
+    }
+    for (const url of [...known, ...aliasHits.map((alias) => alias.url)]) byUrl.delete(url);
+    if (byUrl.size === 0) return result;
+
+    // 2. Links novos: a impressão já apareceu?
+    const fresh = [...byUrl.values()];
+    const fingerprints = [...new Set(fresh.map((job) => job.fingerprint).filter(isString))];
+    const since = new Date(now.getTime() - REPOST_WINDOW_DAYS * DAY_MS);
+    const liveSince = new Date(now.getTime() - DUPLICATE_LIVE_DAYS * DAY_MS);
+    const [earlier, forgotten, muted] = fingerprints.length
+      ? await Promise.all([
+          this.prisma.job.findMany({
+            where: { fingerprint: { in: fingerprints }, lastSeenAt: { gte: since } },
+            select: { id: true, fingerprint: true, lastSeenAt: true },
+            orderBy: [{ lastSeenAt: 'desc' }, { id: 'desc' }],
+          }),
+          this.prisma.forgottenJob.findMany({
+            where: { fingerprint: { in: fingerprints }, forgottenAt: { gte: since } },
+            select: { fingerprint: true, forgottenAt: true },
+          }),
+          this.prisma.mutedRepost.findMany({
+            where: { fingerprint: { in: fingerprints } },
+            select: { fingerprint: true },
+          }),
+        ])
+      : [[], [], []];
+
+    const earlierBy = groupBy(earlier, (job) => job.fingerprint!);
+    const forgottenBy = groupBy(forgotten, (item) => item.fingerprint!);
+    const mutedSet = new Set(muted.map((item) => item.fingerprint));
+
+    const toCreate: Prisma.JobCreateManyInput[] = [];
+    const aliases: Prisma.JobAliasCreateManyInput[] = [];
+    /** Mesma impressão duas vezes nesta leva: a 2ª vira link da 1ª (depois de criada). */
+    const firstInBatch = new Map<string, string>();
+    const batchAliases: {
+      ownerUrl: string;
+      alias: Omit<Prisma.JobAliasCreateManyInput, 'jobId'>;
+    }[] = [];
+
+    for (const job of fresh) {
+      const fingerprint = job.fingerprint;
+      const alias = {
+        url: job.url!,
+        source: job.source,
+        externalId: job.externalId ?? null,
+        firstSeenAt: now,
+        lastSeenAt: now,
+      };
+
+      if (fingerprint) {
+        const ownerUrl = firstInBatch.get(fingerprint);
+        if (ownerUrl) {
+          batchAliases.push({ ownerUrl, alias });
+          continue;
+        }
+
+        const previous = earlierBy.get(fingerprint) ?? [];
+        const latest = previous[0];
+        if (latest && latest.lastSeenAt >= liveSince) {
+          aliases.push({ ...alias, jobId: latest.id });
+          continue;
+        }
+
+        const gone = forgottenBy.get(fingerprint) ?? [];
+        const count = previous.length + gone.length;
+        if (count > 0) {
+          const seenTimes = [
+            ...previous.map((item) => item.lastSeenAt.getTime()),
+            ...gone.map((item) => item.forgottenAt.getTime()),
+          ];
+          Object.assign(job, {
+            repostOfId: latest?.id ?? null,
+            repostCount: count,
+            previousSeenAt: new Date(Math.max(...seenTimes)),
+            ...(mutedSet.has(fingerprint) && {
+              triage: 'dismissed',
+              triagedAt: now,
+              dismissReason: MUTED_REPOST_REASON,
+            }),
+          } satisfies Partial<Prisma.JobCreateManyInput>);
+          result.reposts += 1;
+        }
+        firstInBatch.set(fingerprint, job.url!);
+      }
+
+      toCreate.push(job);
     }
 
     // skipDuplicates: a deduplicação é do banco (URL e source+externalId
     // únicos). Dois jobs da fila gravando ao mesmo tempo não duplicam nada.
-    const { count: created } = await this.prisma.job.createMany({
-      data: [...byUrl.values()],
-      skipDuplicates: true,
-    });
+    if (toCreate.length > 0) {
+      const { count } = await this.prisma.job.createMany({ data: toCreate, skipDuplicates: true });
+      result.created = count;
+    }
 
-    // As recém-criadas têm firstSeenAt = now e ficam de fora.
-    const { count: seen } = await this.prisma.job.updateMany({
-      where: { url: { in: [...byUrl.keys()] }, firstSeenAt: { lt: now } },
-      data: { lastSeenAt: now },
-    });
+    if (batchAliases.length > 0) {
+      const owners = await this.prisma.job.findMany({
+        where: { url: { in: [...new Set(batchAliases.map((item) => item.ownerUrl))] } },
+        select: { id: true, url: true },
+      });
+      const idByUrl = new Map(owners.map((owner) => [owner.url!, owner.id]));
+      for (const { ownerUrl, alias } of batchAliases) {
+        const jobId = idByUrl.get(ownerUrl);
+        if (jobId) aliases.push({ ...alias, jobId });
+      }
+    }
+
+    if (aliases.length > 0) {
+      const { count } = await this.prisma.jobAlias.createMany({
+        data: aliases,
+        skipDuplicates: true,
+      });
+      result.duplicates = count;
+      await this.touch(
+        aliases.map((alias) => alias.jobId),
+        now,
+      );
+    }
 
     // As novas entram sem nota; a fila calcula depois, sem atrasar a gravação.
-    if (created > 0) {
+    if (result.created > 0) {
       this.requestScoring('ingest');
     }
 
-    return { received: postings.length, created, seen, ignored };
+    return result;
+  }
+
+  /* ------------------------------------------------- repostadas (11) */
+
+  /** As outras vezes em que esta vaga apareceu, e se as repostagens estão silenciadas. */
+  async history(id: string): Promise<JobHistoryDto> {
+    const job = await this.findOrThrow(id);
+    if (!job.fingerprint) return { repostsMuted: false, occurrences: [] };
+
+    const since = new Date(Date.now() - REPOST_WINDOW_DAYS * DAY_MS);
+    const [jobs, forgotten, muted] = await Promise.all([
+      this.prisma.job.findMany({
+        where: { fingerprint: job.fingerprint, id: { not: id }, lastSeenAt: { gte: since } },
+        include: { application: { select: { id: true, status: true, appliedAt: true } } },
+      }),
+      this.prisma.forgottenJob.findMany({
+        where: { fingerprint: job.fingerprint, forgottenAt: { gte: since } },
+      }),
+      this.prisma.mutedRepost.findUnique({ where: { fingerprint: job.fingerprint } }),
+    ]);
+
+    const occurrences: JobOccurrenceDto[] = [
+      ...jobs.map((row) => ({
+        jobId: row.id,
+        source: row.source,
+        url: row.url,
+        firstSeenAt: row.firstSeenAt.toISOString(),
+        lastSeenAt: row.lastSeenAt.toISOString(),
+        triage: row.triage,
+        triagedAt: row.triagedAt?.toISOString() ?? null,
+        application: row.application
+          ? { ...row.application, appliedAt: row.application.appliedAt.toISOString() }
+          : null,
+      })),
+      ...forgotten.map((row) => ({
+        jobId: null,
+        source: row.source,
+        url: row.url,
+        firstSeenAt: null,
+        lastSeenAt: row.forgottenAt.toISOString(),
+        triage: 'forgotten' as const,
+        triagedAt: null,
+        application: null,
+      })),
+    ].sort((a, b) => b.lastSeenAt.localeCompare(a.lastSeenAt));
+
+    return { repostsMuted: Boolean(muted), occurrences };
+  }
+
+  /** Liga/desliga "descartar sozinha se for repostada" para a impressão desta vaga. */
+  async muteReposts(id: string, input: MuteRepostsInput): Promise<JobHistoryDto> {
+    const job = await this.findOrThrow(id);
+    if (!job.fingerprint) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: 'Não dá para reconhecer repostagens desta vaga (título ou empresa vazios).',
+      });
+    }
+
+    if (input.muted) {
+      await this.prisma.mutedRepost.upsert({
+        where: { fingerprint: job.fingerprint },
+        create: { fingerprint: job.fingerprint, title: job.title, company: job.company },
+        update: {},
+      });
+    } else {
+      await this.prisma.mutedRepost.deleteMany({ where: { fingerprint: job.fingerprint } });
+    }
+    return this.history(id);
+  }
+
+  /**
+   * Vagas antigas (de antes desta versão) sem impressão: calcula em lotes.
+   * Roda na subida; não liga nada retroativamente — só as próximas chegadas.
+   */
+  async backfillFingerprints(batch = 500): Promise<number> {
+    let updated = 0;
+    let after = '';
+    for (;;) {
+      const rows = await this.prisma.job.findMany({
+        where: { fingerprint: null, id: { gt: after } },
+        orderBy: { id: 'asc' },
+        take: batch,
+        select: { id: true, title: true, company: true, location: true, workModel: true },
+      });
+      if (rows.length === 0) return updated;
+      for (const row of rows) {
+        const fingerprint = jobFingerprint(row);
+        if (fingerprint) {
+          await this.prisma.job.update({ where: { id: row.id }, data: { fingerprint } });
+          updated += 1;
+        }
+      }
+      after = rows.at(-1)!.id;
+    }
   }
 
   /* ----------------------------------------------------------- internos */
+
+  /** A vaga foi trazida por outro link: continua aberta. */
+  private async touch(jobIds: string[], now: Date): Promise<void> {
+    await this.prisma.job.updateMany({
+      where: { id: { in: [...new Set(jobIds)] } },
+      data: { lastSeenAt: now },
+    });
+  }
 
   /** Sem esperar: a nota é trabalho de fundo e nunca segura a resposta. */
   private requestScoring(reason: string): void {
@@ -396,4 +668,17 @@ export function triageData(input: TriageInput, now: Date = new Date()) {
     triagedAt: now,
     dismissReason: input.status === 'dismissed' ? (input.reason ?? null) : null,
   };
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const isString = (value: string | null | undefined): value is string => Boolean(value);
+
+function groupBy<T>(items: readonly T[], key: (item: T) => string): Map<string, T[]> {
+  const map = new Map<string, T[]>();
+  for (const item of items) {
+    const k = key(item);
+    map.set(k, [...(map.get(k) ?? []), item]);
+  }
+  return map;
 }

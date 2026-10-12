@@ -150,7 +150,7 @@ describeDb('Retenção (integração)', () => {
     ]);
 
     const again = await jobs.ingest([posting(1), posting(3)]);
-    expect(again).toEqual({ received: 2, created: 1, seen: 0, ignored: 1 });
+    expect(again).toMatchObject({ received: 2, created: 1, seen: 0, ignored: 1 });
     expect(await remaining()).toEqual(['2', '3', '4', '5', '6', 'manual-antiga']);
   });
 

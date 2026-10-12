@@ -1,6 +1,8 @@
 import { scoreTier, type JobDto } from '@busca-vagas/shared';
 import { Bookmark, BookmarkCheck, ExternalLink, Eye, Inbox, X } from 'lucide-react';
+import { useSourceName } from '../../api/discovery';
 import { JobChips, StackChips, StatusChip } from '../../components/job/Chips';
+import { JobFlags } from '../../components/job/JobFlags';
 import { ReasonLine } from '../../components/job/ReasonList';
 import { ScoreBadge } from '../../components/job/ScoreBadge';
 import { formatAgo } from '../../lib/format';
@@ -23,6 +25,7 @@ export function JobCard({ job, now, onOpen, onTriage }: JobCardProps) {
   const tier = scoreTier(job);
   const dim = tier === 'incompatible' || job.triage === 'dismissed';
   const date = jobDate(job);
+  const sourceName = useSourceName();
 
   return (
     <article
@@ -49,6 +52,7 @@ export function JobCard({ job, now, onOpen, onTriage }: JobCardProps) {
       </div>
 
       <JobChips job={job} />
+      <JobFlags job={job} sourceName={sourceName} />
       <StackChips stack={job.stack} />
 
       {tier === 'pending' ? (

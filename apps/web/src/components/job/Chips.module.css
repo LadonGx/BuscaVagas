@@ -72,3 +72,20 @@
 .dot[data-tone='great'] {
   background: var(--great);
 }
+
+/* Selos de repostagem e de outras fontes (JobFlags). */
+.flag {
+  padding: 2px 8px;
+  border: 1px solid var(--info);
+  border-radius: 7px;
+  color: var(--info-fg);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: help;
+}
+
+.flag[data-tone='warn'] {
+  border-color: var(--good);
+  background: var(--good-bg);
+  color: var(--good-fg);
+}

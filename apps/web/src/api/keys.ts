@@ -10,6 +10,7 @@ export const keys = {
     lists: ['jobs', 'list'] as const,
     list: (filters: object) => ['jobs', 'list', filters] as const,
     detail: (id: string) => ['jobs', 'detail', id] as const,
+    history: (id: string) => ['jobs', 'history', id] as const,
   },
   applications: {
     all: ['applications'] as const,

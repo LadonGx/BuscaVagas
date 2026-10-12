@@ -1,0 +1,259 @@
+/*
+ * A folha é papel: cores fixas (preto no branco) nos dois temas, porque é
+ * isso que sai no PDF. Só o painel de opções segue o tema do app.
+ */
+
+.screen {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  min-height: 100vh;
+  padding: 28px;
+}
+
+.panel {
+  position: sticky;
+  top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 0;
+  color: var(--soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subChoices {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 24px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.subChoices .check {
+  color: var(--soft);
+  font-size: 13px;
+}
+
+.check input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.stage {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------ folha */
+
+.paper {
+  width: 210mm;
+  max-width: 100%;
+  min-height: 297mm;
+  padding: 18mm 18mm 20mm;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 30%);
+  color: #1f1d29;
+  font-family: var(--font-body);
+  font-size: 10.5pt;
+  line-height: 1.45;
+}
+
+.docHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14pt;
+  padding-bottom: 10pt;
+  border-bottom: 2px solid #4a33b0;
+}
+
+.name {
+  color: #16131f;
+  font-size: 22pt;
+  font-weight: 700;
+}
+
+.contact {
+  color: #4b475c;
+  font-size: 10pt;
+}
+
+.emptyDoc {
+  color: #6b6780;
+}
+
+.docSection {
+  margin-top: 12pt;
+}
+
+.docTitle {
+  margin-bottom: 6pt;
+  padding-bottom: 3pt;
+  border-bottom: 1px solid #dddbe6;
+  color: #4a33b0;
+  font-size: 10.5pt;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  break-after: avoid;
+}
+
+.docFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3pt 18pt;
+  margin: 0;
+}
+
+.docFields div {
+  display: flex;
+  gap: 4pt;
+}
+
+.docFields dt {
+  flex: none;
+  color: #4b475c;
+  font-weight: 600;
+}
+
+.docFields dd {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.docText {
+  white-space: pre-line;
+}
+
+.docEntry {
+  margin-top: 6pt;
+  break-inside: avoid;
+}
+
+.docEntry:first-of-type {
+  margin-top: 0;
+}
+
+.docEntryHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12pt;
+}
+
+.docEntryHead span {
+  flex: none;
+}
+
+.docMuted {
+  color: #6b6780;
+  font-size: 9.5pt;
+}
+
+.docEntry .docText {
+  margin-top: 2pt;
+  color: #33303f;
+}
+
+@media (width < 1000px) {
+  .screen {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .panel {
+    position: static;
+  }
+
+  .paper {
+    min-height: 0;
+    padding: 24px;
+  }
+}
+
+/* --------------------------------------------------------- impressão */
+
+@page {
+  size: A4;
+  margin: 14mm 16mm;
+}
+
+@media print {
+  :global(html),
+  :global(body) {
+    background: #fff;
+  }
+
+  .screen {
+    display: block;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .panel {
+    display: none;
+  }
+
+  .paper {
+    width: auto;
+    min-height: 0;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

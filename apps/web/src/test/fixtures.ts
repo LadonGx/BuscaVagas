@@ -3,6 +3,10 @@ import type {
   ApplicationSummaryDto,
   JobCountsDto,
   JobDto,
+  ResumeDto,
+  ResumeItemData,
+  ResumeSectionDto,
+  ResumeSectionKind,
   SourceInfoDto,
   SourceRunDto,
 } from '@busca-vagas/shared';
@@ -164,4 +168,57 @@ export const application = (
     },
   ],
   ...overrides,
+});
+
+const section = (
+  id: string,
+  title: string,
+  kind: ResumeSectionKind,
+  position: number,
+  items: [string, ResumeItemData][],
+): ResumeSectionDto => ({
+  id,
+  title,
+  kind,
+  position,
+  items: items.map(([itemId, data], index) => ({ id: itemId, position: index, data })),
+});
+
+/** Currículo com uma seção de cada tipo e os campos que o PDF esconde. */
+export const resume = (): ResumeDto => ({
+  sections: [
+    section('s-dados', 'Dados pessoais', 'fields', 0, [
+      ['i-nome', { label: 'Nome completo', value: 'Ana Souza' }],
+      ['i-nasc', { label: 'Data de nascimento', value: '01/02/2000' }],
+      ['i-cidade', { label: 'Cidade/UF', value: 'Americana/SP' }],
+    ]),
+    section('s-contato', 'Contato', 'fields', 1, [
+      ['i-email', { label: 'E-mail', value: 'ana@email.com' }],
+      ['i-tel', { label: 'Telefone/WhatsApp', value: '' }],
+    ]),
+    section('s-resumo', 'Resumo profissional', 'text', 2, [
+      ['i-resumo', { text: 'Dev full stack júnior.' }],
+    ]),
+    section('s-exp', 'Experiência', 'entries', 3, [
+      [
+        'i-exp',
+        {
+          title: 'Desenvolvedora Jr',
+          organization: 'Lumen',
+          location: 'Remoto',
+          startDate: '2025-01',
+          endDate: null,
+          current: true,
+          description: 'APIs em NestJS.',
+        },
+      ],
+    ]),
+    section('s-comp', 'Competências', 'fields', 4, [
+      ['i-ling', { label: 'Linguagens', value: 'TypeScript, Java' }],
+    ]),
+    section('s-resp', 'Respostas prontas', 'fields', 5, [
+      ['i-pret', { label: 'Pretensão salarial (CLT)', value: 'R$ 4.000' }],
+      ['i-disp', { label: 'Disponibilidade para início', value: 'Imediata' }],
+    ]),
+  ],
 });

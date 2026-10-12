@@ -1,0 +1,94 @@
+/* Formulário centralizado: uma coluna larga, como no protótipo. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+/* O cabeçalho (com "Salvar") acompanha a rolagem. */
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin: -26px -4px 0;
+  padding: 18px 4px 12px;
+  border-bottom: 1px solid transparent;
+  background: var(--bg);
+}
+
+.status {
+  display: block;
+  min-height: 1.5em;
+  color: var(--good-fg);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.headerCopy {
+  min-height: 40px;
+  color: var(--text);
+  padding: 0 14px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.headerCopy:not([data-copied]) {
+  background: var(--surface);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.import {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px dashed var(--input-border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.importIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+}
+
+.importText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+}
+
+.soon {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--chip-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* No celular o cabeçalho ocupa muita altura: rola junto. Ctrl+S continua. */
+@media (width < 860px) {
+  .sticky {
+    position: static;
+    margin: 0;
+    padding: 0;
+  }
+}

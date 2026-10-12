@@ -1,0 +1,30 @@
+.copy {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--soft);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.copy:not(:disabled):hover {
+  border-color: var(--accent);
+}
+
+.copy:disabled {
+  opacity: 0.45;
+}
+
+.copy[data-copied] {
+  border-color: var(--great);
+  background: var(--great-bg);
+  color: var(--great-fg);
+}

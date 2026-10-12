@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router';
 import { AppLayout } from './components/layout/AppLayout';
 import { CandidaturasPage } from './features/candidaturas/CandidaturasPage';
 import { CurriculoPage } from './features/curriculo/CurriculoPage';
+import { ImprimirPage } from './features/curriculo/ImprimirPage';
 import { DeslizarPage } from './features/deslizar/DeslizarPage';
 import { NotFoundPage } from './features/erros/NotFoundPage';
 import { RouteError } from './features/erros/RouteError';
@@ -39,4 +40,6 @@ export const routes: RouteObject[] = [
       { path: '*', element: <NotFoundPage /> },
     ],
   },
+  // Folha A4 para imprimir/salvar em PDF: fora do layout, sem o menu.
+  { path: '/curriculo/imprimir', element: <ImprimirPage />, errorElement: <RouteError /> },
 ];

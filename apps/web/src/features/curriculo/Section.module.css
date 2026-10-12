@@ -1,0 +1,444 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.card[data-organizing] {
+  border-color: var(--accent);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.headActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.error {
+  color: var(--bad-fg);
+  font-size: 12px;
+}
+
+.input {
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  background: var(--input);
+  font-size: 14px;
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--bad);
+}
+
+/* ------------------------------------------------ botões pequenos */
+
+.textTool,
+.tool {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--soft);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.textTool {
+  padding: 0 10px;
+}
+
+.tool {
+  width: 32px;
+}
+
+.textTool:not(:disabled):hover,
+.tool:not(:disabled):hover {
+  border-color: var(--accent);
+}
+
+.textTool:disabled,
+.tool:disabled {
+  opacity: 0.4;
+}
+
+.textTool[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+}
+
+.textTool[data-armed],
+.tool[data-armed] {
+  width: auto;
+  padding: 0 10px;
+  border-color: var(--bad);
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+}
+
+.tools {
+  display: flex;
+  gap: 6px;
+}
+
+/* ---------------------------------------------- organizar a seção */
+
+.sectionTools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface2);
+}
+
+.rename {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.rename .input {
+  flex: 1;
+}
+
+.sectionButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* -------------------------------------------------------- campos */
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.labelInput {
+  composes: input;
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--good);
+}
+
+.valueRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 3px 3px 3px 0;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  background: var(--input);
+}
+
+.valueRow:focus-within {
+  border-color: var(--accent);
+}
+
+.field[data-dirty] .valueRow {
+  border-color: var(--good);
+}
+
+.value {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  max-height: 240px;
+  padding: 5px 11px;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+  resize: none;
+  field-sizing: content;
+}
+
+.value:focus-visible {
+  box-shadow: none;
+}
+
+.value[aria-invalid='true'] {
+  color: var(--bad-fg);
+}
+
+.add {
+  align-self: flex-start;
+  min-height: 34px;
+  padding: 0 10px;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.addForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.addForm .input {
+  flex: 1;
+  min-width: 220px;
+}
+
+.addForm .error {
+  flex-basis: 100%;
+}
+
+/* --------------------------------------------------------- texto */
+
+.textBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.text {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  background: var(--input);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  field-sizing: content;
+}
+
+.textBlock[data-dirty] .text {
+  border-color: var(--good);
+}
+
+.text[aria-invalid='true'] {
+  border-color: var(--bad);
+}
+
+.textFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ------------------------------------------------------- entradas */
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface2);
+}
+
+.entry[data-dirty] {
+  border-color: var(--good);
+}
+
+.entryHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.entryText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.entryTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.unsaved {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--good-bg);
+  color: var(--good-fg);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.entryActions {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+
+.description {
+  color: var(--soft);
+  font-size: 14px;
+  white-space: pre-line;
+}
+
+.entryForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--soft);
+  font-size: 14px;
+}
+
+.check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.formFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------------------------------------------------- nova seção */
+
+.addSection {
+  align-self: center;
+}
+
+.kinds {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  margin-bottom: 6px;
+  padding: 0;
+  color: var(--soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kind {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.kind:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.kind input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+
+.kind > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+
+@media (width < 720px) {
+  .fieldGrid,
+  .entryForm,
+  .kinds {
+    grid-template-columns: 1fr;
+  }
+
+  .entryHead {
+    flex-direction: column;
+  }
+}

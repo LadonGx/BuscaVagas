@@ -90,3 +90,10 @@
     align-items: stretch;
   }
 }
+
+/* Aviso não sai no papel (ex.: "Currículo salvo." no PDF). */
+@media print {
+  .region {
+    display: none;
+  }
+}

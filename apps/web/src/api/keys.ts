@@ -22,4 +22,5 @@ export const keys = {
   },
   dashboard: ['dashboard'] as const,
   preferences: ['preferences'] as const,
+  resume: ['resume'] as const,
 };

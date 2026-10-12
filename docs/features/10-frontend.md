@@ -39,9 +39,9 @@ apps/web/src/
   components/              peças usadas em mais de uma tela
     layout/  AppLayout, Sidebar (menu + tema), ScanStatus, OfflineBanner, nav.ts
     toast/   ToastProvider + useToast
-    ui/      Button, PageHeader, EmptyState, Drawer  (depois: IconButton, Pill, Field, Dialog…)
+    ui/      Button, PageHeader, EmptyState, Drawer, Field, CopyButton
     job/     ScoreBadge, ReasonList (+ ReasonLine), Chips (JobChips, StackChips, StatusChip)
-    ScanButton  (depois: CopyButton)
+    ScanButton
   features/
     inicio/ vagas/ deslizar/ candidaturas/ curriculo/ preferencias/
   lib/
@@ -212,25 +212,65 @@ dezenas), `GET /api/applications/:id` no painel.
 Dados: `GET /api/resume`. O modelo de dados do [04](04-resume.md) continua
 igual; muda só a apresentação (formulário centralizado, como no job-tracker).
 
-- Cabeçalho: "Ver e salvar PDF" e "Salvar".
+- Cabeçalho fixo no topo ao rolar (no celular, rola junto): "Copiar tudo"
+  (mesmo texto do `/export`), "Ver e salvar PDF" e "Salvar". Embaixo do
+  título, "N alterações não salvas · Ctrl+S salva".
 - Caixa "Importar de PDF": **só visual nesta fase** — botão desabilitado com
   "Chega na Fase 3". O leitor de PDF é o item da Fase 3.
-- Cada seção vira um cartão:
-  - `fields` → grade de 2 colunas (Dados pessoais, Contato, Links,
-    Competências, Idiomas, Respostas prontas), botão "Copiar" em cada campo;
-  - `text` → área de texto (Resumo) com "Copiar" e contador;
-  - `entries` → cartões de experiência, formação, projetos e cursos, com
-    "Copiar" e edição no lugar.
+- Cada seção vira um cartão com "Copiar seção" e "Organizar":
+  - `fields` → grade de 2 colunas, "Copiar" em cada campo. O valor é uma área
+    de texto que cresce com o conteúdo (respostas longas cabem);
+  - `text` → área de texto com contador de caracteres;
+  - `entries` → cartões com título, organização · local · período e
+    descrição, com "Copiar" e "Editar" (formulário no lugar, datas `AAAA-MM`,
+    "Ainda estou aqui" limpa o fim).
 - **Copiar um campo copia só o valor** (o formulário da vaga já tem o
-  rótulo). Copiar uma seção ou uma entrada usa `resumeItemToText`, o mesmo
-  texto do `/export`. O botão vira "Copiado" por 1,5 s.
-- "Salvar" envia só os itens alterados (`PATCH /resume/items/:id`), em
-  sequência. Com algo não salvo: aviso ao sair da página e `Ctrl+S` salva.
-- Adicionar item, adicionar/renomear/apagar seção e reordenar com
-  "subir/descer" (`PUT .../order`).
-- "Ver e salvar PDF" abre `/curriculo/imprimir`: o currículo em página A4
-  com CSS de impressão e `window.print()` — o navegador oferece "Salvar como
-  PDF". Sem gerar PDF no servidor.
+  rótulo); vazio fica desabilitado. Copiar uma seção ou uma entrada usa
+  `resumeItemToText`, o mesmo texto do `/export`. Copia o que está na tela,
+  mesmo antes de salvar. O botão vira "Copiado" por 1,5 s.
+
+**Quando cada mudança vai para a API**
+
+| O quê                                                            | Quando                       |
+| ---------------------------------------------------------------- | ---------------------------- |
+| Conteúdo: valores, rótulos dos campos, textos, edição de entrada | Só no "Salvar" (ou `Ctrl+S`) |
+| Estrutura: criar/apagar item ou seção, renomear seção, ordenar   | Na hora                      |
+
+- O rascunho guarda o item inteiro por id. Item igual ao salvo (depois de
+  aparar espaços, `undefined` × `null`) não conta como alteração.
+- "Salvar" valida cada item com o schema do `shared` antes de enviar: item
+  com erro não vai, o erro aparece no campo (a entrada abre sozinha) e os
+  outros são salvos. Depois `PATCH /resume/items/:id`, **um de cada vez**;
+  um que falhe não para os outros e continua no rascunho.
+- Mudança de estrutura não mexe no rascunho (dá para adicionar um campo no
+  meio da edição).
+- Com algo não salvo: trocar de tela pergunta ("Salvar e sair", "Sair sem
+  salvar", "Continuar editando"); fechar a aba ou recarregar, o navegador
+  pergunta. `Ctrl+S` salva mesmo com o cursor num campo.
+- "Organizar" mostra o que fica escondido no uso normal: renomear a seção,
+  editar o rótulo dos campos, subir/descer/apagar itens e subir/descer/apagar
+  a seção. Apagar pede o segundo clique em até 5 s.
+- "Adicionar seção" no fim: nome e tipo (Campos, Texto, Entradas). O tipo não
+  muda depois.
+
+**Impressão — `/curriculo/imprimir`**
+
+- Fora do layout do app (sem menu). Folha A4 em preto no branco nos dois
+  temas; `@page` A4 com margem; painel de opções e avisos não saem no papel.
+- "Salvar como PDF" chama `window.print()`; a dica lembra de escolher
+  "Salvar como PDF" e desmarcar "Cabeçalhos e rodapés". O título da aba
+  ("Currículo — Nome") vira o nome sugerido do arquivo.
+- "Ver e salvar PDF" salva o rascunho antes de abrir; se algo não salvar,
+  fica no formulário.
+- Montagem: o campo que começa com "Nome" vira o título; as seções de campos
+  que vêm **antes** de qualquer texto ou entrada (Dados pessoais, Contato,
+  Links) viram uma linha de contato só com os valores; o resto vira um bloco
+  por seção (campos como "Rótulo: valor"). Campo, seção ou entrada vazia não
+  aparece.
+- **O que entra**: caixas por seção e por campo. Por padrão fica de fora a
+  seção "Respostas prontas" e os campos "Data de nascimento" e "Pretensão
+  salarial" (em qualquer seção; comparação sem acento). A escolha fica no
+  navegador (`busca-vagas:curriculo-pdf`), por id.
 
 ### Preferências — `/preferencias`
 
@@ -264,7 +304,7 @@ Cada item é um passo com teste e revisão antes do próximo.
 3. ✅ **Vagas**: grade, filtros na URL, painel, triagem com desfazer, vaga manual.
 4. ✅ **Deslizar**.
 5. ✅ **Candidaturas**: quadro, mover de coluna, linha do tempo.
-6. **Currículo**: formulário, copiar, salvar, impressão.
+6. ✅ **Currículo**: formulário, copiar, salvar, impressão.
 7. **Preferências**: formulário, fontes, histórico, limpeza.
 8. **Início**: painel.
 
@@ -273,7 +313,8 @@ Cada item é um passo com teste e revisão antes do próximo.
 - `lib/score.ts`: faixas nas bordas e motivos do cartão (bloqueio, a favor/contra, cobertura baixa).
 - Triagem otimista: some na hora, volta com erro da API, desfazer chama `inbox`.
 - Deslizar: setas, `Ctrl+Z`, busca a próxima página com 5 restantes.
-- Currículo: copiar campo copia só o valor; salvar envia só o que mudou.
+- Currículo: copiar campo copia só o valor; salvar envia só o que mudou;
+  item inválido não vai; `Ctrl+S`; aviso ao sair; o que entra no PDF.
 - Tema: o atributo muda na raiz e a escolha fica salva.
 - Acessibilidade: cada tela renderiza sem botão sem nome (checagem simples
   com Testing Library).

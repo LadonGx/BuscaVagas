@@ -1,4 +1,9 @@
-import type { ResumeDto, ResumeItemDto, ResumeSectionDto } from '@busca-vagas/shared';
+import type {
+  ResumeDto,
+  ResumeItemDto,
+  ResumeSectionDto,
+  ResumeStacksDto,
+} from '@busca-vagas/shared';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
 import { createTestApp, describeDb, resetDatabase, type TestApp } from '../../../test/helpers';
@@ -35,6 +40,44 @@ describeDb('Currículo (integração)', () => {
 
     await getResume();
     expect(await t.prisma.resumeSection.count()).toBe(DEFAULT_RESUME_SECTIONS.length);
+  });
+
+  it('stacks: procura nas competências, pelo detector das vagas', async () => {
+    const resume = await getResume();
+    const [linguagens, frameworks, bancos] = section(resume, 'Competências').items;
+    const fill = (item: ResumeItemDto, label: string, value: string) =>
+      api().patch(`/api/resume/items/${item.id}`).send({ data: { label, value } }).expect(200);
+    await fill(linguagens!, 'Linguagens', 'TypeScript, Java');
+    await fill(frameworks!, 'Frameworks', 'NestJS, React, React Native');
+    await fill(bancos!, 'Banco de dados', 'Postgres');
+    // Fora das competências: não entra.
+    const [summary] = section(resume, 'Resumo profissional').items;
+    await api()
+      .patch(`/api/resume/items/${summary!.id}`)
+      .send({ data: { text: 'Uso Docker no dia a dia.' } })
+      .expect(200);
+
+    const result = (await api().get('/api/resume/stacks').expect(200)).body as ResumeStacksDto;
+    expect(result.scannedSections).toEqual(['Competências']);
+    expect(result.stacks.map((s) => s.name).sort()).toEqual(
+      ['java', 'nestjs', 'postgresql', 'react', 'react native', 'typescript'].sort(),
+    );
+    expect(result.stacks.every((s) => s.sections[0] === 'Competências')).toBe(true);
+  });
+
+  it('stacks: sem seção de competências, procura nas seções de campos', async () => {
+    const resume = await getResume();
+    const skills = section(resume, 'Competências');
+    await api().patch(`/api/resume/sections/${skills.id}`).send({ title: 'Outros' }).expect(200);
+    await api()
+      .patch(`/api/resume/items/${skills.items[0]!.id}`)
+      .send({ data: { label: 'Linguagens', value: 'Python' } })
+      .expect(200);
+
+    const result = (await api().get('/api/resume/stacks').expect(200)).body as ResumeStacksDto;
+    expect(result.scannedSections).toContain('Outros');
+    expect(result.scannedSections).not.toContain('Experiência');
+    expect(result.stacks).toEqual([{ name: 'python', sections: ['Outros'] }]);
   });
 
   it('acessos simultâneos não duplicam as seções padrão', async () => {

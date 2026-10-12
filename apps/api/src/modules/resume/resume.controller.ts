@@ -9,6 +9,7 @@ import {
   type ResumeItemDto,
   type ResumeItemInput,
   type ResumeSectionDto,
+  type ResumeStacksDto,
   type UpdateResumeSectionInput,
 } from '@busca-vagas/shared';
 import {
@@ -35,6 +36,12 @@ export class ResumeController {
   @Get()
   get(): Promise<ResumeDto> {
     return this.resume.get();
+  }
+
+  /** Tecnologias das competências, para trazer às preferências. */
+  @Get('stacks')
+  stacks(): Promise<ResumeStacksDto> {
+    return this.resume.stacks();
   }
 
   /** O currículo inteiro em texto puro, para "cole seu currículo aqui". */

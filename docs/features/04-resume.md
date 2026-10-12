@@ -51,6 +51,7 @@ voltar no próximo acesso.
 | -------- | -------------------------------------- | --------------------------------------------------------------- |
 | `GET`    | `/api/resume`                          | seções com itens, em ordem                                      |
 | `GET`    | `/api/resume/export`                   | currículo inteiro em `text/plain` (campos vazios ficam de fora) |
+| `GET`    | `/api/resume/stacks`                   | tecnologias das competências, pelo detector de stack das vagas  |
 | `POST`   | `/api/resume/sections`                 | `{ title, kind }` → vai para o fim                              |
 | `PATCH`  | `/api/resume/sections/:id`             | `{ title }`                                                     |
 | `DELETE` | `/api/resume/sections/:id`             | apaga os itens junto                                            |
@@ -67,6 +68,12 @@ Reordenar com lista incompleta, repetida ou com id de fora → 400.
 A formatação de cada item em texto (`resumeItemToText`) fica em
 `packages/shared`: o botão "copiar" do front e o `/export` da API usam a
 mesma função. Exemplo de `entries`:
+
+`/resume/stacks` passa o currículo salvo pelo `stackFromText` (o detector das
+vagas, em `packages/sources`), então os nomes batem com os das preferências.
+Procura nas seções cujo título fala de competências (`SKILL_SECTION_PATTERN`:
+"Competências", "Habilidades", "Skills", "Tecnologias", "Ferramentas"...); sem
+nenhuma, em todas as seções de campos. Em campos, lê só o valor.
 
 ```
 Desenvolvedor Full Stack Trainee — Empresa (Americana, SP)

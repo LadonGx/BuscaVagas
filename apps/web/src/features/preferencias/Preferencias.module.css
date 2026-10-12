@@ -495,3 +495,152 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ----------------------------------------------- sugestões de stack */
+
+.combo {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.listbox {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  width: max(100%, 320px);
+  max-height: 288px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  list-style: none;
+}
+
+.listbox[hidden] {
+  display: none;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.option[aria-selected='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+}
+
+.optionName {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.optionWhere {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--chip-text);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.optionCount {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------ trazer do currículo */
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.importPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface2);
+}
+
+.importTitle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.importList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.importName {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.check input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+/* -------------------------------------------------- erro resumido */
+
+.details {
+  margin-top: 4px;
+  font-family: var(--font-body);
+}
+
+.details summary {
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.details pre {
+  max-height: 200px;
+  margin: 6px 0 0;
+  padding: 8px;
+  overflow: auto;
+  border-radius: var(--radius-sm);
+  background: var(--input);
+  color: var(--soft);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

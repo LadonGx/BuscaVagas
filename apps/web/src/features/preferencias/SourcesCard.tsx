@@ -12,6 +12,7 @@ import {
   formatUntil,
 } from '../../lib/format';
 import { useNow } from '../../lib/useNow';
+import { ErrorText } from './ErrorText';
 import styles from './Preferencias.module.css';
 
 const KIND_LABEL: Record<SourceInfoDto['kind'], string> = {
@@ -85,9 +86,7 @@ export function SourcesCard() {
                 {!source.active && source.reason && (
                   <span className={styles.reason}>{source.reason}</span>
                 )}
-                {failed && source.lastRun?.error && (
-                  <span className={styles.reason}>{source.lastRun.error}</span>
-                )}
+                {failed && source.lastRun?.error && <ErrorText error={source.lastRun.error} />}
               </div>
             </li>
           );
@@ -175,7 +174,7 @@ function RunsDrawer({ open, onClose, sources }: RunsDrawerProps) {
               </p>
             )}
             {run.terms.length > 0 && <p className={styles.hint}>Termos: {run.terms.join(', ')}</p>}
-            {run.error && <p className={styles.reason}>{run.error}</p>}
+            {run.error && <ErrorText error={run.error} />}
           </li>
         ))}
       </ol>

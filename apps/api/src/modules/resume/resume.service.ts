@@ -1,12 +1,17 @@
+import { stackFromText } from '@busca-vagas/sources';
 import {
   resumeItemDataSchema,
+  resumeItemToText,
   resumeToText,
+  SKILL_SECTION_PATTERN,
+  type FieldItem,
   type CreateResumeSectionInput,
   type ResumeDto,
   type ResumeItemData,
   type ResumeItemDto,
   type ResumeSectionDto,
   type ResumeSectionKind,
+  type ResumeStacksDto,
   type UpdateResumeSectionInput,
 } from '@busca-vagas/shared';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
@@ -41,6 +46,35 @@ export class ResumeService {
     });
 
     return { sections: sections.map(toSectionDto) };
+  }
+
+  /**
+   * Tecnologias do currículo para as preferências. Procura nas seções de
+   * competências (pelo título); sem nenhuma, em todas as seções de campos.
+   * Em campos, só o valor ("Linguagens: TypeScript" → "TypeScript").
+   */
+  async stacks(): Promise<ResumeStacksDto> {
+    const { sections } = await this.get();
+    const plain = (text: string) => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+    const skills = sections.filter((section) => SKILL_SECTION_PATTERN.test(plain(section.title)));
+    const scanned = skills.length > 0 ? skills : sections.filter((s) => s.kind === 'fields');
+
+    const found = new Map<string, string[]>();
+    for (const section of scanned) {
+      const texts = section.items.map((item) =>
+        section.kind === 'fields'
+          ? (item.data as FieldItem).value
+          : resumeItemToText(section.kind, item.data),
+      );
+      for (const name of stackFromText(...texts)) {
+        found.set(name, [...(found.get(name) ?? []), section.title]);
+      }
+    }
+
+    return {
+      scannedSections: scanned.map((section) => section.title),
+      stacks: [...found].map(([name, where]) => ({ name, sections: where })),
+    };
   }
 
   async exportText(): Promise<string> {

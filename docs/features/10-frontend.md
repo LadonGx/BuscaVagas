@@ -285,6 +285,13 @@ Limpeza.
 - **Stacks** em três grupos (Principais, Ganham pontos, Evitar). Sugestões de
   `/preferences/stacks` (lista do campo, com quantas vagas citam cada uma);
   nome fora da lista é aceito com o aviso "o detector ainda não conhece".
+  A lista de sugestões é própria (a nativa do navegador não segue o tema e,
+  no Windows, abre fora do lugar): uma linha por tecnologia com a
+  quantidade de vagas, "já em Evitar" quando está noutro grupo, ↑/↓, Enter e
+  Esc. **"Trazer do currículo"** (`GET /resume/stacks`) lista as tecnologias
+  das Competências — as novas já marcadas, as que estão num grupo como "já em
+  Principais" — e manda as marcadas para Principais ou Ganham pontos, no
+  rascunho.
   **A mesma tecnologia fica num grupo só**: adicionar noutro grupo move, e
   uma linha diz de onde saiu. Enter ou vírgula adiciona.
 - Senioridade, contrato e modalidade: botões liga/desliga (nenhum = critério
@@ -301,7 +308,8 @@ Limpeza.
   "Recalculando notas… faltam N", confere a cada 3 s e, quando zera,
   recarrega as listas e o painel. Fila fora do ar: salva e avisa.
 - **Fontes**: ativa/desligada/falhou, última busca (vagas e novas), próxima
-  busca, motivo quando desligada e o erro da última falha. As empresas dos
+  busca, motivo quando desligada e o erro da última falha (só a primeira
+  linha; o texto completo fica em "ver detalhes"). As empresas dos
   boards continuam no `.env`. "Ver histórico de buscas" abre o painel com
   `/discovery/runs`: fonte, status, manual/agendada, data, duração,
   encontradas/novas/filtradas/fora do formato, termos e erro; filtro por

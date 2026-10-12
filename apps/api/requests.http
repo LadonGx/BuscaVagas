@@ -147,6 +147,9 @@ Content-Type: application/json
 ### Exportar em texto puro
 GET {{api}}/resume/export
 
+### Tecnologias das Competências (para "Trazer do currículo" nas Preferências)
+GET {{api}}/resume/stacks
+
 ############################################################ Descoberta
 
 ### Fontes ativas e última execução

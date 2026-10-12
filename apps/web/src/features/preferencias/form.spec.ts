@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { inactiveBoard, preferences, source } from '../../test/fixtures';
 import { cleanupLines } from './CleanupCard';
 import { changedFields, errorsFromApi, moveStack, toForm, validateForm } from './form';
+import { shortError } from './ErrorText';
 import { runDuration, sourceState } from './SourcesCard';
+import { suggestStacks } from './StackCombobox';
 
 const saved = (): PreferencesDto => ({
   ...preferences(),
@@ -105,5 +107,35 @@ describe('cartões ao lado', () => {
       '2 registros do histórico de buscas com mais de 30 dias',
       '3 bloqueios de vaga descartada há muito tempo — elas podem voltar a aparecer nas buscas',
     ]);
+  });
+});
+
+describe('sugestões e erros', () => {
+  const options = [
+    { name: 'react', known: true, jobs: 13 },
+    { name: 'react native', known: true, jobs: 4 },
+    { name: 'preact', known: false, jobs: 20 },
+    { name: 'node.js', known: true, jobs: 9 },
+  ];
+
+  it('quem começa com o texto vem antes; o que já está no grupo sai', () => {
+    expect(suggestStacks(options, 'REact', []).map((o) => o.name)).toEqual([
+      'react',
+      'react native',
+      'preact',
+    ]);
+    expect(suggestStacks(options, '', ['react']).map((o) => o.name)).toEqual([
+      'react native',
+      'preact',
+      'node.js',
+    ]);
+  });
+
+  it('erro comprido vira a primeira linha, cortada', () => {
+    const long = `Falha ao gravar as vagas: ${'x'.repeat(200)}\nlinha 2`;
+    const short = shortError(long);
+    expect(short.length).toBe(140);
+    expect(short.endsWith('…')).toBe(true);
+    expect(shortError('Falha de rede: fetch failed')).toBe('Falha de rede: fetch failed');
   });
 });

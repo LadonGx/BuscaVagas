@@ -2,6 +2,7 @@ import type {
   JobCountsDto,
   PreferencesDto,
   PreferencesValues,
+  ResumeStacksDto,
   RetentionReportDto,
   SourceRunDto,
 } from '@busca-vagas/shared';
@@ -27,7 +28,17 @@ const retention = (overrides: Partial<RetentionReportDto> = {}): RetentionReport
 });
 
 /** API com estado: o PUT sobe a versão e põe as notas na fila. */
-function setup({ rescoreQueued = true } = {}) {
+function setup({
+  rescoreQueued = true,
+  resumeStacks = {
+    scannedSections: ['Competências'],
+    stacks: [
+      { name: 'react', sections: ['Competências'] },
+      { name: 'docker', sections: ['Competências'] },
+      { name: 'java', sections: ['Competências'] },
+    ],
+  } as ResumeStacksDto,
+} = {}) {
   let prefs: PreferencesDto = {
     ...preferences(),
     stacksCore: ['node.js', 'react'],
@@ -67,8 +78,11 @@ function setup({ rescoreQueued = true } = {}) {
     'GET /preferences/stacks': () => [
       { name: 'react', known: true, jobs: 13 },
       { name: 'node.js', known: true, jobs: 9 },
+      { name: 'docker', known: true, jobs: 5 },
+      { name: 'react native', known: true, jobs: 4 },
       { name: 'php', known: true, jobs: 2 },
     ],
+    'GET /resume/stacks': () => resumeStacks,
     'GET /maintenance/retention': () => report,
     'POST /maintenance/retention': () => {
       calls.push({ method: 'POST', path: '/maintenance/retention' });
@@ -289,5 +303,113 @@ describe('Preferências', () => {
     expect(
       await within(cleanup).findByText('Nenhuma vaga para sair na próxima limpeza.'),
     ).toBeInTheDocument();
+  });
+
+  it('sugestões: lista própria, já sem o que está no grupo, com teclado e clique', async () => {
+    const { calls } = setup();
+    const { user } = await openPage();
+
+    const input = screen.getByRole('combobox', { name: 'Adicionar em Ganham pontos' });
+    await user.click(input);
+    const list = await screen.findByRole('listbox', {
+      name: 'Sugestões: Adicionar em Ganham pontos',
+    });
+    const names = () =>
+      within(list)
+        .getAllByRole('option')
+        .map((o) => o.textContent);
+    expect(names()).toEqual([
+      'reactjá em Principais13 vagas',
+      'node.jsjá em Principais9 vagas',
+      'docker5 vagas',
+      'react native4 vagas',
+      'php2 vagas',
+    ]);
+
+    // Filtra: quem começa com o texto vem antes.
+    await user.type(input, 're');
+    expect(names()).toEqual(['reactjá em Principais13 vagas', 'react native4 vagas']);
+    await user.keyboard('{ArrowDown}{ArrowDown}');
+    expect(input).toHaveAttribute(
+      'aria-activedescendant',
+      within(list).getAllByRole('option')[1]!.id,
+    );
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('list', { name: 'Ganham pontos' })).toHaveTextContent('react native');
+
+    // Clique numa sugestão que está noutro grupo: move.
+    await user.click(input);
+    await user.click(within(list).getByRole('option', { name: /^php/ }));
+    expect(screen.getByRole('list', { name: 'Ganham pontos' })).toHaveTextContent('php');
+
+    await user.keyboard('{Escape}');
+    expect(input).toHaveAttribute('aria-expanded', 'false');
+    expect(calls).toEqual([]);
+  });
+
+  it('"Trazer do currículo": marca o que é novo e manda para o grupo escolhido', async () => {
+    const { calls } = setup();
+    const { user } = await openPage();
+
+    await user.click(screen.getByRole('button', { name: 'Trazer do currículo' }));
+    const panel = await screen.findByRole('group', { name: /Tecnologias do currículo/ });
+    expect(panel).toHaveTextContent('procurei em Competências');
+    const react = within(panel).getByRole('checkbox', { name: /react/ });
+    expect(react).not.toBeChecked();
+    expect(within(panel).getByText('já em Principais')).toBeInTheDocument();
+    expect(within(panel).getByRole('checkbox', { name: 'docker' })).toBeChecked();
+
+    await user.click(within(panel).getByRole('checkbox', { name: 'java' }));
+    await user.click(
+      within(panel).getByRole('button', { name: 'Adicionar marcadas em Ganham pontos' }),
+    );
+
+    expect(
+      screen.queryByRole('group', { name: /Tecnologias do currículo/ }),
+    ).not.toBeInTheDocument();
+    const plus = screen.getByRole('list', { name: 'Ganham pontos' });
+    expect(plus).toHaveTextContent('docker');
+    expect(plus).not.toHaveTextContent('java');
+    expect(
+      screen.getByText('1 tecnologia do currículo foi para Ganham pontos. Salve para valer.'),
+    ).toBeInTheDocument();
+    // Só no rascunho: nada foi gravado.
+    expect(calls).toEqual([]);
+    expect(saveButton()).toBeEnabled();
+  });
+
+  it('"Trazer do currículo" com a tecnologia noutro grupo: move e avisa', async () => {
+    setup();
+    const { user } = await openPage();
+
+    await user.click(screen.getByRole('button', { name: 'Trazer do currículo' }));
+    const panel = await screen.findByRole('group', { name: /Tecnologias do currículo/ });
+    await user.click(within(panel).getByRole('checkbox', { name: /react/ }));
+    await user.click(within(panel).getByRole('checkbox', { name: 'docker' }));
+    await user.click(within(panel).getByRole('checkbox', { name: 'java' }));
+    await user.click(
+      within(panel).getByRole('button', { name: 'Adicionar marcadas em Ganham pontos' }),
+    );
+
+    expect(screen.getByRole('list', { name: 'Principais' })).not.toHaveTextContent('react');
+    expect(
+      screen.getByText(
+        '1 tecnologia do currículo foi para Ganham pontos (1 saiu de outro grupo). Salve para valer.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('"Trazer do currículo" sem nada reconhecido aponta para o Currículo', async () => {
+    setup({ resumeStacks: { scannedSections: ['Competências'], stacks: [] } });
+    const { user } = await openPage();
+
+    await user.click(screen.getByRole('button', { name: 'Trazer do currículo' }));
+    expect(await screen.findByText(/Nenhuma tecnologia reconhecida/)).toBeInTheDocument();
+    const panel = screen.getByRole('group', { name: /Tecnologias do currículo/ });
+    expect(within(panel).getByRole('link', { name: 'Currículo' })).toHaveAttribute(
+      'href',
+      '/curriculo',
+    );
+    expect(screen.queryByRole('button', { name: /Adicionar marcadas/ })).not.toBeInTheDocument();
   });
 });

@@ -122,6 +122,20 @@ export interface ResumeDto {
   sections: ResumeSectionDto[];
 }
 
+/**
+ * `GET /api/resume/stacks`: tecnologias do currículo, pelo mesmo detector de
+ * stack das vagas (os nomes batem com os das preferências).
+ */
+export interface ResumeStacksDto {
+  /** Seções onde procurou (as de competências; sem nenhuma, as de campos). */
+  scannedSections: string[];
+  /** Na ordem do detector, cada uma com as seções onde apareceu. */
+  stacks: { name: string; sections: string[] }[];
+}
+
+/** Título que conta como seção de competências ("Competências", "Skills"...). */
+export const SKILL_SECTION_PATTERN = /compet|habilidad|skill|tecnolog|stack|ferrament/;
+
 /* ------------------------------------------------------ texto p/ copiar */
 
 /** "2024-03" -> "03/2024". */

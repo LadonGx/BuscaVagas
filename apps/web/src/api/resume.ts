@@ -4,6 +4,7 @@ import type {
   ResumeItemData,
   ResumeItemDto,
   ResumeSectionDto,
+  ResumeStacksDto,
 } from '@busca-vagas/shared';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { api } from './client';
@@ -18,6 +19,17 @@ export function useResume() {
   return useQuery({
     queryKey: keys.resume,
     queryFn: ({ signal }) => api.get<ResumeDto>('/resume', undefined, signal),
+  });
+}
+
+/** Tecnologias das competências do currículo salvo (para as preferências). */
+export function useResumeStacks(enabled: boolean) {
+  return useQuery({
+    queryKey: keys.resumeStacks,
+    queryFn: ({ signal }) => api.get<ResumeStacksDto>('/resume/stacks', undefined, signal),
+    enabled,
+    // O currículo pode ter mudado noutra tela: lê de novo a cada abertura.
+    staleTime: 0,
   });
 }
 

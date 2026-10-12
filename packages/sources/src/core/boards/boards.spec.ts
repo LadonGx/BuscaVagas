@@ -9,7 +9,13 @@ import {
   parseBoardFilters,
   type BoardItem,
 } from './filters';
-import { noCompaniesReason, parseCompanyBoardConfig, scanCompanies } from './per-company';
+import { parseBoardUrl, boardPageUrl } from './board-url';
+import {
+  AllCompaniesFailedError,
+  parseCompanyBoardConfig,
+  resolveQueryCompanies,
+  scanCompanies,
+} from './per-company';
 import { classifyPlace } from './place';
 import { createTitleMatcher } from './title-filter';
 
@@ -50,10 +56,52 @@ describe('lista de empresas', () => {
     );
   });
 
-  it('sem empresas, a fonte fica inativa com o motivo', () => {
-    const reason = noCompaniesReason('ASHBY_');
-    expect(reason(parseCompanyBoardConfig('ASHBY_', {}))).toMatch(/ASHBY_COMPANIES vazio/);
-    expect(reason(parseCompanyBoardConfig('ASHBY_', { ASHBY_COMPANIES: 'x' }))).toBeNull();
+  it('empresas da query: slugs ou objetos, sem repetir; vazia = usar a config', () => {
+    expect(
+      resolveQueryCompanies([
+        'acme=Acme',
+        { slug: 'beta', name: null },
+        { slug: 'ACME', name: 'x' },
+      ]),
+    ).toEqual([
+      { slug: 'acme', name: 'Acme' },
+      { slug: 'beta', name: null },
+    ]);
+    expect(resolveQueryCompanies([])).toBeNull();
+    expect(resolveQueryCompanies(undefined)).toBeNull();
+  });
+});
+
+/* ------------------------------------------------------- link do board */
+
+describe('link do board', () => {
+  it.each([
+    ['https://job-boards.greenhouse.io/nubank', 'greenhouse', 'nubank'],
+    ['boards.greenhouse.io/vtex/jobs/123456', 'greenhouse', 'vtex'],
+    ['https://boards.greenhouse.io/embed/job_board?for=stone', 'greenhouse', 'stone'],
+    ['https://boards-api.greenhouse.io/v1/boards/ebanx/jobs', 'greenhouse', 'ebanx'],
+    ['https://jobs.lever.co/starkbank/0b1c-uuid', 'lever', 'starkbank'],
+    ['https://api.lever.co/v0/postings/neon?mode=json', 'lever', 'neon'],
+    ['https://jobs.ashbyhq.com/kraken.com', 'ashby', 'kraken.com'],
+    ['https://api.ashbyhq.com/posting-api/job-board/supabase', 'ashby', 'supabase'],
+  ])('%s → %s/%s', (url, sourceId, slug) => {
+    expect(parseBoardUrl(url)).toEqual({ sourceId, slug });
+  });
+
+  it.each([
+    '',
+    'nubank',
+    'https://www.linkedin.com/jobs/view/123',
+    'https://jobs.lever.co/',
+    'x y',
+  ])('"%s" não é link de board', (url) => {
+    expect(parseBoardUrl(url)).toBeNull();
+  });
+
+  it('página pública de cada ATS', () => {
+    expect(boardPageUrl('greenhouse', 'vtex')).toBe('https://job-boards.greenhouse.io/vtex');
+    expect(boardPageUrl('lever', 'neon')).toBe('https://jobs.lever.co/neon');
+    expect(boardPageUrl('ashby', 'kraken.com')).toBe('https://jobs.ashbyhq.com/kraken.com');
   });
 });
 
@@ -256,6 +304,24 @@ describe('scanCompanies', () => {
     ).rejects.toThrow('HTTP 503');
   });
 
+  it('todas falhando: o erro leva o resultado de cada empresa', async () => {
+    const error = await scanCompanies({
+      sourceId: 'x',
+      config,
+      query: { companies: ['so-essa'] },
+      ctx: ctx(),
+      fetchCompany: async () => {
+        throw new HttpError('HTTP 404', 'u', 404);
+      },
+      mapItem,
+    }).catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(AllCompaniesFailedError);
+    expect((error as AllCompaniesFailedError).companies).toEqual([
+      { slug: 'so-essa', status: 'not_found', jobs: 0, kept: 0, error: 'HTTP 404' },
+    ]);
+  });
+
   it('empresas da query substituem as do .env; skipFilters desliga os filtros', async () => {
     const asked: string[] = [];
     const result = await scanCompanies({
@@ -287,7 +353,7 @@ describe('scanCompanies', () => {
       },
       mapItem,
     });
-    expect(result).toEqual({ jobs: [], dropped: 0, filtered: 0 });
+    expect(result).toEqual({ jobs: [], dropped: 0, filtered: 0, companies: [] });
     expect(logs).toEqual(['x: nenhuma empresa configurada']);
   });
 });

@@ -324,8 +324,12 @@ Limpeza.
   recarrega as listas e o painel. Fila fora do ar: salva e avisa.
 - **Fontes**: ativa/desligada/falhou, última busca (vagas e novas), próxima
   busca, motivo quando desligada e o erro da última falha (só a primeira
-  linha; o texto completo fica em "ver detalhes"). As empresas dos
-  boards continuam no `.env`. "Ver histórico de buscas" abre o painel com
+  linha; o texto completo fica em "ver detalhes"). Board sem empresas
+  aparece "Parada · nenhuma empresa na lista". "Empresas acompanhadas" abre
+  o painel das empresas dos boards (Fase 3, ver o 06): abas "Minha lista"
+  (adicionar pelo link, liga/desliga, ler agora, remover com confirmação,
+  estado da última leitura) e "Diretório" (busca, origem, "Acompanhar").
+  "Ver histórico de buscas" abre o painel com
   `/discovery/runs`: fonte, status, manual/agendada, data, duração,
   encontradas/novas/filtradas/fora do formato, termos e erro; filtro por
   fonte e "Carregar mais".
@@ -363,7 +367,9 @@ Cada item é um passo com teste e revisão antes do próximo.
   item inválido não vai; `Ctrl+S`; aviso ao sair; o que entra no PDF.
 - Preferências: salvar manda tudo e acompanha o recálculo; mover stack entre
   grupos; número fora da faixa não salva; histórico paginado e filtrado;
-  "Limpar agora" só apaga depois de confirmar.
+  "Limpar agora" só apaga depois de confirmar; empresas: adicionar pelo
+  link (erro no campo), diretório com filtro e "Acompanhar", liga/desliga,
+  ler agora, remover, abas pelo teclado.
 - Início: blocos e números, painel da vaga pela URL, gráfico pelo teclado,
   primeiros passos, estados vazios.
 - Tema: o atributo muda na raiz e a escolha fica salva.
@@ -372,5 +378,5 @@ Cada item é um passo com teste e revisão antes do próximo.
 
 ## Fora desta fase
 
-Leitor de PDF do currículo, telas de E-mails e Métricas, empresas dos boards
-editáveis pela tela e notificação de vaga nova — todos na Fase 3.
+Leitor de PDF do currículo, telas de E-mails e Métricas e notificação de vaga
+nova — todos na Fase 3 (as empresas dos boards já são editadas pela tela).

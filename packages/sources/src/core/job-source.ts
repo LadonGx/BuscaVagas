@@ -1,5 +1,7 @@
 import type { JobPosting } from '@busca-vagas/shared';
 import type { z } from 'zod';
+import type { BoardCompany } from './boards/companies';
+import type { CompanyScanStat } from './boards/per-company';
 import type { HttpClient } from './http';
 
 /**
@@ -19,10 +21,12 @@ export interface SourceQuery {
    */
   terms?: readonly string[];
   /**
-   * Slugs das empresas. Só as fontes `company-board` usam; quando presente,
-   * substitui a lista do `.env` (é o que o `try` usa para conferir um slug).
+   * Empresas a ler: slugs (`slug` ou `slug=Nome`) ou empresas prontas. Só as
+   * fontes `company-board` usam; quando presente, substitui a lista do `.env`.
+   * A API passa as empresas acompanhadas (que ficam no banco); o `try`, os
+   * slugs digitados.
    */
-  companies?: readonly string[];
+  companies?: readonly (string | BoardCompany)[];
   /** Ignora os filtros da fonte (título, local). Só para diagnóstico. */
   skipFilters?: boolean;
 }
@@ -43,6 +47,8 @@ export interface SourceResult {
    * vendas num board de empresa). Diferente de `dropped`: não indica problema.
    */
   filtered?: number;
+  /** Fontes `company-board`: o resultado de cada empresa lida. */
+  companies?: CompanyScanStat[];
 }
 
 export interface JobSource {

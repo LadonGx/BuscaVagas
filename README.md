@@ -83,6 +83,7 @@ no VS Code com a extensão **REST Client** — há um exemplo para cada rota.
 | Triagem      | `PUT /api/jobs/:id/triage`, `POST /api/jobs/triage` (lote)                                                                                                           |
 | Candidaturas | `POST/GET /api/applications`, `GET /api/applications/summary`, `GET/PATCH/DELETE /api/applications/:id`, `POST/PATCH/DELETE /api/applications/:id/events[/:eventId]` |
 | Currículo    | `GET /api/resume`, `GET /api/resume/export`, seções e itens em `/api/resume/sections` e `/api/resume/items`                                                          |
+| Empresas     | `GET/POST /api/companies`, `PATCH/DELETE /api/companies/:id`, `POST /api/companies/check`, `GET /api/companies/directory`                                            |
 
 Detalhes, regras e códigos de erro de cada uma: [`docs/features/`](docs/features/README.md).
 
@@ -136,6 +137,12 @@ Rode `pnpm infra:up` e confira com `docker compose ps`.
 
 **"Configuração inválida no .env".** A mensagem lista a variável. Compare com
 o `.env.example`.
+
+**Mudei `GREENHOUSE_COMPANIES` (ou `LEVER_`/`ASHBY_`) e nada mudou.** Desde a
+Fase 3 as empresas dos boards ficam no banco e são editadas em **Preferências →
+Fontes → Empresas acompanhadas** (colar o link do board ou escolher no
+diretório). O `.env` só foi lido na primeira subida, para copiar a lista que já
+existia.
 
 **Erro de tipo do Prisma depois de uma migration** (`Property 'score' does not
 exist...`). Desde o Prisma 7, `migrate dev` não regenera o client. `pnpm dev:api`

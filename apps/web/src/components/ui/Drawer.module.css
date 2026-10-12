@@ -25,6 +25,10 @@
   animation: slide 200ms ease-out;
 }
 
+.panel[data-size='wide'] {
+  width: min(580px, 100%);
+}
+
 .panel[data-placement='center'] {
   top: 50%;
   right: auto;

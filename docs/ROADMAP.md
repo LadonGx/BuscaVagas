@@ -27,7 +27,7 @@ Planos detalhados de cada feature: [`docs/features/`](features/README.md).
 **Fontes** (uma pasta cada, em ordem de prioridade):
 
 - [x] `gupy` — API pública por termo; cobre o mercado brasileiro (JT, CO, VG) ([05](features/05-discovery-gupy.md))
-- [x] `greenhouse`, `lever`, `ashby` — boards por empresa, lista no `.env`, filtro de tecnologia e de local (JT, JS) ([06](features/06-company-boards.md))
+- [x] `greenhouse`, `lever`, `ashby` — boards por empresa (lista editada na tela desde a Fase 3), filtro de tecnologia e de local (JT, JS) ([06](features/06-company-boards.md))
 - [ ] `github-issues` — repositórios de vagas como `backend-br/vagas` e `frontendbr/vagas`, via API oficial do GitHub (VG)
 - [ ] `remote-boards` — RemoteOK e Remotive (JT)
 - [x] Extração de stack, senioridade, modalidade e contrato por heurística (JT)
@@ -71,21 +71,52 @@ Planos: [09 — dados para as telas](features/09-screen-data.md) e
 
 ## Fase 3 — Ajustes e melhorias
 
-- [ ] Portais BR sem API via JSON-LD (`schema.org/JobPosting`): InfoJobs, Vagas.com (JT)
-- [ ] Notificação de vaga nova com nota alta (JS)
-- [ ] Checagem se a vaga ainda está aberta antes de candidatar (CO)
+Ordem combinada, em blocos.
+
+**Bloco A — mais vagas, menos repetidas**
+
+- [x] Empresas dos boards editáveis na tela (Preferências → Fontes) + diretório embutido de
+      empresas verificadas por ATS; o `.env` só semeia a primeira vez (JS) ([06](features/06-company-boards.md))
+- [x] Portais BR (InfoJobs, Vagas.com) e grandes (Indeed, Glassdoor, LinkedIn): termos de uso
+      conferidos — todos proíbem coleta automática. Caminhos permitidos abaixo.
 - [ ] Detecção de vaga repostada (VG)
+
+**Bloco B — candidatura**
+
 - [ ] Importar currículo de PDF, com revisão antes de salvar (VA, JS)
+- [ ] Checagem se a vaga ainda está aberta antes de candidatar (CO)
 - [ ] Versão do currículo congelada em cada candidatura (JT)
-- [ ] Painel: funil, tempo até a primeira resposta, rendimento por fonte (JT)
-- [ ] Estatísticas do mercado com as vagas coletadas: stacks mais pedidas etc. (VG)
 - [ ] Banco de perguntas de entrevista com as suas respostas (JS)
+
+**Bloco C — acompanhar**
+
+- [ ] Notificação de vaga nova com nota alta (JS)
+- [ ] Tela de Métricas: rendimento por fonte, stacks mais pedidas, tempo até a resposta (JT, VG)
+
+**Bloco D — uso no dia a dia**
+
 - [ ] Backup / exportação dos dados (JS)
-- [ ] Diretório embutido de empresas por ATS (JS)
-- [ ] Extensão do Chrome: enviar vaga do LinkedIn para o app, sem scraping (VA)
-- [ ] Alertas de vaga do LinkedIn lidos do e-mail (IMAP com rótulo) (JT)
-- [ ] Preencher formulário com Playwright, **nunca enviar** (JT)
 - [ ] Docker Compose completo (API + web em container) para quem só quer usar
+- [ ] Alertas de vaga por e-mail (IMAP, só leitura, num marcador do Gmail): LinkedIn,
+      Glassdoor e Indeed mandam título, empresa, local e link (JT)
+- [ ] Extensão do Chrome: enviar a vaga aberta no navegador para o app, sem scraping (VA)
+- [ ] Preencher formulário com Playwright, **nunca enviar** (JT)
+
+**Último passo:** sites de carreira de grandes empresas (iFood, Bosch, Mercado Livre,
+IBM…), cada um com o próprio formato — depois de tudo acima.
+
+**Portais que não permitem coleta** (pesquisa de outubro/2026):
+
+| Portal    | O que os termos dizem                                   | Caminho permitido                          |
+| --------- | ------------------------------------------------------- | ------------------------------------------ |
+| InfoJobs  | Proíbe acesso por robôs; `robots.txt` bloqueia as vagas | Alerta por e-mail; extensão; "Vaga manual" |
+| Vagas.com | Proíbe software que interfira e reprodução do conteúdo  | Alerta por e-mail; extensão; "Vaga manual" |
+| Indeed    | Proíbe crawl/scrape; API de publisher encerrada em 2024 | Alerta por e-mail; extensão; "Vaga manual" |
+| Glassdoor | Proíbe agentes automáticos e extração                   | Alerta por e-mail; extensão; "Vaga manual" |
+| LinkedIn  | Pede permissão expressa; API só para parceiros          | Alerta por e-mail; extensão; "Vaga manual" |
+
+"Vaga manual" = colar o link; quando a página tem JSON-LD (`schema.org/JobPosting`),
+os campos podem vir preenchidos — é você abrindo a página, não um robô.
 
 ## Fase 4 — IA (guardada para o final)
 

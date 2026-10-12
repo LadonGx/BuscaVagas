@@ -56,11 +56,13 @@ export interface SourceInfoDto {
   displayName: string;
   kind: 'search' | 'company-board';
   /**
-   * `false` = a fonte existe mas não roda: sem configuração (ex.: board sem
-   * empresas no `.env`) ou com configuração inválida. O motivo vem em `reason`.
+   * `false` = a fonte existe mas não roda: board sem empresas acompanhadas
+   * ou configuração inválida. O motivo vem em `reason`.
    */
   active: boolean;
   reason: string | null;
+  /** Boards de empresa: quantas empresas ligadas. `null` nas fontes de busca. */
+  trackedCompanies: number | null;
   lastRun: SourceRunDto | null;
   /** Próxima execução agendada. `null` = inativa, sem agenda ou fila fora do ar. */
   nextRunAt: string | null;

@@ -1,7 +1,7 @@
 # Fonte: Greenhouse
 
-Board de empresa (`company-board`): lê as vagas de cada empresa da lista
-`GREENHOUSE_COMPANIES`. API pública e oficial, sem autenticação.
+Board de empresa (`company-board`): lê as vagas de cada empresa acompanhada
+(lista editada na tela; a API passa em `query.companies`). API pública e oficial, sem autenticação.
 
 ## Endpoint
 
@@ -36,10 +36,10 @@ são tratados como opcionais.
 
 ## Configuração (`.env`)
 
-| Variável                      | Padrão  |                                               |
-| ----------------------------- | ------- | --------------------------------------------- |
-| `GREENHOUSE_COMPANIES`        | (vazio) | `slug[=Nome]`, vírgula; vazio = fonte inativa |
-| `GREENHOUSE_REQUEST_DELAY_MS` | `300`   | pausa entre empresas                          |
+| Variável                      | Padrão  |                                                        |
+| ----------------------------- | ------- | ------------------------------------------------------ |
+| `GREENHOUSE_COMPANIES`        | (vazio) | `slug[=Nome]`, vírgula; só semeia o banco na 1ª subida |
+| `GREENHOUSE_REQUEST_DELAY_MS` | `300`   | pausa entre empresas                                   |
 
 Filtros comuns a todos os boards (`BOARDS_*`): ver
 [docs/features/06-company-boards.md](../../../../docs/features/06-company-boards.md).

@@ -21,6 +21,11 @@ export const keys = {
     sources: ['discovery', 'sources'] as const,
     runs: (sourceId: string | null) => ['discovery', 'runs', sourceId ?? 'todas'] as const,
   },
+  companies: {
+    all: ['companies'] as const,
+    list: ['companies', 'list'] as const,
+    directory: ['companies', 'directory'] as const,
+  },
   retention: ['maintenance', 'retention'] as const,
   dashboard: ['dashboard'] as const,
   preferences: ['preferences'] as const,

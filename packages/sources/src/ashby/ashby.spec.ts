@@ -93,10 +93,8 @@ describe('AshbySource', () => {
     expect(result).toMatchObject({ filtered: 2, dropped: 1 });
   });
 
-  it('definição: ASHBY_COMPANIES vazio = inativa', () => {
-    expect(ashbySourceDefinition.inactiveReason?.(ashbySourceDefinition.parseConfig({}))).toMatch(
-      /ASHBY_COMPANIES/,
-    );
+  it('definição: sempre ativa — as empresas vêm da API (banco) ou do .env', () => {
+    expect(ashbySourceDefinition.inactiveReason).toBeUndefined();
   });
 });
 

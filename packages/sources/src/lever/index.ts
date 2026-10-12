@@ -1,6 +1,5 @@
-import { noCompaniesReason } from '../core/boards/per-company';
 import type { SourceDefinition } from '../core/job-source';
-import { LEVER_ENV_PREFIX, parseLeverConfig, type LeverConfig } from './lever.config';
+import { parseLeverConfig, type LeverConfig } from './lever.config';
 import { LEVER_SOURCE_ID } from './lever.mapper';
 import { LeverSource } from './lever.source';
 
@@ -10,7 +9,6 @@ export const leverSourceDefinition: SourceDefinition<LeverConfig> = {
   displayName: 'Lever',
   kind: 'company-board',
   parseConfig: parseLeverConfig,
-  inactiveReason: noCompaniesReason(LEVER_ENV_PREFIX),
   create: (config) => new LeverSource(config),
 };
 

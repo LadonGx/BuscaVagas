@@ -1,7 +1,7 @@
 # Fonte: Ashby
 
-Board de empresa (`company-board`): lê as vagas de cada empresa da lista
-`ASHBY_COMPANIES`. API pública e oficial, sem autenticação.
+Board de empresa (`company-board`): lê as vagas de cada empresa acompanhada
+(lista editada na tela; a API passa em `query.companies`). API pública e oficial, sem autenticação.
 
 ## Endpoint
 
@@ -19,7 +19,7 @@ maiúsculas, se houver).
 
 | Comportamento                                                               | O que fazemos                                                                      |
 | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Não informa o nome da empresa                                               | `ASHBY_COMPANIES=slug=Nome`, senão vem do slug                                     |
+| Não informa o nome da empresa                                               | nome do diretório ou digitado na tela, senão vem do slug                           |
 | `workplaceType`: `OnSite`, `Remote`, `Hybrid`; às vezes só `isRemote`       | campo próprio, depois `isRemote`, depois o texto                                   |
 | `employmentType`: `FullTime`, `PartTime`, `Intern`, `Contract`, `Temporary` | `Intern` → estágio, `Temporary` → temporário, `Contract` → outro; jornada → `null` |
 | País no endereço: `address.postalAddress.addressCountry` (nome, não ISO)    | entra no filtro de local                                                           |
@@ -31,10 +31,10 @@ Ainda não confirmado com resposta real: o status de um slug inexistente.
 
 ## Configuração (`.env`)
 
-| Variável                 | Padrão  |                                               |
-| ------------------------ | ------- | --------------------------------------------- |
-| `ASHBY_COMPANIES`        | (vazio) | `slug[=Nome]`, vírgula; vazio = fonte inativa |
-| `ASHBY_REQUEST_DELAY_MS` | `300`   | pausa entre empresas                          |
+| Variável                 | Padrão  |                                                        |
+| ------------------------ | ------- | ------------------------------------------------------ |
+| `ASHBY_COMPANIES`        | (vazio) | `slug[=Nome]`, vírgula; só semeia o banco na 1ª subida |
+| `ASHBY_REQUEST_DELAY_MS` | `300`   | pausa entre empresas                                   |
 
 Filtros comuns (`BOARDS_*`): ver
 [docs/features/06-company-boards.md](../../../../docs/features/06-company-boards.md).

@@ -37,3 +37,10 @@ export const scanDedupId = (sourceId: string) => `scan:${sourceId}`;
 
 /** Id do agendador de uma fonte. */
 export const schedulerId = (sourceId: string) => `schedule:${sourceId}`;
+
+/** Token das empresas do `.env` (`*_COMPANIES`), por fonte — semeiam o banco uma vez. */
+export const COMPANY_SEEDS = Symbol('COMPANY_SEEDS');
+
+/** Motivo de um board ficar parado: a lista de empresas (no banco) está vazia. */
+export const NO_COMPANIES_REASON =
+  'Nenhuma empresa acompanhada — adicione em Preferências → Fontes → Empresas';

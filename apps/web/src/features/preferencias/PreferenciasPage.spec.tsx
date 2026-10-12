@@ -134,7 +134,10 @@ describe('Preferências', () => {
 
     const sources = screen.getByRole('region', { name: 'Fontes' });
     expect(await within(sources).findByText('Greenhouse')).toBeInTheDocument();
-    expect(sources).toHaveTextContent('GREENHOUSE_COMPANIES vazio');
+    expect(sources).toHaveTextContent('Parada · nenhuma empresa na lista');
+    expect(
+      within(sources).getByRole('button', { name: 'Empresas acompanhadas' }),
+    ).toBeInTheDocument();
     expect(sources).toHaveTextContent('387 vagas');
 
     const cleanup = screen.getByRole('region', { name: 'Limpeza (30 dias)' });

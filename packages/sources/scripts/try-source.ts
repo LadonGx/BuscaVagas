@@ -77,6 +77,15 @@ async function main(): Promise<number> {
   if (outcome.error) {
     console.log(`Erro: ${outcome.error}`);
   }
+  for (const company of outcome.companies ?? []) {
+    const state =
+      company.status === 'ok'
+        ? `${company.jobs} vagas no board, ${company.kept} passam nos filtros`
+        : company.status === 'not_found'
+          ? 'não encontrada (404) — confira o slug'
+          : `falhou: ${company.error}`;
+    console.log(`  · ${company.slug}: ${state}`);
+  }
 
   if (jobs.length > 0) {
     printSummary(jobs);

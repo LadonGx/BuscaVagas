@@ -111,10 +111,11 @@ describe('LeverSource', () => {
     expect(result).toMatchObject({ filtered: 2, dropped: 1 });
   });
 
-  it('definição: LEVER_COMPANIES vazio = inativa', () => {
-    expect(leverSourceDefinition.inactiveReason?.(leverSourceDefinition.parseConfig({}))).toMatch(
-      /LEVER_COMPANIES/,
-    );
+  it('definição: sempre ativa — as empresas vêm da API (banco) ou do .env', () => {
+    expect(leverSourceDefinition.inactiveReason).toBeUndefined();
+    expect(
+      leverSourceDefinition.parseConfig({ LEVER_COMPANIES: 'acme' }).companies.map((c) => c.slug),
+    ).toEqual(['acme']);
   });
 });
 

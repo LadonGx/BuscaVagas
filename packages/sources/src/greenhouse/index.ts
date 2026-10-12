@@ -1,10 +1,5 @@
-import { noCompaniesReason } from '../core/boards/per-company';
 import type { SourceDefinition } from '../core/job-source';
-import {
-  GREENHOUSE_ENV_PREFIX,
-  parseGreenhouseConfig,
-  type GreenhouseConfig,
-} from './greenhouse.config';
+import { parseGreenhouseConfig, type GreenhouseConfig } from './greenhouse.config';
 import { GREENHOUSE_SOURCE_ID } from './greenhouse.mapper';
 import { GreenhouseSource } from './greenhouse.source';
 
@@ -14,7 +9,6 @@ export const greenhouseSourceDefinition: SourceDefinition<GreenhouseConfig> = {
   displayName: 'Greenhouse',
   kind: 'company-board',
   parseConfig: parseGreenhouseConfig,
-  inactiveReason: noCompaniesReason(GREENHOUSE_ENV_PREFIX),
   create: (config) => new GreenhouseSource(config),
 };
 

@@ -1,4 +1,5 @@
 import type { JobPosting } from '@busca-vagas/shared';
+import { AllCompaniesFailedError, type CompanyScanStat } from './boards/per-company';
 import type { HttpClient } from './http';
 import type { JobSource, SourceQuery } from './job-source';
 
@@ -11,6 +12,8 @@ export interface SourceOutcome {
   filtered: number;
   durationMs: number;
   error?: string;
+  /** Fontes `company-board`: o resultado de cada empresa (também quando todas falham). */
+  companies?: CompanyScanStat[];
 }
 
 export interface RunSourcesResult {
@@ -55,6 +58,7 @@ export async function runSource(
         dropped: result.dropped,
         filtered: result.filtered ?? 0,
         durationMs: Date.now() - started,
+        ...(result.companies && { companies: result.companies }),
       },
     };
   } catch (error) {
@@ -68,6 +72,7 @@ export async function runSource(
         filtered: 0,
         durationMs: Date.now() - started,
         error: error instanceof Error ? error.message : String(error),
+        ...(error instanceof AllCompaniesFailedError && { companies: error.companies }),
       },
     };
   } finally {

@@ -307,3 +307,41 @@ model ForgottenJob {
 
   @@index([forgottenAt])
 }
+
+// ---------------------------------------------------------------------------
+// Empresas acompanhadas nos boards — docs/features/06-company-boards.md
+// ---------------------------------------------------------------------------
+
+/// Uma empresa num board (Greenhouse, Lever, Ashby). A lista é editada na
+/// tela (Preferências → Fontes); o `.env` (`*_COMPANIES`) só semeia a
+/// primeira vez.
+model TrackedCompany {
+  id            String    @id @default(cuid())
+  /// Id da fonte: "greenhouse", "lever", "ashby".
+  source        String
+  /// Final da URL do board, como a pessoa digitou.
+  slug          String
+  /// Nome escolhido; null = o da API do board ou o derivado do slug.
+  name          String?
+  /// Desligada = fica na lista, fora das buscas.
+  active        Boolean   @default(true)
+  /// Resultado da última leitura (busca ou conferência).
+  lastCheckedAt DateTime?
+  /// "ok", "not_found" (404: slug errado) ou "failed".
+  lastStatus    String?
+  lastJobs      Int?
+  lastMatched   Int?
+  lastError     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([source, slug])
+  @@index([source, active])
+}
+
+/// Coisas que acontecem uma vez só (ex.: importar as empresas do `.env`).
+/// Existir a linha = já aconteceu.
+model SystemFlag {
+  key   String   @id
+  setAt DateTime @default(now())
+}

@@ -1,6 +1,5 @@
-import { noCompaniesReason } from '../core/boards/per-company';
 import type { SourceDefinition } from '../core/job-source';
-import { ASHBY_ENV_PREFIX, parseAshbyConfig, type AshbyConfig } from './ashby.config';
+import { parseAshbyConfig, type AshbyConfig } from './ashby.config';
 import { ASHBY_SOURCE_ID } from './ashby.mapper';
 import { AshbySource } from './ashby.source';
 
@@ -10,7 +9,6 @@ export const ashbySourceDefinition: SourceDefinition<AshbyConfig> = {
   displayName: 'Ashby',
   kind: 'company-board',
   parseConfig: parseAshbyConfig,
-  inactiveReason: noCompaniesReason(ASHBY_ENV_PREFIX),
   create: (config) => new AshbySource(config),
 };
 

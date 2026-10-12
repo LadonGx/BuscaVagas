@@ -1,0 +1,320 @@
+.hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.error {
+  color: var(--bad-fg);
+  font-size: 13px;
+}
+
+.label {
+  color: var(--soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  background: var(--input);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--bad);
+}
+
+/* ------------------------------------------------------------- abas */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  margin-bottom: -1px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.tab[aria-selected='true'] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.tabCount {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--chip-text);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 4px;
+}
+
+/* ------------------------------------------------ adicionar pelo link */
+
+.addForm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.addRow {
+  display: flex;
+  gap: 8px;
+}
+
+/* ------------------------------------------------------------ lista */
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.groupTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.groupTitle .hint {
+  font-weight: 400;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 10px 8px 12px;
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.row[data-off] .rowTitle strong {
+  color: var(--muted);
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  font-size: 14px;
+}
+
+.slug {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+a.slug:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.status {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.status[data-tone='bad'] {
+  color: var(--bad-fg);
+}
+
+/* Liga/desliga: checkbox com cara de chave. */
+.switch {
+  flex: none;
+  position: relative;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border: 1px solid var(--input-border);
+  border-radius: 999px;
+  background: var(--track);
+  appearance: none;
+  cursor: pointer;
+  transition: background-color 120ms;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 120ms;
+}
+
+.switch:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.switch:checked::after {
+  background: var(--on-accent);
+  transform: translateX(14px);
+}
+
+.actions,
+.confirm {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+
+.confirm :global(button) {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+}
+
+.iconButton:not(:disabled):hover {
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+}
+
+.iconButton[data-busy] svg {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+/* -------------------------------------------------------- diretório */
+
+.directoryTools {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.regions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.region {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+.region[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-weight: 600;
+}
+
+.followButton {
+  flex: none;
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.tracked {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+  color: var(--great-fg);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (width < 520px) {
+  .addRow {
+    flex-direction: column;
+  }
+}

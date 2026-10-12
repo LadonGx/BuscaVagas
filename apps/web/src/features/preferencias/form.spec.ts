@@ -79,7 +79,10 @@ describe('cartões ao lado', () => {
     expect(sourceState(source(), now)).toMatch(
       /^Há 2 h · 387 vagas \(23 novas\) · próxima em (4 h|3 h 59 min)$/,
     );
-    expect(sourceState(inactiveBoard(), now)).toBe('Desligada');
+    expect(sourceState(inactiveBoard(), now)).toBe('Parada · nenhuma empresa na lista');
+    expect(
+      sourceState(source({ kind: 'company-board', active: false, reason: 'inválida' }), now),
+    ).toBe('Desligada');
     expect(sourceState(source({ running: true }), now)).toBe('Buscando agora…');
     expect(sourceState(source({ lastRun: null, nextRunAt: null }), now)).toBe('Ainda não buscou');
   });

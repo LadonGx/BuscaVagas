@@ -1,5 +1,6 @@
 export * from './applications';
 export * from './common';
+export * from './companies';
 export * from './dashboard';
 export * from './discovery';
 export * from './enums';

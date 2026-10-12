@@ -9,12 +9,11 @@ molde da Gupy. O que é comum às três fica em `core/boards/`.
 
 ## Decisões
 
-- **Empresas no `.env`, por fonte:** `GREENHOUSE_COMPANIES`,
-  `LEVER_COMPANIES`, `ASHBY_COMPANIES`. **Tudo opcional:** lista vazia (ou
-  variável ausente) = fonte inativa — não é agendada, não gera execução vazia
-  a cada 6 h e não atrapalha a Gupy. A API mostra o motivo em vez de ficar
-  em silêncio (ver "Fonte desligada" abaixo). Na Fase 2 a lista vai para o
-  banco, com a tela de "empresas acompanhadas".
+- **Empresas no banco, editadas na tela** (desde a Fase 3): Preferências →
+  Fontes → **Empresas acompanhadas**. Cada busca lê a lista na hora — sem
+  reiniciar a API. Board sem empresas ligadas fica parado (não gera execução
+  vazia) e a tela diz por quê. As listas do `.env` (`GREENHOUSE_COMPANIES`...)
+  só **semeiam** o banco na primeira subida; ver "Empresas acompanhadas".
 - **Só vagas de tecnologia:** filtro por palavras no título, em PT e EN
   (developer, engineer, desenvolvedor, software, frontend, QA...). Os
   `DISCOVERY_TERMS` da Gupy não servem aqui — "desenvolvedor" não casa com
@@ -30,7 +29,48 @@ molde da Gupy. O que é comum às três fica em `core/boards/`.
   fixtures são montadas a partir da documentação oficial; o `try` grava as
   reais na máquina do usuário, como na Gupy.
 
-## Lista de empresas
+## Empresas acompanhadas
+
+Tabela `TrackedCompany` (fonte + slug únicos, sem diferenciar maiúsculas na
+checagem). Cada empresa pode ser **desligada** sem sair da lista e guarda o
+resultado da última leitura: vagas no board, quantas passaram nos filtros,
+`ok` / `not_found` (404: slug errado ou a empresa saiu do ATS) / `failed`.
+
+**Na tela** (painel "Empresas acompanhadas"):
+
+- **Adicionar pelo link** — cola a página de vagas (ou o link de uma vaga) no
+  Greenhouse, Lever ou Ashby; a API descobre a fonte e o slug, **confere o
+  board antes** (404 não entra) e já grava as vagas que vieram.
+- **Minha lista** por board: liga/desliga, "ler o board agora", remover (com
+  confirmação), link para o board, estado da última leitura.
+- **Diretório**: empresas conferidas na API de cada ATS (brasileiras e de fora
+  contratando remoto na América Latina), com busca e "Acompanhar". Fica em
+  `apps/api/src/modules/discovery/companies/company-directory.ts`, com a data
+  da conferência. Boards mudam: empresa que sair do ATS aparece como "não
+  encontrada" na lista depois da primeira busca.
+
+**API:**
+
+| Rota                        | O que faz                                                                             |
+| --------------------------- | ------------------------------------------------------------------------------------- |
+| `GET /companies`            | a lista, por fonte e nome                                                             |
+| `POST /companies`           | `{ url }` ou `{ source, slug, name? }`: confere, adiciona, grava as vagas (`jobsNew`) |
+| `PATCH /companies/:id`      | `{ active?, name? }` (`name: null` = automático)                                      |
+| `DELETE /companies/:id`     | remove                                                                                |
+| `POST /companies/check`     | lê um board agora **sem gravar nada** (status, vagas, filtradas)                      |
+| `POST /companies/:id/check` | lê o board de uma empresa da lista e guarda o resultado                               |
+| `GET /companies/directory`  | o diretório, com `trackedId` nas que já estão na lista                                |
+
+Links reconhecidos (`core/boards/board-url.ts`): `job-boards.greenhouse.io/<slug>`,
+`boards.greenhouse.io/<slug>` (e `/embed/job_board?for=<slug>`), `jobs.lever.co/<slug>`,
+`jobs.ashbyhq.com/<slug>` e os endereços das APIs. Boards da UE
+(`*.eu.greenhouse.io`, `jobs.eu.lever.co`) ainda não.
+
+**O `.env` agora só semeia.** Na primeira subida desta versão, as empresas de
+`GREENHOUSE_COMPANIES`, `LEVER_COMPANIES` e `ASHBY_COMPANIES` são copiadas
+para o banco **uma vez** (marca `companies:env-imported` em `SystemFlag`).
+Depois disso a tela manda: apagar uma empresa não a traz de volta, e mudar o
+`.env` não muda nada.
 
 ```
 GREENHOUSE_COMPANIES=zenvia,outra-empresa=Outra Empresa S.A.
@@ -44,8 +84,9 @@ GREENHOUSE_COMPANIES=zenvia,outra-empresa=Outra Empresa S.A.
 | Lever      | `jobs.lever.co/<slug>`            | `<slug>` |
 | Ashby      | `jobs.ashbyhq.com/<slug>`         | `<slug>` |
 
-O nome exibido é opcional: o Greenhouse informa o nome da empresa; Lever e
-Ashby não, e aí o slug vira nome ("quinto-andar" → "Quinto Andar").
+O nome exibido é opcional: o Greenhouse informa o nome da empresa (ao
+adicionar pela tela, ele é guardado); Lever e Ashby não, e aí o slug vira
+nome ("quinto-andar" → "Quinto Andar") — o diretório já traz o nome certo.
 
 **Conferir um slug** (quantas vagas, quantas passaram nos filtros):
 
@@ -66,10 +107,13 @@ Nas fontes `company-board`, os argumentos depois do id são empresas (nas
 | `place.ts`        | classifica o local: `brazil`, `remote-open`, `foreign`, `unknown`      |
 | `filters.ts`      | configuração `BOARDS_*` e aplicação dos dois filtros                   |
 | `per-company.ts`  | loop por empresa: pausa, empresa inexistente, dedup, falha só se todas |
+| `board-url.ts`    | link do board ↔ (fonte, slug); página pública do board                 |
 
 **Loop por empresa:** empresa com 404 vira um aviso no log ("slug não
 existe no Lever?") e as outras seguem. A fonte só falha se **todas** as
-empresas falharem — mesma regra dos termos da Gupy.
+empresas falharem — mesma regra dos termos da Gupy. O resultado de cada
+empresa volta em `SourceResult.companies` (também quando todas falham, via
+`AllCompaniesFailedError`) e a API guarda em `TrackedCompany`.
 
 **Local** — cada vaga tem uma ou mais localizações (texto + país, quando a
 API informa) e às vezes um "é remota". Regras, por localização:
@@ -129,16 +173,20 @@ contractor. Por isso:
 | Contract / contractor / freelance | `other`        |
 | Full-time, part-time, nada        | `null`         |
 
-## Fonte desligada
+## Fonte parada
 
-Board sem empresas, ou com a lista inválida, fica de fora sem derrubar nada:
+Os três boards **sobem sempre** e ficam agendados. Sem empresa ligada:
 
-- **Na subida:** `Fonte "greenhouse" inativa: GREENHOUSE_COMPANIES vazio —
-nenhuma empresa para buscar` (lista inválida: erro com a variável).
-- **`GET /api/discovery/sources`:** a fonte aparece com `active: false` e o
-  `reason`.
-- **`POST /api/discovery/scan`:** nada é enfileirado para ela e a resposta
-  traz `inactive: [{ sourceId, reason }]` — "não foi adicionado nada, e por quê".
+- **`GET /api/discovery/sources`:** `active: false`, `trackedCompanies: 0` e o
+  `reason` ("Nenhuma empresa acompanhada — adicione em Preferências → Fontes →
+  Empresas"); a tela mostra "Parada · nenhuma empresa na lista".
+- **`POST /api/discovery/scan`:** nada é enfileirado e a resposta traz
+  `inactive: [{ sourceId, reason }]`.
+- **Busca agendada:** o `ScanRunner` vê a lista vazia e não registra execução.
+  Basta adicionar uma empresa para a próxima busca agendada já ler o board.
+
+`.env` inválido (ex.: `GREENHOUSE_REQUEST_DELAY_MS=abc`) continua tirando a
+fonte do ar, com o erro na subida e em `reason`.
 
 ## Mudanças fora das pastas das fontes
 
@@ -149,13 +197,17 @@ nenhuma empresa para buscar` (lista inválida: erro com a variável).
 - `SourceRun.filtered` (migration nova) e `SourceRunDto.filtered`.
 - Cliente HTTP: teto de resposta sobe de 4 MB para 16 MB (board grande do
   Greenhouse com descrições passa de 4 MB).
-- `try`: empresas como argumentos e `--no-filter`.
+- `try`: empresas como argumentos e `--no-filter`; mostra o resultado de cada empresa.
+- Fase 3: `SourceQuery.companies` aceita empresas prontas (`{ slug, name }`);
+  `SourceResult.companies` / `SourceOutcome.companies`; os boards não têm mais
+  `inactiveReason`; `SourceInfoDto.trackedCompanies`; tabelas `TrackedCompany`
+  e `SystemFlag` (migration `tracked_companies`).
 
 ## Configuração (`.env`)
 
 | Variável                   | Padrão         |                                                      |
 | -------------------------- | -------------- | ---------------------------------------------------- |
-| `GREENHOUSE_COMPANIES`     | (vazio)        | `slug[=Nome]`, separados por vírgula                 |
+| `GREENHOUSE_COMPANIES`     | (vazio)        | `slug[=Nome]`, vírgula — só a 1ª subida (semente)    |
 | `LEVER_COMPANIES`          | (vazio)        | idem                                                 |
 | `ASHBY_COMPANIES`          | (vazio)        | idem                                                 |
 | `<FONTE>_REQUEST_DELAY_MS` | `300`          | pausa entre empresas                                 |
@@ -171,5 +223,11 @@ nenhuma empresa para buscar` (lista inválida: erro com a variável).
 - Por fonte: mapper item a item, contrato, salário, modalidade, URL; fetch
   com http falso contando `filtered` e `dropped`; config; teste com a
   resposta real quando houver `live-page.json`.
-- Registro: fonte sem empresas fica inativa com motivo.
-- Integração: `SourceRun.filtered` gravado e devolvido em `/discovery/runs`.
+- Link do board: cada formato de URL reconhecido; o que não é board fica de fora.
+- Registro: os boards sobem com o `.env` vazio.
+- Integração: `SourceRun.filtered` gravado e devolvido em `/discovery/runs`;
+  a busca usa as empresas ligadas do banco e guarda o resultado de cada uma;
+  board sem empresas não busca nem registra execução; `/companies` (adicionar
+  pelo link, 404 não entra, repetida = 409, conferir sem gravar, ligar/desligar,
+  remover, diretório); importação do `.env` uma vez só.
+- Tela: painel de empresas (lista, adicionar pelo link, diretório, teclado nas abas).

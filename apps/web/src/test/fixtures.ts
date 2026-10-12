@@ -55,6 +55,7 @@ export const source = (overrides: Partial<SourceInfoDto> = {}): SourceInfoDto =>
   kind: 'search',
   active: true,
   reason: null,
+  trackedCompanies: null,
   lastRun: run(),
   nextRunAt: new Date(Date.now() + 4 * 3_600_000).toISOString(),
   running: false,
@@ -67,7 +68,8 @@ export const inactiveBoard = (): SourceInfoDto =>
     displayName: 'Greenhouse',
     kind: 'company-board',
     active: false,
-    reason: 'GREENHOUSE_COMPANIES vazio — nenhuma empresa para buscar',
+    reason: 'Nenhuma empresa acompanhada — adicione em Preferências → Fontes → Empresas',
+    trackedCompanies: 0,
     lastRun: null,
     nextRunAt: null,
   });

@@ -16,7 +16,9 @@ import { afterCursor, decodeCursor, toPage } from '../../common/pagination/curso
 import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { QUEUES } from '../../queue/queue.constants';
+import { TrackedCompaniesStore } from './companies/tracked-companies.store';
 import {
+  NO_COMPANIES_REASON,
   SCAN_JOB_NAME,
   scanDedupId,
   schedulerId,
@@ -46,6 +48,7 @@ export class DiscoveryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService<Env, true>,
+    private readonly companies: TrackedCompaniesStore,
     @Inject(SOURCES) private readonly sources: JobSource[],
     @Inject(UNAVAILABLE_SOURCES) private readonly unavailable: UnavailableSource[],
     @InjectQueue(QUEUES.SOURCE_SCAN) private readonly queue: Queue<ScanJobData>,
@@ -60,19 +63,22 @@ export class DiscoveryService {
       distinct: ['sourceId'],
     });
     const lastBySource = new Map(lastRuns.map((run) => [run.sourceId, toSourceRunDto(run)]));
-    const state = await this.queueState();
+    const [state, counts] = await Promise.all([this.queueState(), this.companies.activeCounts()]);
 
     return [
       ...this.sources.map((source) => {
+        const tracked = source.kind === 'company-board' ? (counts.get(source.id) ?? 0) : null;
+        const idle = tracked === 0;
         const next = state.nextRun.get(source.id);
         return {
           id: source.id,
           displayName: source.displayName,
           kind: source.kind,
-          active: true,
-          reason: null,
+          active: !idle,
+          reason: idle ? NO_COMPANIES_REASON : null,
+          trackedCompanies: tracked,
           lastRun: lastBySource.get(source.id) ?? null,
-          nextRunAt: next ? new Date(next).toISOString() : null,
+          nextRunAt: next && !idle ? new Date(next).toISOString() : null,
           running: state.running.has(source.id),
         };
       }),
@@ -82,6 +88,7 @@ export class DiscoveryService {
         kind: source.kind,
         active: false,
         reason: source.reason,
+        trackedCompanies: null,
         lastRun: lastBySource.get(source.id) ?? null,
         nextRunAt: null,
         running: false,
@@ -129,8 +136,18 @@ export class DiscoveryService {
   }
 
   async scan(input: ScanInput): Promise<ScanResultDto> {
-    const active = new Set(this.sources.map((source) => source.id));
-    const unavailable = new Map(this.unavailable.map((source) => [source.id, source.reason]));
+    const counts = await this.companies.activeCounts();
+    // Board sem empresas ligadas não tem o que buscar: entra como desligado.
+    const idle = this.sources.filter(
+      (source) => source.kind === 'company-board' && !counts.get(source.id),
+    );
+    const active = new Set(
+      this.sources.filter((source) => !idle.includes(source)).map((source) => source.id),
+    );
+    const unavailable = new Map([
+      ...idle.map((source) => [source.id, NO_COMPANIES_REASON] as const),
+      ...this.unavailable.map((source) => [source.id, source.reason] as const),
+    ]);
     // Sem lista: todas as ativas, e as desligadas só para avisar o motivo.
     const requested = input.sources ?? [...active, ...unavailable.keys()];
     const terms = input.terms ?? this.config.get('DISCOVERY_TERMS', { infer: true });

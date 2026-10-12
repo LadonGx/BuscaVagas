@@ -3,3 +3,4 @@ export * from './filters';
 export * from './per-company';
 export * from './place';
 export * from './title-filter';
+export * from './board-url';

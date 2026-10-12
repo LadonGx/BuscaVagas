@@ -13,7 +13,13 @@ import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { createTestApp, describeDb, resetDatabase, type TestApp } from '../../../test/helpers';
 import { QUEUES } from '../../queue/queue.constants';
 import { JobsModule } from '../jobs/jobs.module';
-import { SOURCE_HTTP_CLIENT, SOURCES, UNAVAILABLE_SOURCES } from './discovery.constants';
+import { TrackedCompaniesStore } from './companies/tracked-companies.store';
+import {
+  NO_COMPANIES_REASON,
+  SOURCE_HTTP_CLIENT,
+  SOURCES,
+  UNAVAILABLE_SOURCES,
+} from './discovery.constants';
 import { DiscoveryController } from './discovery.controller';
 import { DiscoveryService } from './discovery.service';
 import { ScanRunner, SourceRunFailedError } from './scan-runner.service';
@@ -55,7 +61,7 @@ const fakeSource: JobSource = {
   },
 };
 
-/** Board de empresa falso: não usa termos e devolve vagas filtradas. */
+/** Board de empresa falso: não usa termos e devolve vagas filtradas e o resultado por empresa. */
 const boardQueries: SourceQuery[] = [];
 const boardSource: JobSource = {
   id: 'board',
@@ -63,7 +69,15 @@ const boardSource: JobSource = {
   kind: 'company-board',
   fetch: async (query) => {
     boardQueries.push(query);
-    return { jobs: [posting(10, 'board')], dropped: 1, filtered: 5 };
+    return {
+      jobs: [posting(10, 'board')],
+      dropped: 1,
+      filtered: 5,
+      companies: [
+        { slug: 'acme', status: 'ok', jobs: 7, kept: 1, error: null },
+        { slug: 'sumiu', status: 'not_found', jobs: 0, kept: 0, error: 'HTTP 404' },
+      ],
+    };
   },
 };
 
@@ -83,6 +97,7 @@ const http: HttpClient = { getJson: async () => ({}), getText: async () => '' };
   providers: [
     ScanRunner,
     DiscoveryService,
+    TrackedCompaniesStore,
     { provide: SOURCES, useValue: [fakeSource, boardSource] },
     {
       provide: UNAVAILABLE_SOURCES,
@@ -126,11 +141,17 @@ describeDb('Descoberta (integração)', () => {
 
   const api = () => request(t.http);
 
+  /** O board falso só busca com empresas ligadas no banco. */
+  const track = (...slugs: string[]) =>
+    t.prisma.trackedCompany.createMany({
+      data: slugs.map((slug) => ({ source: 'board', slug })),
+    });
+
   it('ScanRunner grava as vagas e o histórico com novas vs. já vistas', async () => {
     fake.jobs = [posting(1), posting(2)];
     fake.dropped = 3;
 
-    const first = await runner.run('fake', ['node', 'react'], 'manual');
+    const first = (await runner.run('fake', ['node', 'react'], 'manual'))!;
     expect(first).toMatchObject({
       sourceId: 'fake',
       status: 'ok',
@@ -152,16 +173,49 @@ describeDb('Descoberta (integração)', () => {
     expect(first.filtered).toBe(0);
   });
 
-  it('board de empresa: grava as filtradas e não registra termos', async () => {
-    const run = await runner.run('board', ['node'], 'schedule');
+  it('board de empresa: busca as empresas ligadas, grava as filtradas e não registra termos', async () => {
+    await track('acme', 'sumiu');
+    await t.prisma.trackedCompany.create({
+      data: { source: 'board', slug: 'desligada', active: false },
+    });
+    const run = (await runner.run('board', ['node'], 'schedule'))!;
 
     expect(run).toMatchObject({ terms: [], jobsFound: 1, jobsNew: 1, dropped: 1, filtered: 5 });
-    expect(boardQueries[0]).toEqual({ terms: [] });
+    expect(boardQueries[0]).toEqual({
+      terms: [],
+      companies: [
+        { slug: 'acme', name: null },
+        { slug: 'sumiu', name: null },
+      ],
+    });
+
+    // O resultado de cada empresa fica guardado para a tela.
+    const stats = await t.prisma.trackedCompany.findMany({ orderBy: { slug: 'asc' } });
+    expect(
+      stats.map(({ slug, lastStatus, lastJobs, lastMatched }) => ({
+        slug,
+        lastStatus,
+        lastJobs,
+        lastMatched,
+      })),
+    ).toEqual([
+      { slug: 'acme', lastStatus: 'ok', lastJobs: 7, lastMatched: 1 },
+      { slug: 'desligada', lastStatus: null, lastJobs: null, lastMatched: null },
+      { slug: 'sumiu', lastStatus: 'not_found', lastJobs: 0, lastMatched: 0 },
+    ]);
 
     const [listed] = (
       (await api().get('/api/discovery/runs?sourceId=board').expect(200)).body as Page<SourceRunDto>
     ).items;
     expect(listed).toMatchObject({ id: run.id, filtered: 5 });
+  });
+
+  it('board sem empresas ligadas: não busca nem registra execução', async () => {
+    await t.prisma.trackedCompany.create({ data: { source: 'board', slug: 'x', active: false } });
+
+    expect(await runner.run('board', [], 'schedule')).toBeNull();
+    expect(boardQueries).toEqual([]);
+    expect(await t.prisma.sourceRun.count()).toBe(0);
   });
 
   it('falha da fonte fica registrada e é relançada (para o BullMQ tentar de novo)', async () => {
@@ -181,6 +235,7 @@ describeDb('Descoberta (integração)', () => {
   });
 
   it('GET /discovery/sources traz a última execução de cada fonte', async () => {
+    await track('acme', 'beta');
     let sources = (await api().get('/api/discovery/sources').expect(200)).body as SourceInfoDto[];
     expect(sources).toEqual([
       {
@@ -189,6 +244,7 @@ describeDb('Descoberta (integração)', () => {
         kind: 'search',
         active: true,
         reason: null,
+        trackedCompanies: null,
         lastRun: null,
         nextRunAt: null,
         running: false,
@@ -199,6 +255,7 @@ describeDb('Descoberta (integração)', () => {
         kind: 'company-board',
         active: true,
         reason: null,
+        trackedCompanies: 2,
         lastRun: null,
         nextRunAt: null,
         running: false,
@@ -209,6 +266,7 @@ describeDb('Descoberta (integração)', () => {
         kind: 'company-board',
         active: false,
         reason: 'PARADO_COMPANIES vazio — nenhuma empresa para buscar',
+        trackedCompanies: null,
         lastRun: null,
         nextRunAt: null,
         running: false,
@@ -223,7 +281,21 @@ describeDb('Descoberta (integração)', () => {
     expect(sources[0]?.lastRun?.terms).toEqual(['b']);
   });
 
+  it('GET /discovery/sources: board sem empresas ligadas aparece parado, com o caminho', async () => {
+    const next = Date.parse('2026-10-11T18:00:00.000Z');
+    queue.getJobSchedulers.mockResolvedValue([{ key: 'schedule:board', next }]);
+
+    const sources = (await api().get('/api/discovery/sources').expect(200)).body as SourceInfoDto[];
+    expect(sources.find((source) => source.id === 'board')).toMatchObject({
+      active: false,
+      reason: NO_COMPANIES_REASON,
+      trackedCompanies: 0,
+      nextRunAt: null,
+    });
+  });
+
   it('GET /discovery/sources traz a próxima busca agendada e o que está rodando', async () => {
+    await track('acme');
     const next = Date.parse('2026-10-11T18:00:00.000Z');
     queue.getJobSchedulers.mockResolvedValue([
       { key: 'schedule:fake', next },
@@ -255,6 +327,7 @@ describeDb('Descoberta (integração)', () => {
   });
 
   it('POST /discovery/scan enfileira com os termos do .env ou os pedidos', async () => {
+    await track('acme');
     const byEnv = (await api().post('/api/discovery/scan').expect(202)).body as ScanResultDto;
     expect(byEnv.queued).toEqual([
       { sourceId: 'fake', jobId: 'job-fake' },
@@ -278,7 +351,9 @@ describeDb('Descoberta (integração)', () => {
 
   it('POST /discovery/scan avisa que a fonte desligada não buscou nada, e por quê', async () => {
     const all = (await api().post('/api/discovery/scan').expect(202)).body as ScanResultDto;
+    expect(all.queued.map((item) => item.sourceId)).toEqual(['fake']);
     expect(all.inactive).toEqual([
+      { sourceId: 'board', reason: NO_COMPANIES_REASON },
       { sourceId: 'parado', reason: 'PARADO_COMPANIES vazio — nenhuma empresa para buscar' },
     ]);
 
@@ -294,6 +369,7 @@ describeDb('Descoberta (integração)', () => {
   });
 
   it('POST /discovery/scan não duplica fonte que já está na fila', async () => {
+    await track('acme');
     queue.getDeduplicationJobId.mockResolvedValue('job-antigo');
 
     const result = (await api().post('/api/discovery/scan').expect(202)).body as ScanResultDto;

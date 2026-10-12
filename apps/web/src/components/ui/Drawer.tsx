@@ -14,6 +14,8 @@ interface DrawerProps {
   footer?: ReactNode;
   /** `side` = painel à direita (padrão); `center` = diálogo no meio da tela. */
   placement?: 'side' | 'center';
+  /** `wide` = painel lateral mais largo (listas com ações por linha). */
+  size?: 'normal' | 'wide';
   children: ReactNode;
 }
 
@@ -32,6 +34,7 @@ export function Drawer({
   eyebrow,
   footer,
   placement = 'side',
+  size = 'normal',
   children,
 }: DrawerProps) {
   const titleId = useId();
@@ -90,6 +93,7 @@ export function Drawer({
         ref={panel}
         className={styles.panel}
         data-placement={placement}
+        data-size={size}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

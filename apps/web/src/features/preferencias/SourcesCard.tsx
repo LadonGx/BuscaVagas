@@ -1,5 +1,5 @@
 import type { SourceInfoDto, SourceRunDto } from '@busca-vagas/shared';
-import { History } from 'lucide-react';
+import { Building2, History } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useSourceRuns, useSources } from '../../api/discovery';
 import { Button } from '../../components/ui/Button';
@@ -12,6 +12,7 @@ import {
   formatUntil,
 } from '../../lib/format';
 import { useNow } from '../../lib/useNow';
+import { boardNames, CompaniesDrawer } from './CompaniesDrawer';
 import { ErrorText } from './ErrorText';
 import styles from './Preferencias.module.css';
 
@@ -36,8 +37,14 @@ export function runDuration(ms: number | null): string | null {
   return formatDuration(ms);
 }
 
+/** Board de empresa parado só porque a lista de empresas está vazia. */
+export function isIdleBoard(source: SourceInfoDto): boolean {
+  return source.kind === 'company-board' && source.trackedCompanies === 0;
+}
+
 /** Linha de estado de uma fonte, para o cartão. */
 export function sourceState(source: SourceInfoDto, now: Date): string {
+  if (isIdleBoard(source)) return 'Parada · nenhuma empresa na lista';
   if (!source.active) return 'Desligada';
   if (source.running || source.lastRun?.status === 'running') return 'Buscando agora…';
   const run = source.lastRun;
@@ -60,6 +67,11 @@ export function SourcesCard() {
   const { data: sources, isError, error } = useSources();
   const now = useNow();
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [companiesOpen, setCompaniesOpen] = useState(false);
+  // Só os boards que a API consegue usar (os com configuração inválida ficam de fora).
+  const boards = (sources ?? []).filter(
+    (source) => source.kind === 'company-board' && source.trackedCompanies !== null,
+  );
 
   return (
     <section className={styles.card} aria-labelledby="fontes-titulo">
@@ -80,10 +92,14 @@ export function SourcesCard() {
               <div className={styles.sourceText}>
                 <span>
                   <strong>{source.displayName}</strong>{' '}
-                  <span className={styles.hint}>{KIND_LABEL[source.kind]}</span>
+                  <span className={styles.hint}>
+                    {KIND_LABEL[source.kind]}
+                    {!!source.trackedCompanies &&
+                      ` · ${plural(source.trackedCompanies, 'empresa', 'empresas')}`}
+                  </span>
                 </span>
                 <span className={styles.hint}>{sourceState(source, now)}</span>
-                {!source.active && source.reason && (
+                {!source.active && source.reason && !isIdleBoard(source) && (
                   <span className={styles.reason}>{source.reason}</span>
                 )}
                 {failed && source.lastRun?.error && <ErrorText error={source.lastRun.error} />}
@@ -92,13 +108,25 @@ export function SourcesCard() {
           );
         })}
       </ul>
-      <p className={styles.hint}>
-        As empresas de cada board ficam no <code>.env</code> (ex.: <code>GREENHOUSE_COMPANIES</code>
-        ).
-      </p>
+      {boards.length > 0 && (
+        <>
+          <p className={styles.hint}>{boardNames(boards)} buscam nas empresas da sua lista.</p>
+          <Button
+            icon={<Building2 size={16} aria-hidden="true" />}
+            onClick={() => setCompaniesOpen(true)}
+          >
+            Empresas acompanhadas
+          </Button>
+        </>
+      )}
       <Button icon={<History size={16} aria-hidden="true" />} onClick={() => setHistoryOpen(true)}>
         Ver histórico de buscas
       </Button>
+      <CompaniesDrawer
+        open={companiesOpen}
+        onClose={() => setCompaniesOpen(false)}
+        boards={boards}
+      />
       <RunsDrawer
         open={historyOpen}
         onClose={() => setHistoryOpen(false)}

@@ -26,8 +26,10 @@ reimplementa o loop. Copie a pasta `lever/` em vez do `_template` e use:
 
 - `parseCompanyBoardConfig('ACME_', env)` — lê `ACME_COMPANIES`,
   `ACME_REQUEST_DELAY_MS` e os filtros comuns `BOARDS_*`;
-- `noCompaniesReason('ACME_')` como `inactiveReason` — sem empresas, a fonte
-  não sobe;
+- nada de `inactiveReason`: a API passa as empresas acompanhadas (banco) em
+  `query.companies` e não busca quando a lista está vazia; para o novo ATS
+  aparecer na tela, some o id em `BOARD_SOURCE_IDS` e o formato do link em
+  `core/boards/board-url.ts`;
 - `scanCompanies({ fetchCompany, mapItem, ... })` — pausa, 404 por empresa,
   filtros de título e local (`filtered`), dedup;
 - o mapper devolve `{ posting, place }`: a vaga e os locais (texto + país)

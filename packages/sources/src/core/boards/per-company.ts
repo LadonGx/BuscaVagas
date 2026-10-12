@@ -39,10 +39,37 @@ export function parseCompanyBoardConfig(prefix: string, env: EnvLike): CompanyBo
   };
 }
 
-/** Para `SourceDefinition.inactiveReason`: sem empresas, não há o que buscar. */
-export function noCompaniesReason(prefix: string) {
-  return (config: CompanyBoardConfig): string | null =>
-    config.companies.length === 0 ? `${prefix}COMPANIES vazio — nenhuma empresa para buscar` : null;
+/** Resultado de UMA empresa numa varredura — a API guarda para mostrar na tela. */
+export interface CompanyScanStat {
+  slug: string;
+  /** `not_found` = 404: o slug não existe (ou a empresa saiu desse ATS). */
+  status: 'ok' | 'not_found' | 'failed';
+  /** Vagas que o board tinha (válidas ou não). */
+  jobs: number;
+  /** Quantas passaram nos filtros de título e local. */
+  kept: number;
+  error: string | null;
+}
+
+/** Lançado quando TODAS as empresas falham; leva o resultado de cada uma. */
+export class AllCompaniesFailedError extends Error {
+  constructor(
+    message: string,
+    readonly companies: CompanyScanStat[],
+  ) {
+    super(message);
+    this.name = 'AllCompaniesFailedError';
+  }
+}
+
+/** `query.companies` aceita slugs (`slug` ou `slug=Nome`) ou empresas prontas. */
+export function resolveQueryCompanies(companies: SourceQuery['companies']): BoardCompany[] | null {
+  if (!companies?.length) return null;
+  return parseCompanyList(
+    companies.map((item) =>
+      typeof item === 'string' ? item : item.name ? `${item.slug}=${item.name}` : item.slug,
+    ),
+  );
 }
 
 export interface ScanCompaniesOptions {
@@ -60,16 +87,19 @@ export interface ScanCompaniesOptions {
 /**
  * O loop que as três fontes de board compartilham:
  *
- *  - empresas de `query.companies` (o `try`) ou da configuração;
+ *  - empresas de `query.companies` (a API, que guarda a lista no banco, e o
+ *    `try`) ou da configuração;
  *  - pausa entre empresas;
  *  - empresa com erro (404 = slug errado) vira aviso e as outras seguem;
- *    só lança se TODAS falharem;
+ *    só lança se TODAS falharem (`AllCompaniesFailedError`, com o resultado
+ *    de cada uma);
  *  - filtros de título e local, contados em `filtered`;
+ *  - o resultado de cada empresa em `companies`;
  *  - a mesma URL entra uma vez.
  */
 export async function scanCompanies(options: ScanCompaniesOptions): Promise<SourceResult> {
   const { sourceId, config, query, ctx } = options;
-  const companies = query.companies?.length ? parseCompanyList(query.companies) : config.companies;
+  const companies = resolveQueryCompanies(query.companies) ?? config.companies;
   const passes = query.skipFilters ? () => true : createBoardFilter(config.filters);
 
   const byUrl = new Map<string, JobPosting>();
@@ -77,10 +107,11 @@ export async function scanCompanies(options: ScanCompaniesOptions): Promise<Sour
   let filtered = 0;
   let failed = 0;
   let firstError: unknown = null;
+  const stats: CompanyScanStat[] = [];
 
   if (companies.length === 0) {
     ctx.log(`${sourceId}: nenhuma empresa configurada`);
-    return { jobs: [], dropped: 0, filtered: 0 };
+    return { jobs: [], dropped: 0, filtered: 0, companies: [] };
   }
 
   for (const [index, company] of companies.entries()) {
@@ -105,6 +136,7 @@ export async function scanCompanies(options: ScanCompaniesOptions): Promise<Sour
       }
 
       dropped += result.dropped;
+      stats.push({ slug: company.slug, status: 'ok', jobs: rows.length, kept, error: null });
       ctx.log(
         `${sourceId}: ${company.slug} — ${rows.length} vagas, ${kept} mantidas, ` +
           `${result.ok.length - kept} filtradas, ${result.dropped} descartadas`,
@@ -115,21 +147,24 @@ export async function scanCompanies(options: ScanCompaniesOptions): Promise<Sour
       }
       failed += 1;
       firstError ??= error;
+      const reason = error instanceof Error ? error.message : String(error);
 
       if (error instanceof HttpError && error.status === 404) {
+        stats.push({ slug: company.slug, status: 'not_found', jobs: 0, kept: 0, error: reason });
         ctx.log(`${sourceId}: "${company.slug}" não encontrada (404) — confira o slug`);
       } else {
-        const reason = error instanceof Error ? error.message : String(error);
+        stats.push({ slug: company.slug, status: 'failed', jobs: 0, kept: 0, error: reason });
         ctx.log(`${sourceId}: "${company.slug}" falhou (${reason}) — seguindo com as outras`);
       }
     }
   }
 
   if (failed === companies.length) {
-    throw firstError instanceof Error ? firstError : new Error(String(firstError));
+    const message = firstError instanceof Error ? firstError.message : String(firstError);
+    throw new AllCompaniesFailedError(message, stats);
   }
 
-  return { jobs: [...byUrl.values()], dropped, filtered };
+  return { jobs: [...byUrl.values()], dropped, filtered, companies: stats };
 }
 
 /** Nome exibido: o do `.env`, senão o da API, senão o derivado do slug. */

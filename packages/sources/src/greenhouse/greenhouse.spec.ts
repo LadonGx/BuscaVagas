@@ -126,17 +126,18 @@ describe('GreenhouseSource', () => {
     expect(calls).toHaveLength(2);
     expect(result.jobs).toHaveLength(3);
     expect(logs[0]).toContain('"nao-existe" não encontrada (404)');
+    expect(result.companies).toEqual([
+      { slug: 'nao-existe', status: 'not_found', jobs: 0, kept: 0, error: expect.any(String) },
+      { slug: 'acme', status: 'ok', jobs: 7, kept: 3, error: null },
+    ]);
   });
 });
 
 describe('definição', () => {
-  it('lê GREENHOUSE_COMPANIES; sem empresas fica inativa', () => {
+  it('lê GREENHOUSE_COMPANIES (a semente da lista no banco); sempre ativa', () => {
     const config = greenhouseSourceDefinition.parseConfig({ GREENHOUSE_COMPANIES: 'acme=Acme' });
     expect(config.companies).toEqual([{ slug: 'acme', name: 'Acme' }]);
-    expect(greenhouseSourceDefinition.inactiveReason?.(config)).toBeNull();
-    expect(
-      greenhouseSourceDefinition.inactiveReason?.(greenhouseSourceDefinition.parseConfig({})),
-    ).toMatch(/GREENHOUSE_COMPANIES/);
+    expect(greenhouseSourceDefinition.inactiveReason).toBeUndefined();
   });
 });
 

@@ -61,9 +61,9 @@ describe('buildSources', () => {
     expect(SOURCE_DEFINITIONS.map((d) => d.id)).toEqual(['gupy', 'greenhouse', 'lever', 'ashby']);
   });
 
-  it('com o .env vazio, os boards ficam inativos e a Gupy sobe', () => {
+  it('com o .env vazio, todas sobem: as empresas dos boards vêm do banco (API)', () => {
     const result = buildSources({});
-    expect(result.sources.map((s) => s.id)).toEqual(['gupy']);
-    expect(result.inactive.map((item) => item.sourceId)).toEqual(['greenhouse', 'lever', 'ashby']);
+    expect(result.sources.map((s) => s.id)).toEqual(['gupy', 'greenhouse', 'lever', 'ashby']);
+    expect(result.inactive).toEqual([]);
   });
 });

@@ -170,6 +170,40 @@ GET {{api}}/discovery/runs?limit=10
 ### Vagas que vieram da Gupy
 GET {{api}}/jobs?source=gupy&limit=20
 
+############################################################ Empresas dos boards
+# docs/features/06-company-boards.md — Greenhouse, Lever e Ashby leem a lista do banco.
+
+### Empresas acompanhadas
+GET {{api}}/companies
+
+### Diretório de empresas verificadas (trackedId = já está na lista)
+GET {{api}}/companies/directory
+
+### Conferir um board sem gravar nada (pelo link)
+POST {{api}}/companies/check
+Content-Type: application/json
+
+{ "url": "https://job-boards.greenhouse.io/vtex" }
+
+### Adicionar (pelo link, ou { "source": "lever", "slug": "...", "name": "..." })
+# @name addCompany
+POST {{api}}/companies
+Content-Type: application/json
+
+{ "url": "https://jobs.lever.co/starkbank" }
+
+### Desligar (fica na lista, fora das buscas)
+PATCH {{api}}/companies/{{addCompany.response.body.company.id}}
+Content-Type: application/json
+
+{ "active": false }
+
+### Ler o board de novo agora
+POST {{api}}/companies/{{addCompany.response.body.company.id}}/check
+
+### Remover
+DELETE {{api}}/companies/{{addCompany.response.body.company.id}}
+
 ############################################################ Preferências e nota
 # docs/features/07-preferences-score.md — a nota é calculada em segundo plano.
 

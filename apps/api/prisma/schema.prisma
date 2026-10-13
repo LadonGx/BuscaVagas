@@ -191,18 +191,18 @@ model Job {
 
   /// Ainda está aberta? — docs/features/13-availability.md
   /// Prazo de inscrição (Gupy). Vencido = encerrada.
-  deadline       DateTime?
+  deadline     DateTime?
   /// Boards: slug da empresa no ATS (para saber quando a vaga sai do board).
-  board          String?
+  board        String?
   /// Quando soubemos que fechou (saiu do board, a página diz, prazo venceu).
   /// `null` = aberta ou sem informação. A fonte trazer a vaga de novo reabre.
-  closedAt       DateTime?
-  closedReason   String?
+  closedAt     DateTime?
+  closedReason String?
   /// Última conferência ativa (botão no painel ou a diária das salvas).
-  checkedAt      DateTime?
+  checkedAt    DateTime?
   /// "open" | "closed" | "unknown"
-  checkState     String?
-  checkReason    String?
+  checkState   String?
+  checkReason  String?
 
   @@unique([source, externalId])
   @@index([fingerprint])
@@ -241,14 +241,47 @@ model Application {
   nextStepAt        DateTime?
   nextStepNote      String?
 
+  /// Cópia do currículo do app guardada no "Me candidatei"
+  /// (docs/features/14-resume-versions.md) e quando foi guardada.
+  resumeSnapshotId String?
+  resumeSavedAt    DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   /// Restrict: apagar a vaga apagaria o histórico da candidatura junto.
-  job    Job           @relation(fields: [jobId], references: [id], onDelete: Restrict)
-  events StatusEvent[]
+  job            Job              @relation(fields: [jobId], references: [id], onDelete: Restrict)
+  events         StatusEvent[]
+  resumeSnapshot ResumeSnapshot?  @relation(fields: [resumeSnapshotId], references: [id], onDelete: SetNull)
+  resumeFile     ApplicationFile?
 
   @@index([status, updatedAt])
+  @@index([resumeSnapshotId])
+}
+
+/// O currículo do app como estava ao se candidatar. Uma cópia por conteúdo
+/// (`hash`): o mesmo currículo em cinco candidaturas é guardado uma vez.
+/// `sections` = `ResumeSectionDto[]` daquele momento (com os ids).
+model ResumeSnapshot {
+  id        String   @id @default(cuid())
+  hash      String   @unique
+  sections  Json
+  createdAt DateTime @default(now())
+
+  applications Application[]
+}
+
+/// O PDF que você enviou na candidatura (um por candidatura, até 10 MB).
+model ApplicationFile {
+  id            String   @id @default(cuid())
+  applicationId String   @unique
+  name          String
+  size          Int
+  sha256        String
+  content       Bytes
+  createdAt     DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 /// Uma mudança de status. `occurredAt` é quando ACONTECEU (você informa);

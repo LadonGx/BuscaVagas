@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import type { NextFunction, Request, Response } from 'express';
 import type { Env } from '../config/env';
 import { PrismaExceptionFilter } from './filters/prisma-exception.filter';
@@ -33,6 +34,10 @@ export function configureApp(app: INestApplication): void {
       .status(rejection.status)
       .json({ statusCode: rejection.status, message: rejection.message });
   });
+
+  // JSON até 15 MB: o PDF enviado numa candidatura vai em base64 (até 10 MB,
+  // docs/features/14-resume-versions.md). O padrão do Express é 100 KB.
+  (app as NestExpressApplication).useBodyParser('json', { limit: '15mb' });
 
   app.setGlobalPrefix('api');
   app.enableCors({ origin: config.get('WEB_ORIGIN', { infer: true }) });

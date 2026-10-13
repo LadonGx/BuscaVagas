@@ -220,6 +220,9 @@ dezenas), `GET /api/applications/:id` no painel.
     ser futuro — futuro é próxima etapa) e anotação;
   - linha do tempo do mais recente para o mais antigo, com "(antes: …)",
     editar data/anotação e apagar (o único evento não pode ser apagado);
+  - "Currículo enviado" ([14](14-resume-versions.md)): a cópia do currículo
+    do app (ver e imprimir, comparar com o atual, guardar o de hoje) e o PDF
+    enviado (anexar, baixar, trocar, remover);
   - dados do processo: onde se candidatou, pretensão e anotações;
   - "Apagar candidatura" pede um segundo clique em até 5 s. A vaga continua
     salva.
@@ -274,6 +277,9 @@ igual; muda só a apresentação (formulário centralizado, como no job-tracker)
 
 **Impressão — `/curriculo/imprimir`**
 
+- `?candidatura=<id>` imprime a cópia guardada naquela candidatura, com o
+  aviso "Versão enviada em …" e "Voltar à candidatura"
+  ([14](14-resume-versions.md)).
 - Fora do layout do app (sem menu). Folha A4 em preto no branco nos dois
   temas; `@page` A4 com margem; painel de opções e avisos não saem no papel.
 - "Salvar como PDF" chama `window.print()`; a dica lembra de escolher

@@ -89,7 +89,9 @@ Ordem combinada, em blocos.
 - [x] A vaga ainda está aberta? Board da empresa, prazo da Gupy, botão no painel e
       conferência diária das salvas; selo "Encerrada" e "Esconder encerradas" (CO)
       ([13](features/13-availability.md))
-- [ ] Versão do currículo congelada em cada candidatura (JT)
+- [x] Currículo de cada candidatura: cópia do currículo do app no "Me candidatei", PDF
+      enviado anexado, ver/imprimir e comparar com o atual (JT)
+      ([14](features/14-resume-versions.md))
 - [ ] Banco de perguntas de entrevista com as suas respostas (JS)
 
 **Bloco C — acompanhar**

@@ -21,6 +21,7 @@ import {
   toApplicationDetailDto,
   toApplicationDto,
 } from './applications.mapper';
+import { pruneSnapshots, ResumeVersionsService, snapshotResume } from './resume-versions.service';
 
 type Tx = Prisma.TransactionClient;
 
@@ -33,7 +34,10 @@ type Tx = Prisma.TransactionClient;
  */
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly versions: ResumeVersionsService,
+  ) {}
 
   async create(input: CreateApplicationInput): Promise<ApplicationDetailDto> {
     const job = await this.prisma.job.findUnique({
@@ -57,8 +61,12 @@ export class ApplicationsService {
     const occurredAt = input.occurredAt ?? now;
 
     const id = await this.prisma.$transaction(async (tx) => {
+      // O currículo de agora fica guardado com a candidatura
+      // (docs/features/14-resume-versions.md). Vazio: nada.
+      const snapshot = await snapshotResume(tx);
       const application = await tx.application.create({
         data: {
+          ...(snapshot && { resumeSnapshotId: snapshot.id, resumeSavedAt: now }),
           jobId: job.id,
           status: input.status,
           appliedAt: occurredAt,
@@ -148,7 +156,10 @@ export class ApplicationsService {
       throw notFound();
     }
 
-    return toApplicationDetailDto(row);
+    return toApplicationDetailDto(
+      row,
+      row.resumeSnapshot ? await this.versions.currentHash() : null,
+    );
   }
 
   async update(id: string, input: UpdateApplicationInput): Promise<ApplicationDetailDto> {
@@ -159,8 +170,12 @@ export class ApplicationsService {
 
   async remove(id: string): Promise<void> {
     await this.assertExists(id);
-    // Os eventos vão junto (onDelete: Cascade). A triagem da vaga fica como está.
-    await this.prisma.application.delete({ where: { id } });
+    // Eventos e PDF vão junto (onDelete: Cascade); a cópia do currículo sai
+    // se nenhuma outra candidatura usa. A triagem da vaga fica como está.
+    await this.prisma.$transaction(async (tx) => {
+      await tx.application.delete({ where: { id } });
+      await pruneSnapshots(tx);
+    });
   }
 
   /* ------------------------------------------------------------ eventos */

@@ -105,6 +105,21 @@ Content-Type: application/json
 ### Detalhe com linha do tempo
 GET {{api}}/applications/{{apply.response.body.id}}
 
+### Currículo guardado na candidatura — docs/features/14-resume-versions.md
+GET {{api}}/applications/{{apply.response.body.id}}/resume
+
+### Guardar o currículo de hoje (troca a cópia)
+POST {{api}}/applications/{{apply.response.body.id}}/resume
+
+### Anexar o PDF enviado (base64; "JVBERi0xLjQK" = "%PDF-1.4\n")
+PUT {{api}}/applications/{{apply.response.body.id}}/resume-file
+Content-Type: application/json
+
+{ "name": "curriculo.pdf", "contentBase64": "JVBERi0xLjQK" }
+
+### Baixar o PDF enviado
+GET {{api}}/applications/{{apply.response.body.id}}/resume-file
+
 ### Listar e resumo por status
 GET {{api}}/applications?status=applied,in_process
 

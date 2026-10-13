@@ -31,6 +31,20 @@ const sectionWithItems = {
 type SectionRow = Prisma.ResumeSectionGetPayload<{ include: typeof sectionWithItems }>;
 
 /**
+ * As seções como estão agora, sem criar as padrão (para quem só lê: a cópia
+ * do currículo na candidatura, docs/features/14-resume-versions.md).
+ */
+export async function readResumeSections(
+  prisma: Pick<Prisma.TransactionClient, 'resumeSection'>,
+): Promise<ResumeSectionDto[]> {
+  const sections = await prisma.resumeSection.findMany({
+    orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
+    include: sectionWithItems,
+  });
+  return sections.map(toSectionDto);
+}
+
+/**
  * Currículo em blocos ("gaveta").
  * Plano: docs/features/04-resume.md
  */

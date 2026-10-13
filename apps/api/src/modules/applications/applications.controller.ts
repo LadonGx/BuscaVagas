@@ -2,6 +2,9 @@ import {
   addStatusEventInputSchema,
   applicationListQuerySchema,
   createApplicationInputSchema,
+  resumeFileInputSchema,
+  type ResumeFileInput,
+  type ResumeSnapshotDto,
   updateApplicationInputSchema,
   updateStatusEventInputSchema,
   type AddStatusEventInput,
@@ -24,15 +27,22 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { ApplicationsService } from './applications.service';
+import { ResumeVersionsService } from './resume-versions.service';
 
 /** Plano: docs/features/03-applications.md */
 @Controller('applications')
 export class ApplicationsController {
-  constructor(private readonly applications: ApplicationsService) {}
+  constructor(
+    private readonly applications: ApplicationsService,
+    private readonly versions: ResumeVersionsService,
+  ) {}
 
   @Post()
   create(
@@ -96,5 +106,50 @@ export class ApplicationsController {
     @Param('eventId') eventId: string,
   ): Promise<ApplicationDetailDto> {
     return this.applications.removeEvent(id, eventId);
+  }
+
+  /* ------------- currículo da candidatura (docs/features/14-resume-versions.md) */
+
+  @Get(':id/resume')
+  resume(@Param('id') id: string): Promise<ResumeSnapshotDto> {
+    return this.versions.get(id);
+  }
+
+  /** Guarda o currículo de hoje nesta candidatura (troca a cópia). */
+  @Post(':id/resume')
+  @HttpCode(HttpStatus.OK)
+  async saveResume(@Param('id') id: string): Promise<ApplicationDetailDto> {
+    await this.versions.save(id);
+    return this.applications.get(id);
+  }
+
+  /** O PDF enviado, em base64 dentro de JSON (a API só aceita escrita em JSON). */
+  @Put(':id/resume-file')
+  async attachFile(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(resumeFileInputSchema)) body: ResumeFileInput,
+  ): Promise<ApplicationDetailDto> {
+    await this.versions.attach(id, body);
+    return this.applications.get(id);
+  }
+
+  @Get(':id/resume-file')
+  async downloadFile(@Param('id') id: string, @Res() response: Response): Promise<void> {
+    const file = await this.versions.download(id);
+    response
+      .status(200)
+      .set({
+        'Content-Type': 'application/pdf',
+        'Content-Length': String(file.content.length),
+        'Content-Disposition': `attachment; filename="${file.name.replace(/[^\x20-\x7e]|"/g, '_')}"; filename*=UTF-8''${encodeURIComponent(file.name)}`,
+        'X-Content-Type-Options': 'nosniff',
+      })
+      .end(file.content);
+  }
+
+  @Delete(':id/resume-file')
+  async removeFile(@Param('id') id: string): Promise<ApplicationDetailDto> {
+    await this.versions.removeFile(id);
+    return this.applications.get(id);
   }
 }

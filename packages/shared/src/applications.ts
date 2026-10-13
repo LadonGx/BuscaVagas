@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { dateInputSchema, optionalText, pageQuerySchema, queryList } from './common';
 import type { WorkModel } from './enums';
+import type { ApplicationResumeDto, ApplicationResumeFileDto } from './resume-snapshot';
 
 /* -------------------------------------------------------------- status */
 
@@ -171,6 +172,10 @@ export interface ApplicationDto {
 /** Detalhe: inclui a linha do tempo, do evento mais antigo ao mais recente. */
 export interface ApplicationDetailDto extends ApplicationDto {
   events: StatusEventDto[];
+  /** Cópia do currículo do app guardada no "Me candidatei" (docs/features/14-resume-versions.md). */
+  resume: ApplicationResumeDto | null;
+  /** O PDF que você enviou, se anexou. */
+  resumeFile: ApplicationResumeFileDto | null;
 }
 
 /** Contagem por status, para o quadro de candidaturas. */

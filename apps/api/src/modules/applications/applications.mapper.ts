@@ -14,6 +14,9 @@ export const applicationInclude = {
 export const applicationDetailInclude = {
   ...applicationInclude,
   events: true,
+  resumeSnapshot: { select: { id: true, hash: true } },
+  // Só os dados do PDF, nunca o conteúdo.
+  resumeFile: { select: { name: true, size: true, createdAt: true } },
 } satisfies Prisma.ApplicationInclude;
 
 type ApplicationRow = Prisma.ApplicationGetPayload<{ include: typeof applicationInclude }>;
@@ -38,7 +41,11 @@ export function toApplicationDto(row: ApplicationRow): ApplicationDto {
   };
 }
 
-export function toApplicationDetailDto(row: ApplicationDetailRow): ApplicationDetailDto {
+/** `currentHash`: hash do currículo de hoje, para dizer se a cópia ainda é igual. */
+export function toApplicationDetailDto(
+  row: ApplicationDetailRow,
+  currentHash: string | null,
+): ApplicationDetailDto {
   return {
     ...toApplicationDto(row),
     events: withPreviousStatus(row.events).map((event) => ({
@@ -49,5 +56,20 @@ export function toApplicationDetailDto(row: ApplicationDetailRow): ApplicationDe
       note: event.note,
       createdAt: event.createdAt.toISOString(),
     })),
+    resume:
+      row.resumeSnapshot && row.resumeSavedAt
+        ? {
+            snapshotId: row.resumeSnapshot.id,
+            savedAt: row.resumeSavedAt.toISOString(),
+            sameAsCurrent: row.resumeSnapshot.hash === currentHash,
+          }
+        : null,
+    resumeFile: row.resumeFile
+      ? {
+          name: row.resumeFile.name,
+          size: row.resumeFile.size,
+          uploadedAt: row.resumeFile.createdAt.toISOString(),
+        }
+      : null,
   };
 }

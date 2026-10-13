@@ -215,3 +215,108 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ------------------------------ currículo enviado (14-resume-versions) */
+
+.resumeBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.resumeHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  font-size: 14px;
+}
+
+.resumeHead > svg {
+  flex: none;
+  color: var(--accent);
+}
+
+.resumeHead > span:not(.badge) {
+  display: flex;
+  flex: 1 1 200px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  padding: 2px 8px;
+  border: 1px solid var(--info);
+  border-radius: 7px;
+  color: var(--info-fg);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge[data-tone='good'] {
+  border-color: var(--good);
+  background: var(--good-bg);
+  color: var(--good-fg);
+}
+
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.linkButton:hover {
+  border-color: var(--accent);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--info-bg);
+  font-size: 13px;
+}
+
+.changes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+
+.changes li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.changeDetail {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.changeDetail del {
+  color: var(--bad-fg);
+}
+
+.changeDetail ins {
+  color: var(--good-fg);
+  text-decoration: none;
+}

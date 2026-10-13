@@ -62,6 +62,9 @@ hábito de registro, não a velocidade da empresa.
 | `PATCH`  | `/api/applications/:id/events/:eventId` | corrige `status`, `occurredAt` ou `note`                                                                                                         |
 | `DELETE` | `/api/applications/:id/events/:eventId` | 409 se for o único evento                                                                                                                        |
 
+O currículo de cada candidatura (cópia do app e PDF enviado) tem rotas
+próprias: [14](14-resume-versions.md).
+
 ## Regras
 
 - `occurredAt` não pode estar no futuro (tolerância de 5 min). Data futura é

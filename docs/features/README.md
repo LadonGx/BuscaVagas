@@ -20,5 +20,6 @@ implementação divergir do plano, o plano é atualizado junto.
 | 11  | [Vaga repostada e duplicada entre fontes](11-reposts.md)            | ✅     |
 | 12  | [Importar currículo de PDF](12-resume-import.md)                    | ✅     |
 | 13  | [A vaga ainda está aberta?](13-availability.md)                     | ✅     |
+| 14  | [Currículo de cada candidatura](14-resume-versions.md)              | ✅     |
 
-Ordem de dependência: 00 → 01 → 02 → 03 (usa a triagem) · 04 é independente · 05 usa o `ingest` de 01 · 06 usa a descoberta de 05 · 07 usa 01 (vagas) e o `ingest` · 08 usa 02 (triagem) e o `ingest` · 09 usa 01, 03, 05 e 07 · 10 usa todas · 11 usa o `ingest` de 01 e a limpeza de 08 · 12 usa o currículo de 04 · 13 usa o `ingest` de 01, os boards de 06 e a fila de 08.
+Ordem de dependência: 00 → 01 → 02 → 03 (usa a triagem) · 04 é independente · 05 usa o `ingest` de 01 · 06 usa a descoberta de 05 · 07 usa 01 (vagas) e o `ingest` · 08 usa 02 (triagem) e o `ingest` · 09 usa 01, 03, 05 e 07 · 10 usa todas · 11 usa o `ingest` de 01 e a limpeza de 08 · 12 usa o currículo de 04 · 13 usa o `ingest` de 01, os boards de 06 e a fila de 08 · 14 usa o currículo de 04 e as candidaturas de 03.

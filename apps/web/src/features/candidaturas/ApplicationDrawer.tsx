@@ -22,6 +22,7 @@ import { Button } from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
 import { Field } from '../../components/ui/Field';
 import { formatDate, formatDateTime, fromLocalInput, toLocalInput } from '../../lib/format';
+import { ApplicationResume } from './ApplicationResume';
 import { isOpen } from './columns';
 import styles from './ApplicationDrawer.module.css';
 
@@ -79,6 +80,7 @@ function Details({ application }: { application: ApplicationDetailDto }) {
       {isOpen(application) && <NextStep application={application} />}
       <AddEvent application={application} />
       <Timeline application={application} />
+      <ApplicationResume application={application} />
       <ProcessInfo application={application} />
     </>
   );

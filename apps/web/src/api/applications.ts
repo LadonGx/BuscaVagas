@@ -4,6 +4,7 @@ import type {
   ApplicationDto,
   ApplicationStatus,
   Page,
+  ResumeSnapshotDto,
   UpdateApplicationInput,
 } from '@busca-vagas/shared';
 import { MAX_PAGE_LIMIT } from '@busca-vagas/shared';
@@ -137,5 +138,65 @@ export function useDeleteApplication() {
       queryClient.removeQueries({ queryKey: keys.applications.detail(id) });
       return refreshAfterChange(queryClient);
     },
+  });
+}
+
+/* ----------------- currículo da candidatura (docs/features/14-resume-versions.md) */
+
+/** A cópia do currículo guardada na candidatura (só quando alguém pede para ver). */
+export function useApplicationResume(id: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.applications.resume(id),
+    queryFn: ({ signal }) =>
+      api.get<ResumeSnapshotDto>(`/applications/${id}/resume`, undefined, signal),
+    enabled,
+    staleTime: Infinity, // a cópia não muda sozinha; "Guardar o de hoje" atualiza
+  });
+}
+
+/** "Guardar o currículo de hoje" nesta candidatura. */
+export function useSaveApplicationResume(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post<ApplicationDetailDto>(`/applications/${id}/resume`),
+    onSuccess: async (detail) => {
+      queryClient.setQueryData(keys.applications.detail(id), detail);
+      await queryClient.invalidateQueries({ queryKey: keys.applications.resume(id) });
+    },
+  });
+}
+
+/** Endereço para baixar o PDF anexado. */
+export const resumeFileUrl = (id: string) => `/api/applications/${id}/resume-file`;
+
+/** Arquivo → base64 (a API só aceita escrita em JSON). */
+export async function fileToBase64(file: Blob): Promise<string> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = '';
+  const CHUNK = 0x8000;
+  for (let index = 0; index < bytes.length; index += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + CHUNK));
+  }
+  return btoa(binary);
+}
+
+/** Anexa (ou troca) o PDF que você enviou. */
+export function useAttachResumeFile(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) =>
+      api.put<ApplicationDetailDto>(`/applications/${id}/resume-file`, {
+        name: file.name,
+        contentBase64: await fileToBase64(file),
+      }),
+    onSuccess: (detail) => queryClient.setQueryData(keys.applications.detail(id), detail),
+  });
+}
+
+export function useRemoveResumeFile(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.delete<ApplicationDetailDto>(`/applications/${id}/resume-file`),
+    onSuccess: (detail) => queryClient.setQueryData(keys.applications.detail(id), detail),
   });
 }

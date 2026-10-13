@@ -12,3 +12,4 @@ export * from './resume';
 export * from './resume-import';
 export * from './resume-import-pdf';
 export * from './resume-import-plan';
+export * from './resume-snapshot';

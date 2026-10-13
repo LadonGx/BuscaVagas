@@ -39,6 +39,18 @@
   font-size: 13px;
 }
 
+.version {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--info);
+  border-radius: var(--radius);
+  background: var(--info-bg);
+  color: var(--info-fg);
+  font-size: 13px;
+}
+
 .choices {
   display: flex;
   flex-direction: column;

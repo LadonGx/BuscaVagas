@@ -175,6 +175,8 @@ export const application = (
       createdAt: '2026-10-04T13:00:00.000Z',
     },
   ],
+  resume: null,
+  resumeFile: null,
   ...overrides,
 });
 

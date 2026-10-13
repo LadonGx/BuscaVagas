@@ -17,6 +17,7 @@ export const keys = {
     summary: ['applications', 'summary'] as const,
     list: ['applications', 'list'] as const,
     detail: (id: string) => ['applications', 'detail', id] as const,
+    resume: (id: string) => ['applications', 'resume', id] as const,
   },
   discovery: {
     sources: ['discovery', 'sources'] as const,

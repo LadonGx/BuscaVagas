@@ -7,9 +7,11 @@ import {
 } from '@busca-vagas/shared';
 import { ArrowLeft, Printer } from 'lucide-react';
 import { useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
+import { useApplication, useApplicationResume } from '../../api/applications';
 import { useResume } from '../../api/resume';
 import { Button } from '../../components/ui/Button';
+import { formatDate } from '../../lib/format';
 import { normalizeItem } from './draft';
 import { fieldShown, findName, sectionShown, usePdfChoices, type PdfChoices } from './pdfChoices';
 import styles from './ImprimirPage.module.css';
@@ -87,9 +89,18 @@ export function buildDocument(
   return { name, contact, blocks };
 }
 
-/** Currículo em página A4. "Salvar como PDF" usa a impressão do navegador. */
+/**
+ * Currículo em página A4. "Salvar como PDF" usa a impressão do navegador.
+ * `?candidatura=<id>`: a cópia guardada naquela candidatura, não o currículo
+ * de hoje (docs/features/14-resume-versions.md).
+ */
 export function ImprimirPage() {
-  const { data, isPending, isError, error } = useResume();
+  const [params] = useSearchParams();
+  const applicationId = params.get('candidatura');
+  const current = useResume();
+  const copy = useApplicationResume(applicationId ?? '', Boolean(applicationId));
+  const application = useApplication(applicationId);
+  const { data, isPending, isError, error } = applicationId ? copy : current;
   const { choices, choose } = usePdfChoices();
   const sections = data?.sections ?? [];
   const doc = buildDocument(sections, choices);
@@ -106,10 +117,23 @@ export function ImprimirPage() {
   return (
     <div className={styles.screen}>
       <aside className={styles.panel} aria-label="Opções do PDF">
-        <Link to="/curriculo" className={styles.back}>
+        <Link
+          to={applicationId ? `/candidaturas/${applicationId}` : '/curriculo'}
+          className={styles.back}
+        >
           <ArrowLeft size={16} aria-hidden="true" />
-          Voltar ao currículo
+          {applicationId ? 'Voltar à candidatura' : 'Voltar ao currículo'}
         </Link>
+        {applicationId && copy.data && (
+          <p className={styles.version}>
+            <strong>Versão enviada em {formatDate(copy.data.savedAt)}</strong>
+            {application.data && (
+              <span>
+                {application.data.job.title} · {application.data.job.company}
+              </span>
+            )}
+          </p>
+        )}
         <Button
           variant="primary"
           icon={<Printer size={16} aria-hidden="true" />}

@@ -112,8 +112,7 @@ describe('Currículo', () => {
       'Lumen · Remoto · 01/2025 – atual',
     );
     expect(screen.getByText('22 caracteres')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Escolher arquivo' })).toBeDisabled();
-    expect(screen.getByText('Chega na Fase 3')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Escolher arquivo' })).toBeEnabled();
     expect(saveButton()).toBeDisabled();
 
     for (const button of screen.getAllByRole('button')) {

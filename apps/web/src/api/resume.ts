@@ -1,6 +1,7 @@
 import type {
   CreateResumeSectionInput,
   ResumeDto,
+  ResumeImportApplyInput,
   ResumeItemData,
   ResumeItemDto,
   ResumeSectionDto,
@@ -202,6 +203,18 @@ export function useSaveItems() {
         }
       }
       return result;
+    },
+  });
+}
+
+/** Aplica a revisão da importação de PDF (tudo ou nada) e troca o currículo do cache. */
+export function useImportResume() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ResumeImportApplyInput) => api.post<ResumeDto>('/resume/import', input),
+    onSuccess: (resume) => {
+      queryClient.setQueryData(keys.resume, resume);
+      void queryClient.invalidateQueries({ queryKey: keys.resumeStacks });
     },
   });
 }

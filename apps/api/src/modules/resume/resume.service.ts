@@ -7,6 +7,7 @@ import {
   type FieldItem,
   type CreateResumeSectionInput,
   type ResumeDto,
+  type ResumeImportApplyInput,
   type ResumeItemData,
   type ResumeItemDto,
   type ResumeSectionDto,
@@ -79,6 +80,76 @@ export class ResumeService {
 
   async exportText(): Promise<string> {
     return resumeToText((await this.get()).sections);
+  }
+
+  /* --------------------------------------------- importar de PDF (12) */
+
+  /**
+   * Aplica o que você aprovou na revisão da importação, tudo ou nada.
+   * Cada item é validado pelo tipo da seção de destino; itens novos entram
+   * no fim da seção; seções novas, no fim do currículo.
+   * Plano: docs/features/12-resume-import.md
+   */
+  async applyImport(input: ResumeImportApplyInput): Promise<ResumeDto> {
+    await this.ensureDefaults();
+
+    await this.prisma.$transaction(async (tx) => {
+      for (const [index, update] of input.updates.entries()) {
+        const item = await tx.resumeItem.findUnique({
+          where: { id: update.itemId },
+          include: { section: { select: { kind: true } } },
+        });
+        if (!item) throw itemNotFound();
+        const data = parseItemData(item.section.kind, update.data, [
+          'updates',
+          String(index),
+          'data',
+        ]);
+        await tx.resumeItem.update({
+          where: { id: item.id },
+          data: { data: data as Prisma.InputJsonValue },
+        });
+      }
+
+      for (const [index, create] of input.creates.entries()) {
+        const section = await tx.resumeSection.findUnique({ where: { id: create.sectionId } });
+        if (!section) throw sectionNotFound();
+        const data = parseItemData(section.kind, create.data, ['creates', String(index), 'data']);
+        const last = await tx.resumeItem.aggregate({
+          where: { sectionId: section.id },
+          _max: { position: true },
+        });
+        await tx.resumeItem.create({
+          data: {
+            sectionId: section.id,
+            position: (last._max.position ?? -1) + 1,
+            data: data as Prisma.InputJsonValue,
+          },
+        });
+      }
+
+      for (const [index, section] of input.sections.entries()) {
+        const items = section.items.map((raw, itemIndex) =>
+          parseItemData(section.kind, raw, ['sections', String(index), 'items', String(itemIndex)]),
+        );
+        const last = await tx.resumeSection.aggregate({ _max: { position: true } });
+        await tx.resumeSection.create({
+          data: {
+            title: section.title,
+            kind: section.kind,
+            position: (last._max.position ?? -1) + 1,
+            items: {
+              create: items.map((data, position) => ({
+                position,
+                data: data as Prisma.InputJsonValue,
+              })),
+            },
+          },
+        });
+      }
+    });
+
+    return this.get();
   }
 
   /* ------------------------------------------------------------ seções */
@@ -236,7 +307,7 @@ export class ResumeService {
   private async findSectionOrThrow(id: string) {
     const section = await this.prisma.resumeSection.findUnique({ where: { id } });
     if (!section) {
-      throw new NotFoundException({ statusCode: 404, message: 'Seção não encontrada.' });
+      throw sectionNotFound();
     }
     return section;
   }
@@ -244,10 +315,14 @@ export class ResumeService {
 
 /* -------------------------------------------------------------- helpers */
 
-function parseItemData(kind: ResumeSectionKind, raw: unknown): ResumeItemData {
+function parseItemData(
+  kind: ResumeSectionKind,
+  raw: unknown,
+  path: string[] = ['data'],
+): ResumeItemData {
   const result = resumeItemDataSchema(kind).safeParse(raw);
   if (!result.success) {
-    throw badRequestFromZod(result.error, ['data']);
+    throw badRequestFromZod(result.error, path);
   }
   return result.data;
 }
@@ -280,6 +355,10 @@ function toSectionDto(section: SectionRow): ResumeSectionDto {
     position: section.position,
     items: section.items.map(toItemDto),
   };
+}
+
+function sectionNotFound(): NotFoundException {
+  return new NotFoundException({ statusCode: 404, message: 'Seção não encontrada.' });
 }
 
 function itemNotFound(): NotFoundException {

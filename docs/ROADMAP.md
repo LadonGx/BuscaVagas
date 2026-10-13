@@ -84,7 +84,8 @@ Ordem combinada, em blocos.
 
 **Bloco B — candidatura**
 
-- [ ] Importar currículo de PDF, com revisão antes de salvar (VA, JS)
+- [x] Importar currículo de PDF (lido no navegador, só completa o que está vazio), com
+      revisão antes de salvar (VA, JS) ([12](features/12-resume-import.md))
 - [ ] Checagem se a vaga ainda está aberta antes de candidatar (CO)
 - [ ] Versão do currículo congelada em cada candidatura (JT)
 - [ ] Banco de perguntas de entrevista com as suas respostas (JS)

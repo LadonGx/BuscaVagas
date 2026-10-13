@@ -147,6 +147,12 @@ Content-Type: application/json
 ### Exportar em texto puro
 GET {{api}}/resume/export
 
+### Importar de PDF: aplicar a revisão (o PDF é lido no navegador) — docs/features/12-resume-import.md
+POST {{api}}/resume/import
+Content-Type: application/json
+
+{ "creates": [{ "sectionId": "{{resume.response.body.sections[4].id}}", "data": { "title": "Estágio em desenvolvimento", "organization": "Acme" } }] }
+
 ### Tecnologias das Competências (para "Trazer do currículo" nas Preferências)
 GET {{api}}/resume/stacks
 

@@ -1,11 +1,13 @@
 import {
   createResumeSectionInputSchema,
   reorderInputSchema,
+  resumeImportApplySchema,
   resumeItemInputSchema,
   updateResumeSectionInputSchema,
   type CreateResumeSectionInput,
   type ReorderInput,
   type ResumeDto,
+  type ResumeImportApplyInput,
   type ResumeItemDto,
   type ResumeItemInput,
   type ResumeSectionDto,
@@ -49,6 +51,18 @@ export class ResumeController {
   @Header('Content-Type', 'text/plain; charset=utf-8')
   export(): Promise<string> {
     return this.resume.exportText();
+  }
+
+  /**
+   * Aplica a revisão da importação de PDF (o PDF é lido no navegador; aqui
+   * chega só o que você aprovou). Plano: docs/features/12-resume-import.md
+   */
+  @Post('import')
+  @HttpCode(HttpStatus.OK)
+  applyImport(
+    @Body(new ZodValidationPipe(resumeImportApplySchema)) body: ResumeImportApplyInput,
+  ): Promise<ResumeDto> {
+    return this.resume.applyImport(body);
   }
 
   /* ------------------------------------------------------------ seções */

@@ -90,4 +90,5 @@ Descrição...
 
 ## Depois
 
-- Importar de PDF (Fase 3) e versão do currículo congelada em cada candidatura.
+- Versão do currículo congelada em cada candidatura (Fase 3). Importar de PDF:
+  ver o [12](12-resume-import.md).

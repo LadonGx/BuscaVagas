@@ -230,8 +230,8 @@ igual; muda só a apresentação (formulário centralizado, como no job-tracker)
 - Cabeçalho fixo no topo ao rolar (no celular, rola junto): "Copiar tudo"
   (mesmo texto do `/export`), "Ver e salvar PDF" e "Salvar". Embaixo do
   título, "N alterações não salvas · Ctrl+S salva".
-- Caixa "Importar de PDF": **só visual nesta fase** — botão desabilitado com
-  "Chega na Fase 3". O leitor de PDF é o item da Fase 3.
+- Caixa "Importar de PDF": abre o painel de importação (Fase 3, ver o
+  [12](12-resume-import.md)); desligada enquanto houver alteração não salva.
 - Cada seção vira um cartão com "Copiar seção" e "Organizar":
   - `fields` → grade de 2 colunas, "Copiar" em cada campo. O valor é uma área
     de texto que cresce com o conteúdo (respostas longas cabem);
@@ -378,5 +378,5 @@ Cada item é um passo com teste e revisão antes do próximo.
 
 ## Fora desta fase
 
-Leitor de PDF do currículo, telas de E-mails e Métricas e notificação de vaga
+Telas de E-mails e Métricas e notificação de vaga
 nova — todos na Fase 3 (as empresas dos boards já são editadas pela tela).

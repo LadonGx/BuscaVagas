@@ -10,6 +10,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { AddSection } from './AddSection';
 import { resumeText } from './draft';
+import { ImportDialog } from './import/ImportDialog';
 import { SectionCard } from './SectionCard';
 import { useResumeDraft, type SaveOutcome } from './useResumeDraft';
 import styles from './CurriculoPage.module.css';
@@ -47,6 +48,7 @@ export function CurriculoPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const [organizing, setOrganizing] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
   const dirty = draft.dirtyCount > 0;
 
   async function save(): Promise<boolean> {
@@ -115,17 +117,26 @@ export function CurriculoPage() {
         <div className={styles.importText}>
           <strong>Importar de PDF</strong>
           <span className={styles.muted}>
-            Vai ler o seu currículo em PDF e preencher os campos abaixo, para você revisar antes de
-            salvar.
+            Lê o seu currículo em PDF e completa o que estiver vazio aqui — você revisa antes de
+            gravar.
           </span>
         </div>
-        <Button disabled aria-describedby="importar-fase-3">
+        <Button
+          disabled={!resume || dirty}
+          aria-describedby={dirty ? 'importar-salve-antes' : undefined}
+          onClick={() => setImporting(true)}
+        >
           Escolher arquivo
         </Button>
-        <span id="importar-fase-3" className={styles.soon}>
-          Chega na Fase 3
-        </span>
+        {dirty && (
+          <span id="importar-salve-antes" className={styles.soon}>
+            Salve antes de importar
+          </span>
+        )}
       </section>
+      {resume && (
+        <ImportDialog open={importing} onClose={() => setImporting(false)} resume={resume} />
+      )}
 
       {isPending && <p className={styles.muted}>Carregando currículo…</p>}
       {isError && (

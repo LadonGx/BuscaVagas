@@ -9,3 +9,6 @@ export * from './jobs';
 export * from './maintenance';
 export * from './preferences';
 export * from './resume';
+export * from './resume-import';
+export * from './resume-import-pdf';
+export * from './resume-import-plan';

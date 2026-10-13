@@ -259,9 +259,9 @@
 }
 
 .badge[data-tone='good'] {
-  border-color: var(--good);
-  background: var(--good-bg);
-  color: var(--good-fg);
+  border-color: var(--great);
+  background: var(--great-bg);
+  color: var(--great-fg);
 }
 
 .linkButton {
@@ -319,4 +319,116 @@
 .changeDetail ins {
   color: var(--good-fg);
   text-decoration: none;
+}
+
+/* ------------------------- perguntas da entrevista (15-interview-questions) */
+
+.askedList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.askedItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.askedHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.askedQuestion {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.askedQuestion:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.askedNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+.textButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.noteForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.noteForm input,
+.addQuestion input,
+.inlineSelect select {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  background: var(--input);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.noteForm input {
+  flex: 1 1 220px;
+}
+
+.addQuestion {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface2);
+  list-style: none;
+}
+
+.suggestions button {
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+}
+
+.suggestions button:hover,
+.suggestions button:focus-visible {
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
 }

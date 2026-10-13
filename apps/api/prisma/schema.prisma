@@ -252,6 +252,7 @@ model Application {
   /// Restrict: apagar a vaga apagaria o histórico da candidatura junto.
   job            Job              @relation(fields: [jobId], references: [id], onDelete: Restrict)
   events         StatusEvent[]
+  interviewAsked InterviewAsked[]
   resumeSnapshot ResumeSnapshot?  @relation(fields: [resumeSnapshotId], references: [id], onDelete: SetNull)
   resumeFile     ApplicationFile?
 
@@ -441,4 +442,57 @@ model TrackedCompany {
 model SystemFlag {
   key   String   @id
   setAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Perguntas de entrevista — docs/features/15-interview-questions.md
+// ---------------------------------------------------------------------------
+
+enum InterviewCategory {
+  hr
+  behavioral
+  technical
+  company
+}
+
+/// Uma pergunta e a sua resposta (texto livre e/ou STAR), com o treino.
+model InterviewQuestion {
+  id            String            @id @default(cuid())
+  question      String
+  category      InterviewCategory
+  tags          String[]          @default([])
+  answer        String?
+  starSituation String?
+  starTask      String?
+  starAction    String?
+  starResult    String?
+
+  /// Treino: quantas vezes, a última avaliação ("good" | "again") e quando.
+  practiceCount Int       @default(0)
+  lastRating    String?
+  practicedAt   DateTime?
+
+  /// Veio da lista inicial.
+  seeded    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  asked InterviewAsked[]
+
+  @@index([category])
+}
+
+/// "Caiu nesta entrevista": a pergunta numa candidatura, com como foi.
+model InterviewAsked {
+  id            String   @id @default(cuid())
+  questionId    String
+  applicationId String
+  note          String?
+  askedAt       DateTime @default(now())
+
+  question    InterviewQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  application Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, applicationId])
+  @@index([applicationId])
 }

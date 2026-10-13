@@ -126,6 +126,37 @@ GET {{api}}/applications?status=applied,in_process
 ###
 GET {{api}}/applications/summary
 
+############################################################ Entrevistas
+# docs/features/15-interview-questions.md
+
+### Banco de perguntas (todas)
+GET {{api}}/interview-questions
+
+### Nova pergunta, já marcada na candidatura acima
+# @name question
+POST {{api}}/interview-questions
+Content-Type: application/json
+
+{
+  "question": "Conte de um prazo apertado.",
+  "category": "behavioral",
+  "tags": ["prazo"],
+  "starSituation": "Entrega do app em duas semanas.",
+  "askedIn": "{{apply.response.body.id}}"
+}
+
+### Treino: "preciso treinar" (ou "good")
+POST {{api}}/interview-questions/{{question.response.body.id}}/practice
+Content-Type: application/json
+
+{ "rating": "again" }
+
+### Como foi nesta entrevista
+PUT {{api}}/interview-questions/{{question.response.body.id}}/asked/{{apply.response.body.id}}
+Content-Type: application/json
+
+{ "note": "Travei no resultado" }
+
 ############################################################ Currículo
 
 ### Currículo (cria as seções padrão no 1º acesso)

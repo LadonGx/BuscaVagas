@@ -92,7 +92,9 @@ Ordem combinada, em blocos.
 - [x] Currículo de cada candidatura: cópia do currículo do app no "Me candidatei", PDF
       enviado anexado, ver/imprimir e comparar com o atual (JT)
       ([14](features/14-resume-versions.md))
-- [ ] Banco de perguntas de entrevista com as suas respostas (JS)
+- [x] Banco de perguntas de entrevista: resposta livre ou STAR, ~30 perguntas comuns para
+      começar, "caiu nesta entrevista" no painel da candidatura e modo treino (JS)
+      ([15](features/15-interview-questions.md))
 
 **Bloco C — acompanhar**
 

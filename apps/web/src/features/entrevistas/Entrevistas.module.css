@@ -1,0 +1,433 @@
+/* Entrevistas e Treino — docs/features/15-interview-questions.md */
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.primaryLink,
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.primaryLink {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.primaryLink:hover {
+  filter: brightness(1.08);
+}
+
+.backLink {
+  border: 1px solid var(--input-border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.backLink:hover {
+  border-color: var(--accent);
+}
+
+/* ------------------------------------------------------------ barra */
+
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.search {
+  display: flex;
+  flex: 1 1 260px;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  background: var(--input);
+  color: var(--muted);
+}
+
+.search:focus-within {
+  box-shadow: var(--focus);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.search input:focus-visible {
+  box-shadow: none;
+}
+
+.select select {
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  background: var(--input);
+  color: var(--soft);
+  font-size: 13px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--soft);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.check input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.activeTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+.tab[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
+  font-weight: 600;
+}
+
+.count {
+  opacity: 0.75;
+}
+
+/* ------------------------------------------------------------ lista */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  transition: border-color 120ms;
+}
+
+.card:hover,
+.card:focus-within {
+  border-color: var(--accent);
+}
+
+.cardMain {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+
+.cardQuestion {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.preview {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--soft);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-line;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip {
+  padding: 2px 8px;
+  border-radius: 7px;
+  background: var(--chip);
+  color: var(--chip-text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.flag {
+  padding: 2px 8px;
+  border: 1px solid var(--weak);
+  border-radius: 7px;
+  color: var(--weak-fg);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.flag[data-tone='warn'] {
+  border-color: var(--good);
+  background: var(--good-bg);
+  color: var(--good-fg);
+}
+
+.flag[data-tone='info'] {
+  border-color: var(--info);
+  color: var(--info-fg);
+}
+
+.tag,
+.tagStatic {
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+}
+
+.tag:hover {
+  background: var(--accent-soft);
+}
+
+/* ----------------------------------------------------------- editor */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 12px;
+}
+
+@media (width <= 560px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.star {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+}
+
+.starToggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.starFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface2);
+}
+
+@media (width <= 560px) {
+  .starFields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.label {
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.askedList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+.askedList a {
+  color: var(--accent);
+}
+
+.note {
+  margin-top: 2px;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+.confirmBar {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  font-size: 14px;
+}
+
+.pushRight {
+  margin-left: auto;
+}
+
+/* ------------------------------------------------------------ treino */
+
+.practice {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 820px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.practiceQuestion {
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+
+.reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface2);
+}
+
+.answerText {
+  color: var(--soft);
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.starList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.starList dt {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.starList dd {
+  margin: 2px 0 0;
+  color: var(--soft);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-line;
+}

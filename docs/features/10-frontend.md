@@ -220,6 +220,8 @@ dezenas), `GET /api/applications/:id` no painel.
     ser futuro — futuro é próxima etapa) e anotação;
   - linha do tempo do mais recente para o mais antigo, com "(antes: …)",
     editar data/anotação e apagar (o único evento não pode ser apagado);
+  - "Perguntas da entrevista" ([15](15-interview-questions.md)): o que
+    perguntaram, com "como foi"; busca no banco ou cria uma pergunta nova;
   - "Currículo enviado" ([14](14-resume-versions.md)): a cópia do currículo
     do app (ver e imprimir, comparar com o atual, guardar o de hoje) e o PDF
     enviado (anexar, baixar, trocar, remover);
@@ -228,6 +230,14 @@ dezenas), `GET /api/applications/:id` no painel.
     salva.
 - Alternância Quadro / Lista (`?vista=lista`); a lista é uma tabela ordenável
   pelo cabeçalho (`aria-sort`).
+
+### Entrevistas — `/entrevistas` e `/entrevistas/treino`
+
+Banco de perguntas com as suas respostas ([15](15-interview-questions.md)):
+busca, categoria, situação (sem resposta, respondidas, para treinar) e tag,
+tudo na URL; editor no painel (`?pergunta=<id>` ou `nova`) com STAR opcional;
+treino com uma pergunta por vez (Espaço mostra a resposta, 1 = preciso
+treinar, 2 = fui bem).
 
 ### Currículo — `/curriculo` e `/curriculo/imprimir`
 

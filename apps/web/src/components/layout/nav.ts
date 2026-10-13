@@ -3,6 +3,7 @@ import {
   House,
   SquareKanban,
   LayoutGrid,
+  MessagesSquare,
   SlidersHorizontal,
   TabletSmartphone,
   type LucideIcon,
@@ -34,6 +35,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: SquareKanban,
     count: { key: 'activeApplications', label: 'em andamento' },
   },
+  { to: '/entrevistas', label: 'Entrevistas', icon: MessagesSquare },
   { to: '/curriculo', label: 'Currículo', icon: FileText },
   { to: '/preferencias', label: 'Preferências', icon: SlidersHorizontal },
 ];

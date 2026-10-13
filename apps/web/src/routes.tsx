@@ -4,6 +4,8 @@ import { CandidaturasPage } from './features/candidaturas/CandidaturasPage';
 import { CurriculoPage } from './features/curriculo/CurriculoPage';
 import { ImprimirPage } from './features/curriculo/ImprimirPage';
 import { DeslizarPage } from './features/deslizar/DeslizarPage';
+import { EntrevistasPage } from './features/entrevistas/EntrevistasPage';
+import { TreinoPage } from './features/entrevistas/TreinoPage';
 import { NotFoundPage } from './features/erros/NotFoundPage';
 import { RouteError } from './features/erros/RouteError';
 import { InicioPage } from './features/inicio/InicioPage';
@@ -24,6 +26,8 @@ export const routes: RouteObject[] = [
       { path: 'deslizar', element: <DeslizarPage /> },
       { path: 'candidaturas', element: <CandidaturasPage /> },
       { path: 'candidaturas/:id', element: <CandidaturasPage /> },
+      { path: 'entrevistas', element: <EntrevistasPage /> },
+      { path: 'entrevistas/treino', element: <TreinoPage /> },
       { path: 'curriculo', element: <CurriculoPage /> },
       { path: 'preferencias', element: <PreferenciasPage /> },
       // Vitrine dos componentes: só no `pnpm dev:web`, fora do build.

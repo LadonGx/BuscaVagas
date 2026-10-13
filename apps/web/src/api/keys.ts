@@ -33,5 +33,6 @@ export const keys = {
   preferences: ['preferences'] as const,
   stackOptions: ['preferences', 'stacks'] as const,
   resume: ['resume'] as const,
+  interviews: ['interview-questions'] as const,
   resumeStacks: ['resume', 'stacks'] as const,
 };

@@ -2,6 +2,7 @@ import type {
   ApplicationDetailDto,
   ApplicationSummaryDto,
   DashboardDto,
+  InterviewQuestionDto,
   JobCountsDto,
   JobDto,
   PreferencesDto,
@@ -141,6 +142,27 @@ export const layoutRoutes = () => ({
   'GET /applications/summary': () => summary(),
   'GET /discovery/sources': () => [source(), inactiveBoard()],
   'GET /preferences': () => preferences(),
+  'GET /interview-questions': () => [],
+});
+
+/** Pergunta de entrevista (docs/features/15-interview-questions.md). */
+export const question = (overrides: Partial<InterviewQuestionDto> = {}): InterviewQuestionDto => ({
+  id: 'q-1',
+  question: 'Fale um pouco sobre você.',
+  category: 'hr',
+  tags: [],
+  answer: null,
+  starSituation: null,
+  starTask: null,
+  starAction: null,
+  starResult: null,
+  answered: false,
+  practice: { count: 0, lastRating: null, practicedAt: null },
+  asked: [],
+  seeded: true,
+  createdAt: '2026-10-01T12:00:00.000Z',
+  updatedAt: '2026-10-01T12:00:00.000Z',
+  ...overrides,
 });
 
 export const application = (

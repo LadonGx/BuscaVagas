@@ -6,14 +6,29 @@ import type { Env } from '../../config/env';
 import { QUEUES } from '../../queue/queue.constants';
 import { planSchedules, type ScheduleSpec } from '../../queue/schedule-plan';
 import {
+  AVAILABILITY_EVERY_MS,
+  AVAILABILITY_FIRST_RUN_DELAY_MS,
+  AVAILABILITY_JOB_NAME,
+  AVAILABILITY_SCHEDULER_ID,
   RETENTION_EVERY_MS,
   RETENTION_FIRST_RUN_DELAY_MS,
   RETENTION_JOB_NAME,
   RETENTION_SCHEDULER_ID,
 } from './maintenance.constants';
 
+const JOBS: Record<string, { name: string; firstRunDelayMs: number }> = {
+  [RETENTION_SCHEDULER_ID]: {
+    name: RETENTION_JOB_NAME,
+    firstRunDelayMs: RETENTION_FIRST_RUN_DELAY_MS,
+  },
+  [AVAILABILITY_SCHEDULER_ID]: {
+    name: AVAILABILITY_JOB_NAME,
+    firstRunDelayMs: AVAILABILITY_FIRST_RUN_DELAY_MS,
+  },
+};
+
 /**
- * Agenda a retenção uma vez por dia. Mesma regra da descoberta: só mexe no
+ * Agenda a retenção e a conferência das salvas, uma vez por dia. Mesma regra da descoberta: só mexe no
  * agendador quando a configuração muda, para o modo dev (que reinicia a cada
  * arquivo salvo) não empurrar nem disparar a limpeza.
  */
@@ -36,8 +51,12 @@ export class MaintenanceScheduler implements OnApplicationBootstrap {
   async sync(): Promise<void> {
     const days = this.config.get('RETENTION_DAYS', { infer: true });
     // Os dias vão no `data` só para que mudar RETENTION_DAYS conte como mudança.
-    const desired: ScheduleSpec<{ days: number }>[] =
-      days > 0 ? [{ id: RETENTION_SCHEDULER_ID, everyMs: RETENTION_EVERY_MS, data: { days } }] : [];
+    const desired: ScheduleSpec<{ days?: number }>[] = [
+      ...(days > 0
+        ? [{ id: RETENTION_SCHEDULER_ID, everyMs: RETENTION_EVERY_MS, data: { days } }]
+        : []),
+      { id: AVAILABILITY_SCHEDULER_ID, everyMs: AVAILABILITY_EVERY_MS, data: {} },
+    ];
 
     const existing = (await this.queue.getJobSchedulers(0, -1)).map((scheduler) => ({
       id: scheduler.key,
@@ -48,10 +67,11 @@ export class MaintenanceScheduler implements OnApplicationBootstrap {
     const plan = planSchedules(existing, desired);
 
     for (const spec of plan.upsert) {
+      const job = JOBS[spec.id]!;
       await this.queue.upsertJobScheduler(
         spec.id,
-        { every: spec.everyMs, startDate: Date.now() + RETENTION_FIRST_RUN_DELAY_MS },
-        { name: RETENTION_JOB_NAME, data: spec.data, opts: { removeOnComplete: { count: 30 } } },
+        { every: spec.everyMs, startDate: Date.now() + job.firstRunDelayMs },
+        { name: job.name, data: spec.data, opts: { removeOnComplete: { count: 30 } } },
       );
     }
     for (const id of plan.remove) {

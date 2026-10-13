@@ -20,6 +20,8 @@ export const gupyJobSchema = z.object({
   /** Tipo de vaga: "vacancy_type_effective", "vacancy_legal_entity"... */
   type: z.string().nullish(),
   publishedDate: z.string().nullish(),
+  /** Prazo de inscrição (ISO). */
+  applicationDeadline: z.string().nullish(),
   /** SINGULAR: "remote" | "hybrid" | "on-site" (não existe "workplaceTypes"). */
   workplaceType: z.string().nullish(),
   isRemoteWork: z.boolean().nullish(),

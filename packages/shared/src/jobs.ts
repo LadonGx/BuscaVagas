@@ -135,6 +135,11 @@ export const jobListQuerySchema = pageQuerySchema.extend({
     .enum(['true', 'false'])
     .transform((value) => value === 'true')
     .optional(),
+  /** `true` esconde as encerradas da caixa (saíram do board, a página diz, prazo venceu); salvas e com candidatura ficam. */
+  hideClosed: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .optional(),
 });
 export type JobListQuery = z.output<typeof jobListQuerySchema>;
 
@@ -198,6 +203,27 @@ export interface JobDto {
   repost: JobRepostDto | null;
   /** A mesma vaga em outros links (outras fontes). Não viram outra vaga. */
   alsoOn: { source: string; url: string }[];
+
+  /* Ainda está aberta? — docs/features/13-availability.md */
+  availability: JobAvailabilityDto;
+}
+
+export const AVAILABILITY_STATES = ['open', 'closed', 'unknown'] as const;
+export type AvailabilityState = (typeof AVAILABILITY_STATES)[number];
+
+export interface JobAvailabilityDto {
+  /**
+   * `closed` = sabemos que fechou (saiu do board, a página diz, prazo venceu).
+   * `open` = a última conferência viu aberta. `null` = nada conferido ainda.
+   */
+  state: AvailabilityState | null;
+  /** Por quê, em PT-BR. */
+  reason: string | null;
+  closedAt: string | null;
+  /** Última conferência ativa. */
+  checkedAt: string | null;
+  /** Prazo de inscrição (Gupy). */
+  deadline: string | null;
 }
 
 /** Janela em que uma vaga com a mesma impressão conta como "já apareceu". */
@@ -305,6 +331,8 @@ export interface JobCountsDto {
   withApplication: number;
   /** Faixas da nota, só caixa + salvas (o que ainda aparece na lista). */
   score: Record<ScoreTier, number>;
-  /** Caixa de entrada sem as incompatíveis — o número do Deslizar. */
+  /** Caixa de entrada sem as incompatíveis e sem as encerradas — o número do Deslizar. */
   swipeable: number;
+  /** Encerradas na caixa (escondidas por padrão) — docs/features/13-availability.md. */
+  inboxClosed: number;
 }

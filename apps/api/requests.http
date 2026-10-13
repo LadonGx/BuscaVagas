@@ -182,6 +182,12 @@ Content-Type: application/json
 
 { "muted": true }
 
+### A vaga ainda está aberta? Confere agora — docs/features/13-availability.md
+POST {{api}}/jobs/{{createJob.response.body.id}}/check
+
+### Caixa sem as encerradas (padrão da tela de Vagas)
+GET {{api}}/jobs?triage=inbox&hideClosed=true&limit=20
+
 ### Vagas que vieram da Gupy
 GET {{api}}/jobs?source=gupy&limit=20
 

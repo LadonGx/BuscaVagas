@@ -45,6 +45,7 @@ describe('Deslizar', () => {
     expect(await screen.findByRole('article', { name: 'Vaga atual: Primeira vaga' })).toBeVisible();
     expect(query()?.get('triage')).toBe('inbox');
     expect(query()?.get('hideIncompatible')).toBe('true');
+    expect(query()?.get('hideClosed')).toBe('true');
   });
 
   it('→ salva, ← descarta, e a próxima aparece', async () => {

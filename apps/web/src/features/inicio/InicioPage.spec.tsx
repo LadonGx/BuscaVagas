@@ -112,6 +112,21 @@ describe('Início', () => {
     }
   });
 
+  it('salvas encerradas: aviso que leva para as salvas; sem nenhuma, nada', async () => {
+    setup({ data: dashboard({ savedClosed: 3 }) });
+    await openPage();
+    expect(screen.getByRole('link', { name: /3 vagas salvas encerraram/ })).toHaveAttribute(
+      'href',
+      '/vagas?aba=salvas',
+    );
+  });
+
+  it('sem salvas encerradas: sem aviso', async () => {
+    setup();
+    await openPage();
+    expect(screen.queryByText(/salvas? encerr/)).not.toBeInTheDocument();
+  });
+
   it('clicar numa vaga abre o painel pela URL, como em Vagas', async () => {
     setup();
     const { user, router } = await openPage();

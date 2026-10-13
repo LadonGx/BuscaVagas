@@ -30,6 +30,8 @@ export interface JobFilters {
   minScore?: number;
   sort?: JobSort;
   hideIncompatible?: boolean;
+  /** Esconde as encerradas (salvas e com candidatura ficam). Padrão da tela: ligado. */
+  hideClosed?: boolean;
 }
 
 export const PAGE_SIZE = 30;
@@ -47,6 +49,7 @@ export function jobListQuery(filters: JobFilters) {
     minScore: filters.minScore,
     sort: filters.sort,
     hideIncompatible: filters.hideIncompatible || undefined,
+    hideClosed: filters.hideClosed || undefined,
     limit: PAGE_SIZE,
   };
 }
@@ -193,5 +196,32 @@ export function useMuteReposts(id: string) {
   return useMutation({
     mutationFn: (muted: boolean) => api.put<JobHistoryDto>(`/jobs/${id}/reposts`, { muted }),
     onSuccess: (history) => queryClient.setQueryData(keys.jobs.history(id), history),
+  });
+}
+
+/**
+ * "Conferir se ainda está aberta" (docs/features/13-availability.md). A vaga
+ * muda no painel e nas listas na hora; contagens e o Início vêm da API.
+ */
+export function useCheckJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post<JobDto>(`/jobs/${id}/check`),
+    onSuccess: async (updated) => {
+      queryClient.setQueryData(keys.jobs.detail(updated.id), updated);
+      for (const [key, data] of queryClient.getQueriesData<JobPages>({
+        queryKey: keys.jobs.lists,
+      })) {
+        if (!data) continue;
+        queryClient.setQueryData<JobPages>(key, {
+          ...data,
+          pages: data.pages.map((page) => ({
+            ...page,
+            items: page.items.map((item) => (item.id === updated.id ? updated : item)),
+          })),
+        });
+      }
+      await queryClient.invalidateQueries({ queryKey: keys.dashboard });
+    },
   });
 }

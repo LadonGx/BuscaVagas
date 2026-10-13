@@ -11,7 +11,8 @@ function useNavCounts(): Partial<Record<NavCount, number>> {
   const { data: counts } = useJobCounts();
   const { data: summary } = useApplicationSummary();
   return {
-    inbox: counts?.triage.inbox,
+    // A caixa esconde as encerradas por padrão: o número acompanha.
+    inbox: counts && counts.triage.inbox - counts.inboxClosed,
     swipeable: counts?.swipeable,
     activeApplications: summary ? activeApplications(summary) : undefined,
   };

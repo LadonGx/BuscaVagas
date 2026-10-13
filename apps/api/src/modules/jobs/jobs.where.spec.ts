@@ -49,6 +49,24 @@ describe('buildJobWhere', () => {
     expect(buildJobWhere({ hideIncompatible: false })).toEqual({ AND: [defaultTriage] });
   });
 
+  it('esconder encerradas: poupa salvas e com candidatura', () => {
+    const now = new Date('2026-10-09T12:00:00.000Z');
+    expect(buildJobWhere({ hideClosed: true }, now)).toEqual({
+      AND: [
+        defaultTriage,
+        {
+          OR: [
+            { triage: 'saved' },
+            { application: { isNot: null } },
+            { closedAt: null, deadline: null },
+            { closedAt: null, deadline: { gte: now } },
+          ],
+        },
+      ],
+    });
+    expect(buildJobWhere({ hideClosed: false })).toEqual({ AND: [defaultTriage] });
+  });
+
   it('com candidatura: sem triagem padrão, a não ser que seja pedida', () => {
     expect(buildJobWhere({ hasApplication: true })).toEqual({
       AND: [{ application: { isNot: null } }],

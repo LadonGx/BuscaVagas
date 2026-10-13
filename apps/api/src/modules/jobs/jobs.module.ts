@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AvailabilityService, availabilityHttpProvider } from './availability.service';
 import { FingerprintBackfill } from './fingerprint-backfill';
 import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
@@ -10,7 +11,7 @@ import { JobsService } from './jobs.service';
  */
 @Module({
   controllers: [JobsController],
-  providers: [JobsService, FingerprintBackfill],
-  exports: [JobsService],
+  providers: [JobsService, FingerprintBackfill, AvailabilityService, availabilityHttpProvider],
+  exports: [JobsService, AvailabilityService],
 })
 export class JobsModule {}

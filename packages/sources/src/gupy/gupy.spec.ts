@@ -35,6 +35,7 @@ describe('mapGupyJob', () => {
       stack: ['typescript', 'react', 'node.js', 'postgresql', 'docker'],
       salary: null,
       postedAt: '2026-10-05T13:22:10.000Z',
+      deadline: '2026-12-08T00:00:00.000Z',
     });
   });
 

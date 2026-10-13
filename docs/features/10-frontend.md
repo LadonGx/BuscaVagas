@@ -137,11 +137,14 @@ Dados: `GET /api/jobs` (infinito), `GET /api/jobs/:id` no painel.
   troca o contra por "nota sobre X% dos critérios"), status, "há X dias" e
   ações (salvar, descartar, detalhes, abrir no site).
 - Barra: busca (`q`, com 300 ms de espera), modalidade, nota mínima, ordem,
-  "Esconder incompatíveis". Pílulas: Caixa · Salvas · Com candidatura
-  (`hasApplication`) · Descartadas, com as contagens de `/jobs/counts`.
+  "Esconder incompatíveis", "Esconder encerradas" (ligado por padrão; só na
+  Caixa e em Descartadas — salvas e com candidatura nunca somem; ver
+  [13](13-availability.md)). Pílulas: Caixa · Salvas · Com candidatura
+  (`hasApplication`) · Descartadas, com as contagens de `/jobs/counts` (a
+  Caixa sem as encerradas escondidas).
 - **Tudo na URL**, em português: `aba` (`salvas`, `candidatura`,
   `descartadas`; ausente = caixa), `busca`, `modelo` (`remote,hybrid`), `nota`,
-  `ordem` (`nota`/`recentes`), `incompativeis=ocultar` e `vaga=<id>` (painel
+  `ordem` (`nota`/`recentes`), `incompativeis=ocultar`, `encerradas=mostrar` e `vaga=<id>` (painel
   aberto). Ex.: `/vagas?aba=salvas&modelo=remote&nota=700`.
 - Ações do cartão: Salvar (ou Tirar dos salvos), Descartar (some se a vaga tem
   candidatura — a API recusa), Voltar para a caixa (na aba Descartadas),
@@ -151,7 +154,8 @@ Dados: `GET /api/jobs` (infinito), `GET /api/jobs/:id` no painel.
   estado anterior (caixa ou salva, com o motivo de descarte se havia). Se a API
   recusar, o cartão volta e o erro aparece.
 - Painel lateral (`?vaga=`): nota grande, cobertura e situação, chips, motivos
-  com + − ? ×, stack detectada, descrição como **texto puro** (conteúdo
+  com + − ? ×, "Ainda está aberta?" (estado, motivo, quando foi conferida e
+  "Conferir agora"), stack detectada, descrição como **texto puro** (conteúdo
   externo nunca vira HTML), link para o site. Rodapé: Salvar / Tirar dos
   salvos, Me candidatei (ou Ver candidatura) e Descartar… com motivo opcional
   e sugestões de um clique (Presencial, Sênior demais, Stack diferente,

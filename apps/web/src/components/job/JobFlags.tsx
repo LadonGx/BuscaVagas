@@ -1,25 +1,47 @@
 import type { JobDto } from '@busca-vagas/shared';
-import { formatDate } from '../../lib/format';
+import { formatDate, formatDay } from '../../lib/format';
 import styles from './Chips.module.css';
 
-type FlagJob = Pick<JobDto, 'repost' | 'alsoOn'>;
+type FlagJob = Pick<JobDto, 'repost' | 'alsoOn'> & {
+  availability?: JobDto['availability'] | null;
+};
 
 export interface JobFlag {
   key: string;
   text: string;
-  /** `warn` = merece atenção (você já se candidatou à anterior). */
-  tone: 'info' | 'warn';
+  /**
+   * `warn` = merece atenção (você já se candidatou à anterior);
+   * `bad` = encerrada.
+   */
+  tone: 'info' | 'warn' | 'bad';
   /** Dica com o detalhe (data, o que você fez). */
   title: string;
 }
 
 /**
- * Selos de repostagem e de outras fontes — docs/features/11-reposts.md.
+ * Selos da vaga: encerrada e prazo (docs/features/13-availability.md),
+ * repostagem e outras fontes (docs/features/11-reposts.md).
  * `sourceName` traduz o id da fonte ("greenhouse" → "Greenhouse").
  */
 export function jobFlags(job: FlagJob, sourceName: (id: string) => string): JobFlag[] {
   const flags: JobFlag[] = [];
-  const { repost } = job;
+  const { repost, availability } = job;
+
+  if (availability?.state === 'closed') {
+    flags.push({
+      key: 'closed',
+      text: 'Encerrada',
+      tone: 'bad',
+      title: availability.reason ?? 'A vaga não está mais aberta.',
+    });
+  } else if (availability?.deadline) {
+    flags.push({
+      key: 'deadline',
+      text: `Inscrições até ${formatDay(availability.deadline).slice(0, 5)}`,
+      tone: 'info',
+      title: `Prazo de inscrição: ${formatDay(availability.deadline)}.`,
+    });
+  }
 
   if (repost) {
     const times = repost.count > 1 ? ` ${repost.count}×` : '';

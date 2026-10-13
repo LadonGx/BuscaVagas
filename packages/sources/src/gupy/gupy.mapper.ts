@@ -60,6 +60,7 @@ export function mapGupyJob(raw: unknown): JobPosting | null {
     stack: stackFromText(title, description),
     salary: null,
     postedAt: toIsoDate(job.publishedDate),
+    deadline: toIsoDate(job.applicationDeadline),
   };
 }
 

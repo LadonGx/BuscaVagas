@@ -36,6 +36,7 @@ export class DashboardService {
       stepsNextDays,
       funnel,
       median,
+      savedClosed,
     ] = await Promise.all([
       this.newJobsPerDay(now, timeZone),
       this.prisma.job.count({
@@ -47,6 +48,8 @@ export class DashboardService {
           incompatible: false,
           scoredVersion: { gte: version },
           score: { gte: SCORE_TIER_MIN.great },
+          // A caixa esconde as encerradas por padrão: a conta acompanha.
+          ...openOnly(now),
         },
       }),
       this.topNew(now, version),
@@ -54,6 +57,13 @@ export class DashboardService {
       this.prisma.application.count({ where: stepsWindow(now, timeZone, UPCOMING_DAYS) }),
       this.funnel(),
       this.medianDaysToFirstResponse(),
+      this.prisma.job.count({
+        where: {
+          triage: 'saved',
+          application: { is: null },
+          OR: [{ closedAt: { not: null } }, { deadline: { lt: now } }],
+        },
+      }),
     ]);
 
     return {
@@ -65,6 +75,7 @@ export class DashboardService {
       stepsNextDays,
       funnel,
       medianDaysToFirstResponse: median,
+      savedClosed,
     };
   }
 
@@ -96,6 +107,8 @@ export class DashboardService {
         scoredVersion: { gte: version },
         score: { not: null },
         firstSeenAt: { gte: new Date(now.getTime() - TOP_NEW_DAYS * DAY_MS) },
+        // Encerrada não é "melhor vaga nova" (docs/features/13-availability.md).
+        ...openOnly(now),
       },
       orderBy: [{ score: 'desc' }, { firstSeenAt: 'desc' }, { id: 'desc' }],
       take: DASHBOARD_LIST_SIZE,
@@ -176,4 +189,9 @@ function stepsWindow(now: Date, timeZone: string, days?: number) {
         : {}),
     },
   };
+}
+
+/** Aberta ou sem informação: não encerrada e prazo (se houver) não vencido. */
+function openOnly(now: Date) {
+  return { closedAt: null, OR: [{ deadline: null }, { deadline: { gte: now } }] };
 }

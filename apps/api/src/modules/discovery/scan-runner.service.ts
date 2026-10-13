@@ -2,6 +2,7 @@ import type { ScanTrigger, SourceRunDto } from '@busca-vagas/shared';
 import { runSource, type HttpClient, type JobSource } from '@busca-vagas/sources';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AvailabilityService } from '../jobs/availability.service';
 import { JobsService } from '../jobs/jobs.service';
 import { TrackedCompaniesStore } from './companies/tracked-companies.store';
 import { SOURCE_HTTP_CLIENT, SOURCES } from './discovery.constants';
@@ -34,6 +35,7 @@ export class ScanRunner {
     private readonly prisma: PrismaService,
     private readonly jobs: JobsService,
     private readonly companies: TrackedCompaniesStore,
+    private readonly availability: AvailabilityService,
     @Inject(SOURCES) sources: JobSource[],
     @Inject(SOURCE_HTTP_CLIENT) private readonly http: HttpClient,
   ) {
@@ -107,6 +109,18 @@ export class ScanRunner {
         error: `Falha ao gravar as vagas: ${message}`,
       });
       throw new SourceRunFailedError(failed, `${sourceId}: ${failed.error}`);
+    }
+
+    // Vagas que saíram do board da empresa ficam encerradas
+    // (docs/features/13-availability.md). Só depois de gravar, para que uma
+    // vaga reaberta não seja fechada de novo.
+    if (outcome.companies) {
+      await this.availability
+        .recordBoardScan(sourceId, outcome.companies)
+        .catch((error: unknown) => {
+          const reason = error instanceof Error ? error.message : String(error);
+          this.logger.warn(`${sourceId}: não consegui marcar as vagas encerradas: ${reason}`);
+        });
     }
 
     const done = await this.finish(run.id, {

@@ -1,4 +1,9 @@
-import type { JobDto, ScoreReason } from '@busca-vagas/shared';
+import type {
+  AvailabilityState,
+  JobAvailabilityDto,
+  JobDto,
+  ScoreReason,
+} from '@busca-vagas/shared';
 import type { Prisma } from '../../generated/prisma/client';
 
 /** O que toda consulta de vaga traz junto, para montar o `JobDto`. */
@@ -80,5 +85,40 @@ export function toJobDto(
           }
         : null,
     alsoOn: job.aliases,
+    availability: availabilityOf(job),
+  };
+}
+
+const STATES: readonly string[] = ['open', 'closed', 'unknown'];
+const dateBr = (date: Date) => date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+
+/**
+ * Encerrada = soubemos que fechou (`closedAt`) ou o prazo de inscrição venceu.
+ * Senão, o resultado da última conferência (ou `null`, nunca conferida).
+ * Plano: docs/features/13-availability.md
+ */
+export function availabilityOf(
+  job: Pick<
+    Prisma.JobGetPayload<object>,
+    'closedAt' | 'closedReason' | 'checkedAt' | 'checkState' | 'checkReason' | 'deadline'
+  >,
+  now: Date = new Date(),
+): JobAvailabilityDto {
+  const expired = job.deadline !== null && job.deadline < now;
+  const checked =
+    job.checkState && STATES.includes(job.checkState)
+      ? (job.checkState as AvailabilityState)
+      : null;
+  const closed = job.closedAt !== null || expired;
+  return {
+    state: closed ? 'closed' : checked,
+    reason: job.closedAt
+      ? job.closedReason
+      : expired
+        ? `O prazo de inscrição terminou em ${dateBr(job.deadline!)}`
+        : job.checkReason,
+    closedAt: (job.closedAt ?? (expired ? job.deadline : null))?.toISOString() ?? null,
+    checkedAt: job.checkedAt?.toISOString() ?? null,
+    deadline: job.deadline?.toISOString() ?? null,
   };
 }

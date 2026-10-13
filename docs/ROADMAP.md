@@ -86,7 +86,9 @@ Ordem combinada, em blocos.
 
 - [x] Importar currículo de PDF (lido no navegador, só completa o que está vazio), com
       revisão antes de salvar (VA, JS) ([12](features/12-resume-import.md))
-- [ ] Checagem se a vaga ainda está aberta antes de candidatar (CO)
+- [x] A vaga ainda está aberta? Board da empresa, prazo da Gupy, botão no painel e
+      conferência diária das salvas; selo "Encerrada" e "Esconder encerradas" (CO)
+      ([13](features/13-availability.md))
 - [ ] Versão do currículo congelada em cada candidatura (JT)
 - [ ] Banco de perguntas de entrevista com as suas respostas (JS)
 

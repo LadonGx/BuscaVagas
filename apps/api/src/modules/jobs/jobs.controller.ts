@@ -31,12 +31,16 @@ import {
   Query,
 } from '@nestjs/common';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { AvailabilityService } from './availability.service';
 import { JobsService } from './jobs.service';
 
 /** Plano: docs/features/01-jobs.md */
 @Controller('jobs')
 export class JobsController {
-  constructor(private readonly jobs: JobsService) {}
+  constructor(
+    private readonly jobs: JobsService,
+    private readonly availability: AvailabilityService,
+  ) {}
 
   @Post()
   create(@Body(new ZodValidationPipe(createJobInputSchema)) body: CreateJobInput): Promise<JobDto> {
@@ -106,5 +110,12 @@ export class JobsController {
     @Body(new ZodValidationPipe(muteRepostsInputSchema)) body: MuteRepostsInput,
   ): Promise<JobHistoryDto> {
     return this.jobs.muteReposts(id, body);
+  }
+
+  /** Confere agora se a vaga ainda está aberta. Plano: docs/features/13-availability.md */
+  @Post(':id/check')
+  @HttpCode(HttpStatus.OK)
+  check(@Param('id') id: string): Promise<JobDto> {
+    return this.availability.check(id);
   }
 }

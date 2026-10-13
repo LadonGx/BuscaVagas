@@ -84,6 +84,12 @@
   cursor: help;
 }
 
+.flag[data-tone='bad'] {
+  border-color: var(--bad);
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+}
+
 .flag[data-tone='warn'] {
   border-color: var(--good);
   background: var(--good-bg);

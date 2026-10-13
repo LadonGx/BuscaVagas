@@ -438,3 +438,31 @@
     white-space: normal;
   }
 }
+
+.callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--bad);
+  border-radius: var(--radius);
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.callout > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.callout > span > span {
+  color: var(--soft);
+  font-size: 13px;
+}
+
+.callout:hover {
+  border-color: var(--bad-fg);
+}

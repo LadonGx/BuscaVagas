@@ -191,3 +191,32 @@
   background: var(--on-accent);
   transform: translateX(14px);
 }
+
+.availability {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+}
+
+.availability[data-state='open'] {
+  border-left-color: var(--good);
+}
+
+.availability[data-state='closed'] {
+  border-left-color: var(--bad);
+  background: var(--bad-bg);
+}
+
+.availabilityText {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+}

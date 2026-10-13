@@ -17,7 +17,11 @@ import { SwipeCard } from './SwipeCard';
 import styles from './DeslizarPage.module.css';
 
 /** Caixa de entrada, da maior nota para a menor, sem as incompatíveis. */
-export const SWIPE_FILTERS: JobFilters = { tab: 'inbox', hideIncompatible: true };
+export const SWIPE_FILTERS: JobFilters = {
+  tab: 'inbox',
+  hideIncompatible: true,
+  hideClosed: true,
+};
 /** Quantas ações o Ctrl+Z consegue desfazer. */
 export const UNDO_LIMIT = 20;
 /** Busca a próxima página quando restam menos que isto carregadas. */

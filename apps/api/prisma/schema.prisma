@@ -189,12 +189,29 @@ model Job {
   /// Os outros links da mesma vaga (outras fontes): não viram outra vaga.
   aliases        JobAlias[]
 
+  /// Ainda está aberta? — docs/features/13-availability.md
+  /// Prazo de inscrição (Gupy). Vencido = encerrada.
+  deadline       DateTime?
+  /// Boards: slug da empresa no ATS (para saber quando a vaga sai do board).
+  board          String?
+  /// Quando soubemos que fechou (saiu do board, a página diz, prazo venceu).
+  /// `null` = aberta ou sem informação. A fonte trazer a vaga de novo reabre.
+  closedAt       DateTime?
+  closedReason   String?
+  /// Última conferência ativa (botão no painel ou a diária das salvas).
+  checkedAt      DateTime?
+  /// "open" | "closed" | "unknown"
+  checkState     String?
+  checkReason    String?
+
   @@unique([source, externalId])
   @@index([fingerprint])
   @@index([company])
   @@index([triage, firstSeenAt])
   @@index([triage, score])
   @@index([scoredVersion])
+  @@index([source, board])
+  @@index([closedAt])
 }
 
 // ---------------------------------------------------------------------------

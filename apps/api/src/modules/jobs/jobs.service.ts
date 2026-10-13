@@ -162,7 +162,10 @@ export class JobsService {
         (SELECT count(*) FROM "Job" WHERE triage = 'saved') AS saved,
         (SELECT count(*) FROM "Job" WHERE triage = 'dismissed') AS dismissed,
         (SELECT count(*) FROM "Application") AS "withApplication",
-        (SELECT count(*) FROM "Job" WHERE triage = 'inbox' AND NOT incompatible) AS swipeable,
+        (SELECT count(*) FROM "Job" WHERE triage = 'inbox' AND NOT incompatible
+          AND "closedAt" IS NULL AND ("deadline" IS NULL OR "deadline" >= now())) AS swipeable,
+        (SELECT count(*) FROM "Job" WHERE triage = 'inbox'
+          AND ("closedAt" IS NOT NULL OR "deadline" < now())) AS "inboxClosed",
         count(*) FILTER (WHERE pending) AS pending,
         count(*) FILTER (WHERE NOT pending AND incompatible) AS incompatible,
         count(*) FILTER (WHERE NOT pending AND NOT incompatible AND score IS NULL) AS unscored,
@@ -185,6 +188,7 @@ export class JobsService {
         unscored: n('unscored'),
       },
       swipeable: n('swipeable'),
+      inboxClosed: n('inboxClosed'),
     };
   }
 
@@ -331,6 +335,8 @@ export class JobsService {
         firstSeenAt: now,
         lastSeenAt: now,
         fingerprint: jobFingerprint(posting),
+        deadline: posting.deadline ? new Date(posting.deadline) : null,
+        board: posting.board ?? null,
       });
     }
 
@@ -360,14 +366,27 @@ export class JobsService {
       result.ignored += 1;
     }
 
-    // 1. Links que já conhecemos: só "visto". Nada da vaga é sobrescrito.
+    // 1. Links que já conhecemos: só "visto" — e, se estava encerrada, a
+    //    fonte trazer de novo reabre. Nada do que você editou é sobrescrito.
     const known = knownJobs.map((job) => job.url!).filter((url) => byUrl.has(url));
     if (known.length > 0) {
       const { count } = await this.prisma.job.updateMany({
         where: { url: { in: known }, firstSeenAt: { lt: now } },
-        data: { lastSeenAt: now },
+        data: { lastSeenAt: now, closedAt: null, closedReason: null },
       });
       result.seen += count;
+      // Vagas de antes do campo `board`: ganham o slug na primeira vez que voltam.
+      const byBoard = new Map<string, string[]>();
+      for (const url of known) {
+        const board = byUrl.get(url)?.board;
+        if (board) byBoard.set(board, [...(byBoard.get(board) ?? []), url]);
+      }
+      for (const [board, urls] of byBoard) {
+        await this.prisma.job.updateMany({
+          where: { url: { in: urls }, board: null },
+          data: { board },
+        });
+      }
     }
     const aliasHits = knownAliases.filter((alias) => byUrl.has(alias.url));
     if (aliasHits.length > 0) {
@@ -609,7 +628,7 @@ export class JobsService {
   private async touch(jobIds: string[], now: Date): Promise<void> {
     await this.prisma.job.updateMany({
       where: { id: { in: [...new Set(jobIds)] } },
-      data: { lastSeenAt: now },
+      data: { lastSeenAt: now, closedAt: null, closedReason: null },
     });
   }
 

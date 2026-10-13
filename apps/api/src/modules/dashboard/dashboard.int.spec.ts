@@ -80,6 +80,7 @@ describeDb('Painel (integração)', () => {
       upcomingSteps: [],
       funnel: { applied: 0, inProcess: 0, offer: 0 },
       medianDaysToFirstResponse: null,
+      savedClosed: 0,
     });
   });
 
@@ -109,6 +110,29 @@ describeDb('Painel (integração)', () => {
     const dashboard = await service.get(NOW, SP);
     expect(dashboard.topNew.map((j) => j.title)).toEqual(['A', 'B']);
     expect(dashboard.highScoreInbox).toBe(3); // A, B e a velha
+  });
+
+  it('encerradas: fora das melhores novas; salvas encerradas (sem candidatura) contadas', async () => {
+    await job({ title: 'Aberta', score: 900 });
+    await job({ title: 'Fechada', score: 950, closedAt: ago(DAY) });
+    await job({ title: 'Prazo vencido', score: 950, deadline: ago(DAY) });
+    await job({ title: 'Prazo futuro', score: 800, deadline: new Date(NOW.getTime() + DAY) });
+    await job({ title: 'Salva fechada', triage: 'saved', closedAt: ago(DAY) });
+    await job({ title: 'Salva vencida', triage: 'saved', deadline: ago(2 * DAY) });
+    await job({ title: 'Salva aberta', triage: 'saved' });
+    const applied = await job({
+      title: 'Salva fechada com candidatura',
+      triage: 'saved',
+      closedAt: ago(DAY),
+    });
+    await t.prisma.application.create({
+      data: { jobId: applied.id, status: 'applied', appliedAt: NOW },
+    });
+
+    const dashboard = await service.get(NOW, SP);
+    expect(dashboard.topNew.map((j) => j.title)).toEqual(['Aberta', 'Prazo futuro']);
+    expect(dashboard.highScoreInbox).toBe(2);
+    expect(dashboard.savedClosed).toBe(2);
   });
 
   it('nota de preferências antigas fica fora até a fila recalcular', async () => {
@@ -205,6 +229,7 @@ describeDb('Painel (integração)', () => {
       'medianDaysToFirstResponse',
       'newJobsPerDay',
       'newLast24h',
+      'savedClosed',
       'stepsNextDays',
       'topNew',
       'upcomingSteps',

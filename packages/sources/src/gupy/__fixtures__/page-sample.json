@@ -14,7 +14,8 @@
       "city": "Campinas",
       "state": "SP",
       "country": "Brasil",
-      "isConfidentialCareerPage": false
+      "isConfidentialCareerPage": false,
+      "applicationDeadline": "2026-12-08T00:00:00.000Z"
     },
     {
       "id": 8765433,

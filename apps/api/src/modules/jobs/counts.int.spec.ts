@@ -59,7 +59,20 @@ describeDb('Contagens e filtro "com candidatura" (integração)', () => {
       withApplication: 0,
       score: { great: 2, good: 2, weak: 1, incompatible: 1, pending: 1, unscored: 1 },
       swipeable: 6,
+      inboxClosed: 0,
     });
+  });
+
+  it('encerradas da caixa: contadas à parte e fora do Deslizar', async () => {
+    const day = 24 * 60 * 60 * 1000;
+    await job({ score: 900 });
+    await job({ score: 900, closedAt: new Date() });
+    await job({ score: 900, deadline: new Date(Date.now() - day) });
+    await job({ score: 900, deadline: new Date(Date.now() + day) });
+    await job({ score: 900, triage: 'saved', closedAt: new Date() }); // salva: não entra
+
+    const counts = (await api().get('/api/jobs/counts').expect(200)).body as JobCountsDto;
+    expect(counts).toMatchObject({ triage: { inbox: 4 }, swipeable: 2, inboxClosed: 2 });
   });
 
   it('nota de preferências antigas conta como pendente, na contagem e na vaga', async () => {

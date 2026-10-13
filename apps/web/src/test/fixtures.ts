@@ -18,6 +18,7 @@ export const counts = (overrides: Partial<JobCountsDto> = {}): JobCountsDto => (
   withApplication: 9,
   score: { great: 42, good: 61, weak: 20, incompatible: 18, pending: 0, unscored: 1 },
   swipeable: 87,
+  inboxClosed: 0,
   ...overrides,
 });
 
@@ -112,6 +113,7 @@ export const job = (overrides: Partial<JobDto> = {}): JobDto => ({
   scorePending: false,
   repost: null,
   alsoOn: [],
+  availability: { state: null, reason: null, closedAt: null, checkedAt: null, deadline: null },
   ...overrides,
 });
 
@@ -251,6 +253,7 @@ export const dashboard = (overrides: Partial<DashboardDto> = {}): DashboardDto =
       }),
     ],
     stepsNextDays: 2,
+    savedClosed: 0,
     funnel: { applied: 9, inProcess: 3, offer: 1 },
     medianDaysToFirstResponse: 4.5,
     ...overrides,

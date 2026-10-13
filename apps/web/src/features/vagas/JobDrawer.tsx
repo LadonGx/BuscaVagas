@@ -14,6 +14,7 @@ import { Button } from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
 import { formatAgo } from '../../lib/format';
 import { scoreLabel } from '../../lib/score';
+import { JobAvailability } from './JobAvailability';
 import { jobDate } from './JobCard';
 import { JobHistory } from './JobHistory';
 import styles from './JobDrawer.module.css';
@@ -68,6 +69,8 @@ function JobDetails({ job }: { job: JobDto }) {
       </div>
 
       <JobChips job={job} />
+
+      <JobAvailability job={job} />
 
       {job.scoreReasons.length > 0 && (
         <section className={styles.block}>

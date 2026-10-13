@@ -16,7 +16,7 @@ import { JobCard } from './JobCard';
 import { JobDrawer } from './JobDrawer';
 import { ManualJobDialog } from './ManualJobDialog';
 import { useJobFilters } from './useJobFilters';
-import { VagasToolbar } from './VagasToolbar';
+import { inboxCount, VagasToolbar } from './VagasToolbar';
 import styles from './VagasPage.module.css';
 
 const EMPTY_TEXT: Record<JobFilters['tab'], { title: string; body: string }> = {
@@ -58,7 +58,12 @@ export function VagasPage() {
 
   const effectiveSort = filters.sort ?? (scoreOn ? 'score' : 'recent');
   const subtitle = [
-    counts && `${formatNumber(counts.triage.inbox)} na caixa`,
+    counts && `${formatNumber(inboxCount(counts, filters.hideClosed))} na caixa`,
+    counts &&
+      filters.hideClosed &&
+      filters.tab === 'inbox' &&
+      counts.inboxClosed > 0 &&
+      `${formatNumber(counts.inboxClosed)} ${counts.inboxClosed === 1 ? 'encerrada escondida' : 'encerradas escondidas'}`,
     effectiveSort === 'score' ? 'ordenadas pela sua nota' : 'pela ordem em que entraram no app',
   ]
     .filter(Boolean)
@@ -95,6 +100,7 @@ export function VagasPage() {
         onMinScore={controls.setMinScore}
         onSort={controls.setSort}
         onHideIncompatible={controls.setHideIncompatible}
+        onHideClosed={controls.setHideClosed}
       />
 
       {list.isPending ? (

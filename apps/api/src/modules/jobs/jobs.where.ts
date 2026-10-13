@@ -50,6 +50,18 @@ export function buildJobWhere(
 
   if (query.minScore !== undefined) and.push({ score: { gte: query.minScore } });
   if (query.hideIncompatible) and.push({ incompatible: false });
+  // Encerrada: soubemos que fechou ou o prazo venceu (mesma regra de
+  // `availabilityOf`). Salva e com candidatura nunca somem: só ganham o selo.
+  if (query.hideClosed) {
+    and.push({
+      OR: [
+        { triage: 'saved' },
+        { application: { isNot: null } },
+        { closedAt: null, deadline: null },
+        { closedAt: null, deadline: { gte: now } },
+      ],
+    });
+  }
 
   return { AND: and };
 }

@@ -32,4 +32,6 @@ export interface DashboardDto {
   funnel: { applied: number; inProcess: number; offer: number };
   /** Mediana de dias entre a candidatura e o primeiro evento seguinte. `null` sem dados. */
   medianDaysToFirstResponse: number | null;
+  /** Vagas salvas (sem candidatura) que encerraram — vale conferir antes de perder tempo. */
+  savedClosed: number;
 }

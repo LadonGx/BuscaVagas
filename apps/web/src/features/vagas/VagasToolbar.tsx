@@ -11,8 +11,20 @@ import { formatNumber } from '../../lib/format';
 import { MIN_SCORE_OPTIONS } from './useJobFilters';
 import styles from './VagasToolbar.module.css';
 
-const TABS: { tab: JobTab; label: string; count: (c: JobCountsDto) => number }[] = [
-  { tab: 'inbox', label: 'Caixa', count: (c) => c.triage.inbox },
+/** Abas onde "Esconder encerradas" faz diferença (salvas e com candidatura nunca somem). */
+const CLOSED_HIDES_IN: readonly JobTab[] = ['inbox', 'dismissed'];
+
+/** Vagas da caixa visíveis com os filtros: sem as encerradas, quando escondidas. */
+export function inboxCount(counts: JobCountsDto, hideClosed: boolean | undefined): number {
+  return counts.triage.inbox - (hideClosed ? counts.inboxClosed : 0);
+}
+
+const TABS: {
+  tab: JobTab;
+  label: string;
+  count: (c: JobCountsDto, f: JobFilters) => number;
+}[] = [
+  { tab: 'inbox', label: 'Caixa', count: (c, f) => inboxCount(c, f.hideClosed) },
   { tab: 'saved', label: 'Salvas', count: (c) => c.triage.saved },
   { tab: 'applied', label: 'Com candidatura', count: (c) => c.withApplication },
   { tab: 'dismissed', label: 'Descartadas', count: (c) => c.triage.dismissed },
@@ -30,6 +42,7 @@ interface VagasToolbarProps {
   onMinScore: (value: number | undefined) => void;
   onSort: (sort: 'score' | 'recent' | undefined) => void;
   onHideIncompatible: (hide: boolean) => void;
+  onHideClosed: (hide: boolean) => void;
 }
 
 export function VagasToolbar(props: VagasToolbarProps) {
@@ -119,6 +132,17 @@ export function VagasToolbar(props: VagasToolbarProps) {
           />
           Esconder incompatíveis
         </label>
+
+        {CLOSED_HIDES_IN.includes(filters.tab) && (
+          <label className={styles.check}>
+            <input
+              type="checkbox"
+              checked={Boolean(filters.hideClosed)}
+              onChange={(event) => props.onHideClosed(event.target.checked)}
+            />
+            Esconder encerradas
+          </label>
+        )}
       </div>
 
       <div className={styles.tabs} role="group" aria-label="Situação">
@@ -133,7 +157,7 @@ export function VagasToolbar(props: VagasToolbarProps) {
           >
             <span className={styles.dot} aria-hidden="true" />
             {label}
-            {counts && <span className={styles.count}>{formatNumber(count(counts))}</span>}
+            {counts && <span className={styles.count}>{formatNumber(count(counts, filters))}</span>}
           </button>
         ))}
       </div>

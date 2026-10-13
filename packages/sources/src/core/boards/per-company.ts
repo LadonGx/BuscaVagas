@@ -49,6 +49,11 @@ export interface CompanyScanStat {
   /** Quantas passaram nos filtros de título e local. */
   kept: number;
   error: string | null;
+  /**
+   * Ids (externalId) de TODAS as vagas válidas do board, filtradas ou não. Vaga
+   * da empresa que não está aqui saiu do board: encerrada.
+   */
+  externalIds?: string[];
 }
 
 /** Lançado quando TODAS as empresas falham; leva o resultado de cada uma. */
@@ -125,6 +130,7 @@ export async function scanCompanies(options: ScanCompaniesOptions): Promise<Sour
       let kept = 0;
 
       for (const item of result.ok) {
+        item.posting.board = company.slug;
         if (!passes(item)) {
           filtered += 1;
           continue;
@@ -136,7 +142,16 @@ export async function scanCompanies(options: ScanCompaniesOptions): Promise<Sour
       }
 
       dropped += result.dropped;
-      stats.push({ slug: company.slug, status: 'ok', jobs: rows.length, kept, error: null });
+      stats.push({
+        slug: company.slug,
+        status: 'ok',
+        jobs: rows.length,
+        kept,
+        error: null,
+        externalIds: result.ok
+          .map((item) => item.posting.externalId)
+          .filter((id): id is string => Boolean(id)),
+      });
       ctx.log(
         `${sourceId}: ${company.slug} — ${rows.length} vagas, ${kept} mantidas, ` +
           `${result.ok.length - kept} filtradas, ${result.dropped} descartadas`,

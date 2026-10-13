@@ -128,7 +128,15 @@ describe('GreenhouseSource', () => {
     expect(logs[0]).toContain('"nao-existe" não encontrada (404)');
     expect(result.companies).toEqual([
       { slug: 'nao-existe', status: 'not_found', jobs: 0, kept: 0, error: expect.any(String) },
-      { slug: 'acme', status: 'ok', jobs: 7, kept: 3, error: null },
+      {
+        slug: 'acme',
+        status: 'ok',
+        jobs: 7,
+        kept: 3,
+        error: null,
+        // Todas as válidas do board, inclusive as filtradas.
+        externalIds: ['4001', '4002', '4003', '4004', '4005'],
+      },
     ]);
   });
 });

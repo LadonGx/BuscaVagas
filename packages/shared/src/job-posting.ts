@@ -46,5 +46,12 @@ export const jobPostingSchema = z.object({
   salary: salaryRangeSchema.nullable(),
   /** Data de publicação (ISO 8601). Nunca a data de "última edição". */
   postedAt: z.iso.datetime({ offset: true }).nullable(),
+  /** Prazo de inscrição, quando a fonte informa (Gupy). Vencido = encerrada. */
+  deadline: z.iso.datetime({ offset: true }).nullable().optional(),
+  /**
+   * Boards de empresa: o slug da empresa no ATS. Serve para conferir se a vaga
+   * ainda está no board (docs/features/13-availability.md).
+   */
+  board: z.string().min(1).nullable().optional(),
 });
 export type JobPosting = z.infer<typeof jobPostingSchema>;

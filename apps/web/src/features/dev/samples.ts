@@ -45,6 +45,7 @@ const base: JobDto = {
   scorePending: false,
   repost: null,
   alsoOn: [],
+  availability: { state: null, reason: null, closedAt: null, checkedAt: null, deadline: null },
 };
 
 export const SAMPLE_JOBS: { label: string; job: JobDto }[] = [

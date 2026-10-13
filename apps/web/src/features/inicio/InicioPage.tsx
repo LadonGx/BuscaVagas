@@ -1,5 +1,5 @@
 import { UPCOMING_DAYS, type ResumeDto } from '@busca-vagas/shared';
-import { FileText, LayoutGrid, PlusCircle, TabletSmartphone } from 'lucide-react';
+import { CalendarX, FileText, LayoutGrid, PlusCircle, TabletSmartphone } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useDashboard } from '../../api/dashboard';
@@ -153,6 +153,21 @@ export function InicioPage() {
 
       {data && (
         <>
+          {data.savedClosed > 0 && (
+            // Salvas sem candidatura que encerraram (docs/features/13-availability.md).
+            <Link to="/vagas?aba=salvas" className={styles.callout}>
+              <CalendarX size={18} aria-hidden="true" />
+              <span>
+                <strong>
+                  {data.savedClosed === 1
+                    ? '1 vaga salva encerrou'
+                    : `${formatNumber(data.savedClosed)} vagas salvas encerraram`}
+                </strong>
+                <span>Sem candidatura. Veja nas salvas e tire as que não fazem mais sentido.</span>
+              </span>
+            </Link>
+          )}
+
           <section aria-labelledby="semana" className={styles.block}>
             <h2 id="semana" className={styles.blockTitle}>
               Esta semana

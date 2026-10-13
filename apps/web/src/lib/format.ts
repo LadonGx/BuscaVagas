@@ -109,6 +109,18 @@ export function formatDate(date: Date | string): string {
   return dateFormat.format(typeof date === 'string' ? new Date(date) : date);
 }
 
+const dayFormat = new Intl.DateTimeFormat('pt-BR', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+/** Dia sem hora (prazo de inscrição: "2026-12-08T00:00Z" é 08/12, não 07/12 à noite). */
+export function formatDay(date: Date | string): string {
+  return dayFormat.format(typeof date === 'string' ? new Date(date) : date);
+}
+
 const pad = (value: number) => String(value).padStart(2, '0');
 
 /** Data → valor de `<input type="datetime-local">` no fuso do navegador. */

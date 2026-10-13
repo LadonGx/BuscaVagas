@@ -70,11 +70,11 @@ const boardSource: JobSource = {
   fetch: async (query) => {
     boardQueries.push(query);
     return {
-      jobs: [posting(10, 'board')],
+      jobs: [{ ...posting(10, 'board'), board: 'acme' }],
       dropped: 1,
       filtered: 5,
       companies: [
-        { slug: 'acme', status: 'ok', jobs: 7, kept: 1, error: null },
+        { slug: 'acme', status: 'ok', jobs: 7, kept: 1, error: null, externalIds: ['10', '11'] },
         { slug: 'sumiu', status: 'not_found', jobs: 0, kept: 0, error: 'HTTP 404' },
       ],
     };
@@ -208,6 +208,35 @@ describeDb('Descoberta (integração)', () => {
       (await api().get('/api/discovery/runs?sourceId=board').expect(200)).body as Page<SourceRunDto>
     ).items;
     expect(listed).toMatchObject({ id: run.id, filtered: 5 });
+  });
+
+  it('board de empresa: vaga que saiu do board da empresa fica encerrada', async () => {
+    await track('acme', 'sumiu');
+    const old = (id: string, board: string) => ({
+      source: 'board',
+      externalId: id,
+      board,
+      title: `Antiga ${id}`,
+      company: 'Acme',
+      url: `https://jobs.example.com/board/${id}`,
+    });
+    await t.prisma.job.createMany({
+      data: [old('11', 'acme'), old('12', 'acme'), old('13', 'sumiu')],
+    });
+
+    await runner.run('board', [], 'schedule');
+
+    const closed = await t.prisma.job.findMany({
+      where: { source: 'board' },
+      orderBy: { externalId: 'asc' },
+      select: { externalId: true, closedReason: true },
+    });
+    expect(closed).toEqual([
+      { externalId: '10', closedReason: null },
+      { externalId: '11', closedReason: null }, // ainda listada no board
+      { externalId: '12', closedReason: 'Saiu do board da empresa' },
+      { externalId: '13', closedReason: null }, // empresa não lida: não mexe
+    ]);
   });
 
   it('board sem empresas ligadas: não busca nem registra execução', async () => {

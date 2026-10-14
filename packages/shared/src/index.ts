@@ -14,3 +14,4 @@ export * from './resume-import-pdf';
 export * from './resume-import-plan';
 export * from './resume-snapshot';
 export * from './interviews';
+export * from './notifications';

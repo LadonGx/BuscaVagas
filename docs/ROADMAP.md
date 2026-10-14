@@ -98,7 +98,8 @@ Ordem combinada, em blocos.
 
 **Bloco C — acompanhar**
 
-- [ ] Notificação de vaga nova com nota alta (JS)
+- [x] Aviso de vaga nova com nota alta: sino no app (um aviso por busca, nota mínima
+      ajustável em Preferências) (JS) ([16](features/16-notifications.md))
 - [ ] Tela de Métricas: rendimento por fonte, stacks mais pedidas, tempo até a resposta (JT, VG)
 
 **Bloco D — uso no dia a dia**
@@ -109,6 +110,8 @@ Ordem combinada, em blocos.
       Glassdoor e Indeed mandam título, empresa, local e link (JT)
 - [ ] Extensão do Chrome: enviar a vaga aberta no navegador para o app, sem scraping (VA)
 - [ ] Preencher formulário com Playwright, **nunca enviar** (JT)
+- [ ] Aviso de nota alta também no celular (ntfy ou Telegram), com horário de silêncio
+      (22h–8h, ajustável) — o sino já guarda os avisos; falta só o canal ([16](features/16-notifications.md))
 
 **Último passo:** sites de carreira de grandes empresas (iFood, Bosch, Mercado Livre,
 IBM…), cada um com o próprio formato — depois de tudo acima.

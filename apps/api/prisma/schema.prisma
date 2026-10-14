@@ -204,6 +204,12 @@ model Job {
   checkState   String?
   checkReason  String?
 
+  /// Aviso de nota alta (docs/features/16-notifications.md): quando entrou num
+  /// aviso e em qual. Uma vaga avisa uma vez só.
+  notifiedAt     DateTime?
+  notificationId String?
+  notification   Notification? @relation(fields: [notificationId], references: [id], onDelete: SetNull)
+
   @@unique([source, externalId])
   @@index([fingerprint])
   @@index([company])
@@ -495,4 +501,32 @@ model InterviewAsked {
 
   @@unique([questionId, applicationId])
   @@index([applicationId])
+}
+
+// ---------------------------------------------------------------------------
+// Avisos — docs/features/16-notifications.md
+// ---------------------------------------------------------------------------
+
+/// Um aviso no sino: as vagas novas com nota alta de uma rodada de notas.
+model Notification {
+  id        String    @id @default(cuid())
+  /// "high-score" (único tipo por enquanto).
+  kind      String    @default("high-score")
+  /// Nota mínima quando o aviso saiu.
+  minScore  Int
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+
+  jobs Job[]
+
+  @@index([createdAt])
+}
+
+/// Linha única (id = 1). Fora das preferências de busca de propósito: mudar
+/// o aviso não recalcula as notas.
+model NotificationSettings {
+  id        Int      @id @default(1)
+  /// 0 = não avisar.
+  minScore  Int      @default(800)
+  updatedAt DateTime @updatedAt
 }

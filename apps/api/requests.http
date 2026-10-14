@@ -126,6 +126,21 @@ GET {{api}}/applications?status=applied,in_process
 ###
 GET {{api}}/applications/summary
 
+############################################################ Avisos
+# docs/features/16-notifications.md
+
+### Sino: não lidos e os últimos 20 avisos
+GET {{api}}/notifications
+
+### Marcar tudo como lido
+POST {{api}}/notifications/read
+
+### Nota mínima (0 desliga)
+PUT {{api}}/notifications/settings
+Content-Type: application/json
+
+{ "minScore": 850 }
+
 ############################################################ Entrevistas
 # docs/features/15-interview-questions.md
 

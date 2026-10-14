@@ -37,7 +37,7 @@ apps/web/src/
     health.ts overview.ts discovery.ts   (base) · jobs.ts applications.ts resume.ts
     preferences.ts dashboard.ts maintenance.ts   (chegam com as telas)
   components/              peças usadas em mais de uma tela
-    layout/  AppLayout, Sidebar (menu + tema), ScanStatus, OfflineBanner, nav.ts
+    layout/  AppLayout, Sidebar (menu + tema), NotificationBell, ScanStatus, OfflineBanner, nav.ts
     toast/   ToastProvider + useToast
     ui/      Button, PageHeader, EmptyState, Drawer, Field, CopyButton
     job/     ScoreBadge, ReasonList (+ ReasonLine), Chips (JobChips, StackChips, StatusChip)
@@ -93,6 +93,13 @@ os testes. Componente que aparece em duas telas sobe para `components/`.
   de cada tela listados num "?" no rodapé do menu.
 
 ## Telas
+
+### Sino — todas as telas
+
+No topo do menu ([16](16-notifications.md)): número de avisos não lidos,
+painel "Avisos" com as vagas novas de nota alta (abrir marca como lido; clicar
+numa vaga abre `/vagas?vaga=<id>`), e um toast "N vagas novas com nota alta ·
+Ver" quando um aviso chega com o app aberto. Confere a cada minuto.
 
 ### Início — `/`
 
@@ -314,8 +321,9 @@ Dados: `GET/PUT /api/preferences`, `GET /preferences/stacks`,
 `GET/POST /maintenance/retention`.
 
 Formulário à esquerda; à direita, numa coluna que acompanha a rolagem
-(abaixo de 1180 px vai para baixo): prévia + "Salvar e recalcular", Fontes e
-Limpeza.
+(abaixo de 1180 px vai para baixo): prévia + "Salvar e recalcular", "Aviso de
+nota alta" ([16](16-notifications.md), salva à parte, sem recalcular), Fontes
+e Limpeza.
 
 - **Stacks** em três grupos (Principais, Ganham pontos, Evitar). Sugestões de
   `/preferences/stacks` (lista do campo, com quantas vagas citam cada uma);

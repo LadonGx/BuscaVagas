@@ -143,6 +143,8 @@ export const layoutRoutes = () => ({
   'GET /discovery/sources': () => [source(), inactiveBoard()],
   'GET /preferences': () => preferences(),
   'GET /interview-questions': () => [],
+  'GET /notifications': () => ({ unread: 0, items: [] }),
+  'GET /notifications/settings': () => ({ minScore: 800 }),
 });
 
 /** Pergunta de entrevista (docs/features/15-interview-questions.md). */

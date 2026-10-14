@@ -14,6 +14,7 @@ import { useToast } from '../../components/toast/toast-context';
 import { useUnsavedChanges } from '../../components/UnsavedChanges';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { CleanupCard } from './CleanupCard';
+import { NotificationsCard } from './NotificationsCard';
 import { ChipList, NumberField, ToggleGroup } from './Fields';
 import {
   changedFields,
@@ -208,6 +209,7 @@ function Editor({ saved }: { saved: PreferencesDto }) {
           saving={savePreferences.isPending}
           onSave={() => void save()}
         />
+        <NotificationsCard />
         <SourcesCard />
         <CleanupCard />
       </aside>

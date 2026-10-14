@@ -4,6 +4,7 @@ import { activeApplications, useApplicationSummary, useJobCounts } from '../../a
 import { formatNumber } from '../../lib/format';
 import { useTheme } from '../../lib/theme';
 import { NAV_ITEMS, type NavCount } from './nav';
+import { NotificationBell } from './NotificationBell';
 import { ScanStatus } from './ScanStatus';
 import styles from './Sidebar.module.css';
 
@@ -41,6 +42,7 @@ export function Sidebar() {
           <Search size={18} strokeWidth={2.4} />
         </span>
         <span className={styles.brandName}>BuscaVagas</span>
+        <NotificationBell />
       </div>
 
       <ul className={styles.list}>

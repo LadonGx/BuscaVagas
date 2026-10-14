@@ -8,6 +8,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
 import { InterviewsModule } from './modules/interviews/interviews.module';
 import { JobsModule } from './modules/jobs/jobs.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { PreferencesModule } from './modules/preferences/preferences.module';
 import { ResumeModule } from './modules/resume/resume.module';
@@ -25,6 +26,7 @@ import { QueueModule } from './queue/queue.module';
     }),
     PrismaModule,
     QueueModule,
+    NotificationsModule,
     ScoringModule,
     HealthModule,
     JobsModule,

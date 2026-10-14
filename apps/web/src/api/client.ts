@@ -57,6 +57,8 @@ export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   query?: Query;
   body?: unknown;
+  /** Arquivo enviado cru, com o próprio Content-Type (ex.: o .zip do backup). */
+  file?: { data: Blob; type: string };
   signal?: AbortSignal;
 }
 
@@ -88,10 +90,13 @@ function parseBody(text: string): unknown {
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', query, body, signal } = options;
+  const { method = 'GET', query, body, file, signal } = options;
   const init: RequestInit = { method, signal };
 
-  if (body !== undefined) {
+  if (file) {
+    init.body = file.data;
+    init.headers = { 'Content-Type': file.type };
+  } else if (body !== undefined) {
     init.body = JSON.stringify(body);
     init.headers = { 'Content-Type': 'application/json' };
   }
@@ -134,4 +139,6 @@ export const api = {
   put: <T>(path: string, body?: unknown) => apiRequest<T>(path, { method: 'PUT', body }),
   patch: <T>(path: string, body?: unknown) => apiRequest<T>(path, { method: 'PATCH', body }),
   delete: <T = void>(path: string) => apiRequest<T>(path, { method: 'DELETE' }),
+  upload: <T>(path: string, data: Blob, type: string) =>
+    apiRequest<T>(path, { method: 'POST', file: { data, type } }),
 };

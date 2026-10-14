@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { validateEnv } from './config/env';
 import { HealthModule } from './health/health.module';
 import { ApplicationsModule } from './modules/applications/applications.module';
+import { BackupModule } from './modules/backup/backup.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
 import { InterviewsModule } from './modules/interviews/interviews.module';
@@ -39,6 +40,7 @@ import { QueueModule } from './queue/queue.module';
     DashboardModule,
     InterviewsModule,
     MetricsModule,
+    BackupModule,
   ],
   controllers: [AppController],
 })

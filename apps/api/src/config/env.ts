@@ -54,6 +54,10 @@ export const envSchema = z.object({
   RETENTION_DAYS: z.coerce.number().int().min(0).max(365).default(30),
   /** Por quanto tempo a URL de uma descartada apagada impede a vaga de voltar. */
   RETENTION_FORGET_DAYS: z.coerce.number().int().min(30).max(3650).default(180),
+
+  // --- Backup (docs/features/18-backup.md) -----------------------------------
+  /** Pasta da cópia de segurança feita antes de restaurar (relativa à pasta da API). */
+  BACKUP_DIR: z.string().trim().min(1).default('../../backups'),
 });
 
 export type Env = z.infer<typeof envSchema>;

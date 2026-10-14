@@ -126,6 +126,15 @@ GET {{api}}/applications?status=applied,in_process
 ###
 GET {{api}}/applications/summary
 
+############################################################ Backup
+# docs/features/18-backup.md — restaurar é melhor pela tela (envia o .zip cru).
+
+### Baixar o backup (.zip)
+GET {{api}}/backup
+
+### Candidaturas em CSV
+GET {{api}}/backup/applications.csv
+
 ############################################################ Métricas
 # docs/features/17-metrics.md — days: 30, 90 (padrão) ou 0 (tudo)
 GET {{api}}/metrics?days=90

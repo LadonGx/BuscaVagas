@@ -106,7 +106,8 @@ Ordem combinada, em blocos.
 
 **Bloco D — uso no dia a dia**
 
-- [ ] Backup / exportação dos dados (JS)
+- [x] Backup: .zip com tudo (JSON + PDFs), restaurar substituindo tudo (com cópia do
+      estado anterior) e candidaturas em CSV (JS) ([18](features/18-backup.md))
 - [ ] Docker Compose completo (API + web em container) para quem só quer usar
 - [ ] Alertas de vaga por e-mail (IMAP, só leitura, num marcador do Gmail): LinkedIn,
       Glassdoor e Indeed mandam título, empresa, local e link (JT)

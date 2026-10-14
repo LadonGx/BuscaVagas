@@ -8,6 +8,10 @@ coverage/
 .env.*
 !.env.example
 
+# Backups do app (docs/features/18-backup.md): seus dados, nunca no repositório.
+backups/
+*.rdb
+
 # Prisma Client gerado (recriado no pnpm install)
 apps/api/src/generated/
 

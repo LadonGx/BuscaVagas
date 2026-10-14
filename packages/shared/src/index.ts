@@ -16,3 +16,4 @@ export * from './resume-snapshot';
 export * from './interviews';
 export * from './notifications';
 export * from './metrics';
+export * from './backup';

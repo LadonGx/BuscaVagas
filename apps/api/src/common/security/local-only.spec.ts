@@ -35,6 +35,14 @@ describe('rejectNonLocal', () => {
     expect(result?.status).toBe(415);
   });
 
+  it('libera o .zip do backup (também pede preflight); multipart e form continuam barrados', () => {
+    const write = (contentType: string) =>
+      rejectNonLocal({ ...local, method: 'POST', hasBody: true, contentType });
+    expect(write('application/zip')).toBeNull();
+    expect(write('multipart/form-data; boundary=x')?.status).toBe(415);
+    expect(write('application/x-www-form-urlencoded')?.status).toBe(415);
+  });
+
   it('libera escrita JSON', () => {
     const result = rejectNonLocal({
       ...local,

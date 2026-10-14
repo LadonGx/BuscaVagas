@@ -13,6 +13,7 @@ import { usePreferences, useSavePreferences } from '../../api/preferences';
 import { useToast } from '../../components/toast/toast-context';
 import { useUnsavedChanges } from '../../components/UnsavedChanges';
 import { PageHeader } from '../../components/ui/PageHeader';
+import { BackupCard } from './BackupCard';
 import { CleanupCard } from './CleanupCard';
 import { NotificationsCard } from './NotificationsCard';
 import { ChipList, NumberField, ToggleGroup } from './Fields';
@@ -212,6 +213,7 @@ function Editor({ saved }: { saved: PreferencesDto }) {
         <NotificationsCard />
         <SourcesCard />
         <CleanupCard />
+        <BackupCard />
       </aside>
 
       {unsaved.dialog}

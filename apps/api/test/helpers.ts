@@ -26,7 +26,11 @@ export interface TestApp {
  * configuração do main.ts (filtros, prefixo /api, segurança local).
  * Não inclui Redis/fila: os módulos testados aqui não dependem dela.
  */
-export async function createTestApp(imports: ModuleMetadata['imports'] = []): Promise<TestApp> {
+export async function createTestApp(
+  imports: ModuleMetadata['imports'] = [],
+  /** Variáveis a mais do .env para este teste (ex.: `BACKUP_DIR`). */
+  env: Record<string, string> = {},
+): Promise<TestApp> {
   if (!TEST_DATABASE_URL) {
     throw new Error('Banco de testes indisponível — use describeDb.');
   }
@@ -41,6 +45,7 @@ export async function createTestApp(imports: ModuleMetadata['imports'] = []): Pr
             DATABASE_URL: TEST_DATABASE_URL,
             REDIS_URL: 'redis://127.0.0.1:6379',
             NODE_ENV: 'test',
+            ...env,
           }),
       }),
       PrismaModule,

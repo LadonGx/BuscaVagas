@@ -24,5 +24,6 @@ implementação divergir do plano, o plano é atualizado junto.
 | 15  | [Perguntas de entrevista](15-interview-questions.md)                | ✅     |
 | 16  | [Aviso de vaga nova com nota alta](16-notifications.md)             | ✅     |
 | 17  | [Métricas](17-metrics.md)                                           | ✅     |
+| 18  | [Backup e exportação](18-backup.md)                                 | ✅     |
 
-Ordem de dependência: 00 → 01 → 02 → 03 (usa a triagem) · 04 é independente · 05 usa o `ingest` de 01 · 06 usa a descoberta de 05 · 07 usa 01 (vagas) e o `ingest` · 08 usa 02 (triagem) e o `ingest` · 09 usa 01, 03, 05 e 07 · 10 usa todas · 11 usa o `ingest` de 01 e a limpeza de 08 · 12 usa o currículo de 04 · 13 usa o `ingest` de 01, os boards de 06 e a fila de 08 · 14 usa o currículo de 04 e as candidaturas de 03 · 15 usa as candidaturas de 03 · 16 usa a nota de 07 e a disponibilidade de 13 · 17 usa vagas, candidaturas e o currículo (01, 03, 04).
+Ordem de dependência: 00 → 01 → 02 → 03 (usa a triagem) · 04 é independente · 05 usa o `ingest` de 01 · 06 usa a descoberta de 05 · 07 usa 01 (vagas) e o `ingest` · 08 usa 02 (triagem) e o `ingest` · 09 usa 01, 03, 05 e 07 · 10 usa todas · 11 usa o `ingest` de 01 e a limpeza de 08 · 12 usa o currículo de 04 · 13 usa o `ingest` de 01, os boards de 06 e a fila de 08 · 14 usa o currículo de 04 e as candidaturas de 03 · 15 usa as candidaturas de 03 · 16 usa a nota de 07 e a disponibilidade de 13 · 17 usa vagas, candidaturas e o currículo (01, 03, 04) · 18 cobre todas as tabelas.

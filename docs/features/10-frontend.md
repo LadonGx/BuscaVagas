@@ -329,8 +329,8 @@ Dados: `GET/PUT /api/preferences`, `GET /preferences/stacks`,
 
 Formulário à esquerda; à direita, numa coluna que acompanha a rolagem
 (abaixo de 1180 px vai para baixo): prévia + "Salvar e recalcular", "Aviso de
-nota alta" ([16](16-notifications.md), salva à parte, sem recalcular), Fontes
-e Limpeza.
+nota alta" ([16](16-notifications.md), salva à parte, sem recalcular), Fontes,
+Limpeza e Backup ([18](18-backup.md)).
 
 - **Stacks** em três grupos (Principais, Ganham pontos, Evitar). Sugestões de
   `/preferences/stacks` (lista do campo, com quantas vagas citam cada uma);

@@ -38,6 +38,11 @@ export function configureApp(app: INestApplication): void {
   // JSON até 15 MB: o PDF enviado numa candidatura vai em base64 (até 10 MB,
   // docs/features/14-resume-versions.md). O padrão do Express é 100 KB.
   (app as NestExpressApplication).useBodyParser('json', { limit: '15mb' });
+  // O .zip da restauração vem cru (docs/features/18-backup.md).
+  (app as NestExpressApplication).useBodyParser('raw', {
+    type: 'application/zip',
+    limit: '500mb',
+  });
 
   app.setGlobalPrefix('api');
   app.enableCors({ origin: config.get('WEB_ORIGIN', { infer: true }) });

@@ -126,6 +126,10 @@ GET {{api}}/applications?status=applied,in_process
 ###
 GET {{api}}/applications/summary
 
+############################################################ Métricas
+# docs/features/17-metrics.md — days: 30, 90 (padrão) ou 0 (tudo)
+GET {{api}}/metrics?days=90
+
 ############################################################ Avisos
 # docs/features/16-notifications.md
 

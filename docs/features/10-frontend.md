@@ -246,6 +246,13 @@ tudo na URL; editor no painel (`?pergunta=<id>` ou `nova`) com STAR opcional;
 treino com uma pergunta por vez (Espaço mostra a resposta, 1 = preciso
 treinar, 2 = fui bem).
 
+### Métricas — `/metricas`
+
+Período (30 dias · 90 dias · Tudo, `?periodo=`), resumo em números,
+candidaturas por semana (colunas empilhadas com e sem resposta), tempo até a
+resposta, rendimento por fonte (tabela), stacks mais pedidas e as que faltam
+no currículo ([17](17-metrics.md)).
+
 ### Currículo — `/curriculo` e `/curriculo/imprimir`
 
 Dados: `GET /api/resume`. O modelo de dados do [04](04-resume.md) continua

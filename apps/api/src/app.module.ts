@@ -8,6 +8,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { DiscoveryModule } from './modules/discovery/discovery.module';
 import { InterviewsModule } from './modules/interviews/interviews.module';
 import { JobsModule } from './modules/jobs/jobs.module';
+import { MetricsModule } from './modules/metrics/metrics.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { PreferencesModule } from './modules/preferences/preferences.module';
@@ -37,6 +38,7 @@ import { QueueModule } from './queue/queue.module';
     MaintenanceModule,
     DashboardModule,
     InterviewsModule,
+    MetricsModule,
   ],
   controllers: [AppController],
 })

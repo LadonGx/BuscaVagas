@@ -35,6 +35,7 @@ export const keys = {
   resume: ['resume'] as const,
   interviews: ['interview-questions'] as const,
   notifications: ['notifications'] as const,
+  metrics: (days: number) => ['metrics', days] as const,
   notificationSettings: ['notifications', 'settings'] as const,
   resumeStacks: ['resume', 'stacks'] as const,
 };

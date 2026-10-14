@@ -217,6 +217,13 @@ describeDb('Painel (integração)', () => {
     ]);
     // 2, 4, 7, 10 -> (4 + 7) / 2
     expect((await service.get(NOW, SP)).medianDaysToFirstResponse).toBe(5.5);
+
+    // Desistir não é resposta da empresa.
+    await application([
+      ['applied', 0],
+      ['withdrawn', 1],
+    ]);
+    expect((await service.get(NOW, SP)).medianDaysToFirstResponse).toBe(5.5);
   });
 
   it('GET /api/dashboard responde com o formato completo', async () => {

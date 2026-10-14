@@ -164,7 +164,9 @@ export class DashboardService {
       FROM (
         SELECT EXTRACT(EPOCH FROM (min(e."occurredAt") - a."appliedAt")) / 86400.0 AS days
         FROM "Application" a
-        JOIN "StatusEvent" e ON e."applicationId" = a.id AND e.status <> 'applied'
+        -- Resposta da empresa (RESPONSE_STATUSES): desistir é seu, não conta.
+        JOIN "StatusEvent" e ON e."applicationId" = a.id
+          AND e.status IN ('in_process', 'offer', 'rejected')
         GROUP BY a.id, a."appliedAt"
       ) AS responses
     `;

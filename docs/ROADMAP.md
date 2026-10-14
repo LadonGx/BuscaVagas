@@ -100,7 +100,9 @@ Ordem combinada, em blocos.
 
 - [x] Aviso de vaga nova com nota alta: sino no app (um aviso por busca, nota mínima
       ajustável em Preferências) (JS) ([16](features/16-notifications.md))
-- [ ] Tela de Métricas: rendimento por fonte, stacks mais pedidas, tempo até a resposta (JT, VG)
+- [x] Tela de Métricas: rendimento por fonte, stacks mais pedidas e as que faltam no
+      currículo, tempo até a resposta, candidaturas por semana (JT, VG)
+      ([17](features/17-metrics.md))
 
 **Bloco D — uso no dia a dia**
 

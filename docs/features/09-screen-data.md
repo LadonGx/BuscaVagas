@@ -104,7 +104,7 @@ interface DashboardDto {
   stepsNextDays: number;
   /** Quantas candidaturas já passaram por cada etapa (pelo histórico, não pelo status atual). */
   funnel: { applied: number; inProcess: number; offer: number };
-  /** Mediana de dias entre a candidatura e o primeiro evento que não é "Aplicada". */
+  /** Mediana de dias até a primeira resposta da empresa (em processo, proposta ou recusa; desistir não conta — 17). */
   medianDaysToFirstResponse: number | null;
 }
 ```

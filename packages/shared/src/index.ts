@@ -15,3 +15,4 @@ export * from './resume-import-plan';
 export * from './resume-snapshot';
 export * from './interviews';
 export * from './notifications';
+export * from './metrics';

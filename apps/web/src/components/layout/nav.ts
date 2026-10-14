@@ -1,4 +1,5 @@
 import {
+  ChartColumn,
   FileText,
   House,
   SquareKanban,
@@ -36,6 +37,7 @@ export const NAV_ITEMS: NavItem[] = [
     count: { key: 'activeApplications', label: 'em andamento' },
   },
   { to: '/entrevistas', label: 'Entrevistas', icon: MessagesSquare },
+  { to: '/metricas', label: 'Métricas', icon: ChartColumn },
   { to: '/curriculo', label: 'Currículo', icon: FileText },
   { to: '/preferencias', label: 'Preferências', icon: SlidersHorizontal },
 ];

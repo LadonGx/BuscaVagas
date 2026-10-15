@@ -57,6 +57,8 @@ mostrar quem tem candidatura.
 - A URL é canonizada (`canonicalUrl` do pacote `sources`) antes de gravar e
   de comparar. `?utm_source=` e `#fragmento` não criam vaga nova.
 - Cadastro manual sempre grava `source = "manual"`.
+- Stack em branco é deduzida do título e da descrição; senioridade em branco, do
+  título (as mesmas regras das fontes). O que você escolher fica.
 - `ingest(postings)`: `createMany({ skipDuplicates: true })` + atualiza
   `lastSeenAt` das que já existiam. **Nunca sobrescreve** dados de uma vaga
   existente — você pode ter editado à mão.

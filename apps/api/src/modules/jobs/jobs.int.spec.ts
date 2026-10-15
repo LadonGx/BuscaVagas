@@ -49,6 +49,25 @@ describeDb('Vagas (integração)', () => {
     });
   });
 
+  it('stack e senioridade em branco: deduzidas do título e da descrição', async () => {
+    const job = await createJob({
+      title: 'Desenvolvedor Back-end Júnior',
+      company: 'Acme',
+      description: 'Vaga com TypeScript, NestJS e PostgreSQL.',
+    });
+    expect(job.seniority).toBe('junior');
+    expect(job.stack).toEqual(expect.arrayContaining(['typescript', 'nestjs', 'postgresql']));
+
+    const chosen = await createJob({
+      title: 'Desenvolvedor Júnior',
+      company: 'Beta',
+      description: 'React',
+      seniority: 'mid',
+      stack: ['vue'],
+    });
+    expect(chosen).toMatchObject({ seniority: 'mid', stack: ['vue'] });
+  });
+
   it('URL repetida (mesmo com rastreamento diferente) responde 409 com o id existente', async () => {
     const first = await createJob({ title: 'Dev', company: 'Acme', url: 'https://acme.com/v/1' });
 
@@ -203,6 +222,73 @@ describeDb('Vagas (integração)', () => {
     expect(new Date(after.lastSeenAt).getTime()).toBeGreaterThan(
       new Date(job1!.lastSeenAt).getTime(),
     );
+  });
+
+  it('extensão: cria já salva; link do LinkedIn aberto na lista vira o link da vaga', async () => {
+    const job = await createJob({
+      title: 'Dev Júnior',
+      company: 'Wevy',
+      url: 'https://www.linkedin.com/jobs/collections/recommended/?currentJobId=4476236394&origin=x',
+      triage: 'saved',
+    });
+    expect(job).toMatchObject({
+      url: 'https://www.linkedin.com/jobs/view/4476236394',
+      triage: 'saved',
+      source: 'manual',
+    });
+    expect(job.triagedAt).not.toBeNull();
+    await api()
+      .post('/api/jobs')
+      .send({ title: 'x', company: 'y', triage: 'dismissed' })
+      .expect(400);
+  });
+
+  it('lookup: pelo link, por outro link da mesma vaga e pela impressão', async () => {
+    const lookup = async (query: Record<string, string>) =>
+      (await api().get('/api/jobs/lookup').query(query).expect(200)).body as {
+        match: string | null;
+        job: JobDto | null;
+        openUrl: string | null;
+      };
+    const service = t.app.get(JobsService);
+    const posting: JobPosting = {
+      source: 'linkedin',
+      externalId: '4476236394',
+      url: 'https://www.linkedin.com/jobs/view/4476236394',
+      title: 'Desenvolvedor Júnior',
+      company: 'Wevy',
+      description: null,
+      location: 'Brasil',
+      workModel: 'remote',
+      contractType: null,
+      seniority: 'junior',
+      stack: [],
+      salary: null,
+      postedAt: null,
+    };
+    await service.ingest([posting]);
+
+    const byLink = await lookup({
+      url: 'https://br.linkedin.com/jobs/view/desenvolvedor-junior-at-wevy-4476236394?trk=x',
+    });
+    expect(byLink).toMatchObject({ match: 'link', job: { company: 'Wevy' } });
+    expect(byLink.openUrl).toMatch(/^http:\/\/127\.0\.0\.1:5173\/vagas\?vaga=/);
+
+    // Outra fonte, outro link, mesma vaga: pela empresa + título + lugar.
+    const same = await lookup({
+      url: 'https://wevy.gupy.io/jobs/99',
+      title: 'Desenvolvedor(a) Júnior',
+      company: 'Wevy Ltda',
+      location: 'Remoto',
+    });
+    expect(same).toMatchObject({ match: 'same', job: { source: 'linkedin' } });
+
+    expect(await lookup({ url: 'https://acme.gupy.io/jobs/1' })).toEqual({
+      match: null,
+      job: null,
+      openUrl: null,
+    });
+    await api().get('/api/jobs/lookup').query({ url: 'nao-e-link' }).expect(400);
   });
 
   it('recusa acesso por Host externo', async () => {

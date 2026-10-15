@@ -19,6 +19,10 @@ export default defineConfig(
     files: ['apps/web/**/*.{ts,tsx}'],
     languageOptions: { globals: globals.browser },
   },
+  {
+    files: ['apps/extension/**/*.ts'],
+    languageOptions: { globals: { ...globals.browser, chrome: 'readonly' } },
+  },
   // Regras dos hooks e do React Compiler (efeitos, refs, estado no render...).
   {
     files: ['apps/web/**/*.{ts,tsx}'],

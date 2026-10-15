@@ -84,7 +84,11 @@ function checkSalaryRange(
 }
 
 export const createJobInputSchema = jobFields
-  .extend({ stack: jobFields.shape.stack.default([]) })
+  .extend({
+    stack: jobFields.shape.stack.default([]),
+    /** Já entra salva (extensão: "Salvar"). Padrão: caixa. */
+    triage: z.enum(['inbox', 'saved']).optional(),
+  })
   .superRefine(checkSalaryRange);
 export type CreateJobInput = z.output<typeof createJobInputSchema>;
 

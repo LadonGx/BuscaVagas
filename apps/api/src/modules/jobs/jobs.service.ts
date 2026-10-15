@@ -1,5 +1,7 @@
 import {
   DUPLICATE_LIVE_DAYS,
+  siteJobUrl,
+  type JobLookupQuery,
   isPreferencesConfigured,
   MANUAL_SOURCE,
   MUTED_REPOST_REASON,
@@ -21,7 +23,7 @@ import {
   type TriageInput,
   type UpdateJobInput,
 } from '@busca-vagas/shared';
-import { canonicalUrl } from '@busca-vagas/sources';
+import { canonicalUrl, seniorityFromTitle, stackFromText } from '@busca-vagas/sources';
 import {
   BadRequestException,
   ConflictException,
@@ -68,9 +70,17 @@ export class JobsService {
       await this.assertUrlFree(url);
     }
 
+    const { triage, ...fields } = input;
     const job = await this.prisma.job.create({
       data: {
-        ...input,
+        ...fields,
+        // Em branco: deduz do título e da descrição, como nas outras fontes
+        // (a extensão manda a descrição colada, sem stack nem senioridade).
+        stack: fields.stack.length
+          ? fields.stack
+          : normalizeStack(stackFromText(fields.title, fields.description)),
+        seniority: fields.seniority ?? seniorityFromTitle(fields.title),
+        ...(triage === 'saved' && { triage: 'saved', triagedAt: new Date() }),
         url,
         source: MANUAL_SOURCE,
         externalId: null,
@@ -190,6 +200,50 @@ export class JobsService {
       swipeable: n('swipeable'),
       inboxClosed: n('inboxClosed'),
     };
+  }
+
+  /**
+   * Extensão do Chrome (docs/features/21-extension.md): a vaga deste link já
+   * está no app? Pelo link (ou um dos outros links da mesma vaga) e, com
+   * título e empresa, pela impressão (a mesma vaga vinda de outra fonte,
+   * vista nos últimos DUPLICATE_LIVE_DAYS dias).
+   */
+  async lookup(
+    query: JobLookupQuery,
+  ): Promise<{ match: 'link' | 'same' | null; job: JobDto | null }> {
+    const version = await this.scoreVersion();
+    const url = this.canonicalOrNull(query.url);
+    if (url) {
+      const byUrl =
+        (await this.prisma.job.findUnique({ where: { url }, include: jobInclude })) ??
+        (
+          await this.prisma.jobAlias.findUnique({
+            where: { url },
+            select: { job: { include: jobInclude } },
+          })
+        )?.job;
+      if (byUrl) return { match: 'link', job: toJobDto(byUrl, version) };
+    }
+
+    if (query.title && query.company) {
+      const fingerprint = jobFingerprint({
+        title: query.title,
+        company: query.company,
+        location: query.location ?? null,
+        workModel: null,
+      });
+      const since = new Date(Date.now() - DUPLICATE_LIVE_DAYS * DAY_MS);
+      const same = fingerprint
+        ? await this.prisma.job.findFirst({
+            where: { fingerprint, lastSeenAt: { gte: since } },
+            orderBy: [{ lastSeenAt: 'desc' }, { id: 'desc' }],
+            include: jobInclude,
+          })
+        : null;
+      if (same) return { match: 'same', job: toJobDto(same, version) };
+    }
+
+    return { match: null, job: null };
   }
 
   async get(id: string): Promise<JobDto> {
@@ -677,8 +731,9 @@ export class JobsService {
     return job;
   }
 
+  /** Link canônico; o de LinkedIn, Indeed e Glassdoor na forma de "uma vaga" (`siteJobUrl`). */
   private canonicalOrNull(url: string | null | undefined): string | null {
-    return url ? canonicalUrl(url) : null;
+    return url ? canonicalUrl(siteJobUrl(url)) : null;
   }
 
   private async assertUrlFree(url: string): Promise<void> {

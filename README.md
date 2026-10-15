@@ -32,6 +32,7 @@ histórico de status e currículo em blocos. Mais fontes e as telas vêm a segui
 apps/
   api/            NestJS: rotas, banco, fila, regras de negócio
   web/            React + Vite
+  extension/      extensão do Chrome: manda a vaga aberta no navegador
 packages/
   shared/         schemas Zod e tipos usados por todos
   sources/        fontes de vagas — UMA PASTA POR SITE
@@ -63,6 +64,13 @@ Abra **http://127.0.0.1:8080**. Com o pnpm instalado, `pnpm app:up`,
 `pnpm app:down` e `pnpm app:logs` fazem o mesmo. Usa o mesmo banco do modo
 dev; não rode os dois juntos. Detalhes em
 [`docs/features/19-docker-app.md`](docs/features/19-docker-app.md).
+
+### Extensão do Chrome (opcional)
+
+Para mandar para o app a vaga que você está vendo em qualquer site: `pnpm
+ext:build` e carregue `apps/extension/dist` em `chrome://extensions` (Modo do
+desenvolvedor → Carregar sem compactação). Passo a passo em
+[`docs/features/21-extension.md`](docs/features/21-extension.md).
 
 ## Começando (para programar)
 
@@ -106,20 +114,21 @@ Detalhes, regras e códigos de erro de cada uma: [`docs/features/`](docs/feature
 
 ## Scripts
 
-| Comando                                       | O que faz                                         |
-| --------------------------------------------- | ------------------------------------------------- |
-| `pnpm dev:api` / `pnpm dev:web`               | Sobe API (recompila `packages/*` antes) / front   |
-| `pnpm build`                                  | Compila todos os pacotes, na ordem de dependência |
-| `pnpm build:packages`                         | Recompila só `packages/*` (rode após mexer neles) |
-| `pnpm lint` / `pnpm format`                   | ESLint / Prettier                                 |
-| `pnpm typecheck`                              | Checagem de tipos em todo o monorepo              |
-| `pnpm test`                                   | Testes (Vitest) em todo o monorepo                |
-| `pnpm infra:up` / `infra:down` / `infra:logs` | Controla Postgres e Redis                         |
-| `pnpm app:up` / `app:down` / `app:logs`       | App completo no Docker, em `127.0.0.1:8080`       |
-| `pnpm db:migrate --name <nome>`               | Cria migration após mudar o `schema.prisma`       |
-| `pnpm db:deploy`                              | Aplica as migrations existentes                   |
-| `pnpm db:studio`                              | Navega pelo banco no navegador                    |
-| `pnpm scores:rescore`                         | Recalcula a nota de todas as vagas (API rodando)  |
+| Comando                                       | O que faz                                            |
+| --------------------------------------------- | ---------------------------------------------------- |
+| `pnpm dev:api` / `pnpm dev:web`               | Sobe API (recompila `packages/*` antes) / front      |
+| `pnpm build`                                  | Compila todos os pacotes, na ordem de dependência    |
+| `pnpm build:packages`                         | Recompila só `packages/*` (rode após mexer neles)    |
+| `pnpm lint` / `pnpm format`                   | ESLint / Prettier                                    |
+| `pnpm typecheck`                              | Checagem de tipos em todo o monorepo                 |
+| `pnpm test`                                   | Testes (Vitest) em todo o monorepo                   |
+| `pnpm infra:up` / `infra:down` / `infra:logs` | Controla Postgres e Redis                            |
+| `pnpm app:up` / `app:down` / `app:logs`       | App completo no Docker, em `127.0.0.1:8080`          |
+| `pnpm ext:build`                              | Compila a extensão do Chrome (`apps/extension/dist`) |
+| `pnpm db:migrate --name <nome>`               | Cria migration após mudar o `schema.prisma`          |
+| `pnpm db:deploy`                              | Aplica as migrations existentes                      |
+| `pnpm db:studio`                              | Navega pelo banco no navegador                       |
+| `pnpm scores:rescore`                         | Recalcula a nota de todas as vagas (API rodando)     |
 
 ## Segurança
 

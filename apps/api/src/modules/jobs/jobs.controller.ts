@@ -1,6 +1,9 @@
 import {
   bulkTriageInputSchema,
   createJobInputSchema,
+  jobLookupQuerySchema,
+  type JobLookupDto,
+  type JobLookupQuery,
   jobListQuerySchema,
   muteRepostsInputSchema,
   triageInputSchema,
@@ -30,7 +33,9 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import type { Env } from '../../config/env';
 import { AvailabilityService } from './availability.service';
 import { JobsService } from './jobs.service';
 
@@ -40,6 +45,7 @@ export class JobsController {
   constructor(
     private readonly jobs: JobsService,
     private readonly availability: AvailabilityService,
+    private readonly config: ConfigService<Env, true>,
   ) {}
 
   @Post()
@@ -67,6 +73,16 @@ export class JobsController {
   @Get('counts')
   counts(): Promise<JobCountsDto> {
     return this.jobs.counts();
+  }
+
+  /** Extensão do Chrome: a vaga já está no app? Antes de ':id'. */
+  @Get('lookup')
+  async lookup(
+    @Query(new ZodValidationPipe(jobLookupQuerySchema)) query: JobLookupQuery,
+  ): Promise<JobLookupDto> {
+    const { match, job } = await this.jobs.lookup(query);
+    const web = this.config.get('WEB_ORIGIN', { infer: true }).replace(/\/$/, '');
+    return { match, job, openUrl: job ? `${web}/vagas?vaga=${encodeURIComponent(job.id)}` : null };
   }
 
   @Get(':id')

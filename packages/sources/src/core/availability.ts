@@ -1,3 +1,4 @@
+import { isRestrictedUrl } from '@busca-vagas/shared';
 import { parseBoardUrl } from './boards/board-url';
 import { HttpError, type HttpClient } from './http';
 import { decodeEntities } from './normalize/text';
@@ -25,26 +26,11 @@ export interface AvailabilityTarget {
 }
 
 /**
- * Sites cujos termos proíbem acesso automatizado (pesquisa da Fase 3, ver
- * docs/ROADMAP.md): não conferimos, nem com uma requisição só.
+ * Sites cujos termos proíbem acesso automatizado (lista em
+ * `@busca-vagas/shared`, RESTRICTED_SITES): não conferimos, nem com uma
+ * requisição só.
  */
-const RESTRICTED_HOSTS = [
-  'linkedin.com',
-  'indeed.com',
-  'glassdoor.com',
-  'glassdoor.com.br',
-  'infojobs.com.br',
-  'vagas.com.br',
-];
-
-export function isRestrictedHost(url: string): boolean {
-  try {
-    const host = new URL(url).hostname.toLowerCase();
-    return RESTRICTED_HOSTS.some((item) => host === item || host.endsWith(`.${item}`));
-  } catch {
-    return false;
-  }
-}
+export const isRestrictedHost = isRestrictedUrl;
 
 /** Frases de vaga fechada nas páginas (Gupy, sites de carreira, ATS). */
 const CLOSED_TEXT =

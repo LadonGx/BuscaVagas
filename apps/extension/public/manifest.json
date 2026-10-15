@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "BuscaVagas",
+  "version": "0.1.0",
+  "description": "Manda a vaga aberta no navegador para o seu BuscaVagas (só na sua máquina).",
+  "action": {
+    "default_title": "Mandar esta vaga para o BuscaVagas",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" }
+  },
+  "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["http://127.0.0.1/*", "http://localhost/*"]
+}

@@ -17,3 +17,4 @@ export * from './interviews';
 export * from './notifications';
 export * from './metrics';
 export * from './backup';
+export * from './capture';

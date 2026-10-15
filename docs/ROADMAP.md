@@ -113,7 +113,9 @@ Ordem combinada, em blocos.
 - [x] Alertas de vaga por e-mail (IMAP, só leitura, num marcador do Gmail): LinkedIn,
       Glassdoor e Indeed mandam título, empresa, local e link (JT)
       ([20](features/20-email-alerts.md))
-- [ ] Extensão do Chrome: enviar a vaga aberta no navegador para o app, sem scraping (VA)
+- [x] Extensão do Chrome: enviar a vaga aberta no navegador para o app, sem scraping (VA)
+      — nos sites restritos só link e título da aba; nos outros, o JSON-LD da página
+      ([21](features/21-extension.md))
 - [ ] Preencher formulário com Playwright, **nunca enviar** (JT)
 - [ ] Aviso de nota alta também no celular (ntfy ou Telegram), com horário de silêncio
       (22h–8h, ajustável) — o sino já guarda os avisos; falta só o canal ([16](features/16-notifications.md))

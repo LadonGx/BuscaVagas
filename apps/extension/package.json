@@ -1,0 +1,22 @@
+{
+  "name": "@busca-vagas/extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Extensão do Chrome: manda a vaga aberta no navegador para o BuscaVagas.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@busca-vagas/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.3.4",
+    "jsdom": "^30.1.2",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.3"
+  }
+}

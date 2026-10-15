@@ -1,0 +1,23 @@
+# O que não entra no build da imagem (Dockerfile).
+**/node_modules
+**/dist
+**/coverage
+**/*.tsbuildinfo
+**/*.log
+apps/api/src/generated
+
+# Seus dados e segredos nunca vão para a imagem.
+.env
+.env.*
+backups
+*.rdb
+
+.git
+.github
+.vscode
+.idea
+docs
+Claude outputs
+Dockerfile
+.dockerignore
+docker-compose*.yml

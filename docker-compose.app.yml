@@ -1,0 +1,40 @@
+# App completo no Docker (API + tela), para quem só quer usar.
+# Complementa o docker-compose.yml (Postgres e Redis), sem mudá-lo:
+#
+#   pnpm app:up      # = docker compose -f docker-compose.yml -f docker-compose.app.yml up -d --build
+#
+# Abra http://127.0.0.1:8080. Usa o mesmo banco do modo dev: tudo que você já
+# tem aparece aqui. Não rode a API do dev ao mesmo tempo (as duas dividiriam
+# a fila). Ver docs/features/19-docker-app.md.
+
+services:
+  app:
+    build: .
+    image: busca-vagas-app
+    restart: unless-stopped
+    # tini como PID 1: repassa o Ctrl+C / docker stop para a API desligar limpo.
+    init: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Suas configurações (termos de busca, empresas, retenção…) vêm do .env.
+    env_file:
+      - path: .env
+        required: false
+    # Estas valem só dentro do container e vencem as do .env.
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-buscavagas}:${POSTGRES_PASSWORD:-buscavagas}@postgres:5432/${POSTGRES_DB:-buscavagas}
+      REDIS_URL: redis://redis:6379
+      API_HOST: 0.0.0.0
+      API_PORT: 3333
+      WEB_ORIGIN: http://127.0.0.1:${APP_PORT:-8080}
+      WEB_DIST_DIR: /app/web
+      BACKUP_DIR: /data/backups
+    # Só na interface local, como o banco: ninguém na sua rede alcança o app.
+    ports:
+      - '127.0.0.1:${APP_PORT:-8080}:3333'
+    # Cópias de segurança feitas antes de restaurar um backup: pasta backups/ do projeto.
+    volumes:
+      - ./backups:/data/backups

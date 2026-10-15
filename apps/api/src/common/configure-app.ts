@@ -5,6 +5,7 @@ import type { NextFunction, Request, Response } from 'express';
 import type { Env } from '../config/env';
 import { PrismaExceptionFilter } from './filters/prisma-exception.filter';
 import { rejectNonLocal } from './security/local-only';
+import { serveWeb } from './serve-web';
 
 /**
  * Tudo que o app precisa além dos módulos: segurança local, prefixo, CORS e
@@ -43,6 +44,10 @@ export function configureApp(app: INestApplication): void {
     type: 'application/zip',
     limit: '500mb',
   });
+
+  // Modo Docker: a API também entrega a tela (docs/features/19-docker-app.md).
+  const webDist = config.get('WEB_DIST_DIR', { infer: true });
+  if (webDist) serveWeb(app as NestExpressApplication, webDist);
 
   app.setGlobalPrefix('api');
   app.enableCors({ origin: config.get('WEB_ORIGIN', { infer: true }) });

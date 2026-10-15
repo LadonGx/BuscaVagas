@@ -108,7 +108,8 @@ Ordem combinada, em blocos.
 
 - [x] Backup: .zip com tudo (JSON + PDFs), restaurar substituindo tudo (com cópia do
       estado anterior) e candidaturas em CSV (JS) ([18](features/18-backup.md))
-- [ ] Docker Compose completo (API + web em container) para quem só quer usar
+- [x] Docker Compose completo (API + tela num container, mesmo banco do dev, migrações ao
+      subir, em `127.0.0.1:8080`) para quem só quer usar ([19](features/19-docker-app.md))
 - [ ] Alertas de vaga por e-mail (IMAP, só leitura, num marcador do Gmail): LinkedIn,
       Glassdoor e Indeed mandam título, empresa, local e link (JT)
 - [ ] Extensão do Chrome: enviar a vaga aberta no navegador para o app, sem scraping (VA)

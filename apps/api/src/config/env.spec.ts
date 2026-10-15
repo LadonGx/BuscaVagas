@@ -21,6 +21,24 @@ describe('validateEnv', () => {
     expect(() => validateEnv({ ...base, API_HOST: '0.0.0.0' })).toThrow(/API_HOST/);
   });
 
+  it('0.0.0.0 só dentro do container (CONTAINER=true, vem do Dockerfile)', () => {
+    expect(validateEnv({ ...base, API_HOST: '0.0.0.0', CONTAINER: 'true' }).API_HOST).toBe(
+      '0.0.0.0',
+    );
+    expect(() => validateEnv({ ...base, API_HOST: '0.0.0.0', CONTAINER: 'false' })).toThrow(
+      /API_HOST: use 127\.0\.0\.1/,
+    );
+    expect(() => validateEnv({ ...base, API_HOST: '192.168.0.10', CONTAINER: 'true' })).toThrow(
+      /API_HOST/,
+    );
+  });
+
+  it('WEB_DIST_DIR: vazio = desligado', () => {
+    expect(validateEnv(base).WEB_DIST_DIR).toBeUndefined();
+    expect(validateEnv({ ...base, WEB_DIST_DIR: ' ' }).WEB_DIST_DIR).toBeUndefined();
+    expect(validateEnv({ ...base, WEB_DIST_DIR: '/app/web' }).WEB_DIST_DIR).toBe('/app/web');
+  });
+
   it('explica o que falta', () => {
     expect(() => validateEnv({})).toThrow(/DATABASE_URL/);
   });

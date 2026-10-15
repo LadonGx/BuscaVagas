@@ -37,6 +37,7 @@ packages/
   sources/        fontes de vagas — UMA PASTA POR SITE
 docs/             arquitetura, roadmap, como adicionar uma fonte
 docker-compose.yml  Postgres + Redis, só em 127.0.0.1
+docker-compose.app.yml  + o app (API e tela) num container, para só usar
 ```
 
 Detalhes e decisões em [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
@@ -47,7 +48,23 @@ Detalhes e decisões em [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 - **pnpm 12** — `npm install -g pnpm@12`
 - **Docker** (Docker Desktop no Windows/macOS)
 
-## Começando
+## Só quero usar
+
+Com o Docker instalado, sem Node nem pnpm:
+
+```bash
+git clone https://github.com/LadonGx/busca-vagas.git
+cd busca-vagas
+cp .env.example .env      # Windows (cmd): copy .env.example .env
+docker compose -f docker-compose.yml -f docker-compose.app.yml up -d --build
+```
+
+Abra **http://127.0.0.1:8080**. Com o pnpm instalado, `pnpm app:up`,
+`pnpm app:down` e `pnpm app:logs` fazem o mesmo. Usa o mesmo banco do modo
+dev; não rode os dois juntos. Detalhes em
+[`docs/features/19-docker-app.md`](docs/features/19-docker-app.md).
+
+## Começando (para programar)
 
 ```bash
 git clone https://github.com/LadonGx/busca-vagas.git
@@ -98,6 +115,7 @@ Detalhes, regras e códigos de erro de cada uma: [`docs/features/`](docs/feature
 | `pnpm typecheck`                              | Checagem de tipos em todo o monorepo              |
 | `pnpm test`                                   | Testes (Vitest) em todo o monorepo                |
 | `pnpm infra:up` / `infra:down` / `infra:logs` | Controla Postgres e Redis                         |
+| `pnpm app:up` / `app:down` / `app:logs`       | App completo no Docker, em `127.0.0.1:8080`       |
 | `pnpm db:migrate --name <nome>`               | Cria migration após mudar o `schema.prisma`       |
 | `pnpm db:deploy`                              | Aplica as migrations existentes                   |
 | `pnpm db:studio`                              | Navega pelo banco no navegador                    |
@@ -109,7 +127,8 @@ A API **não tem autenticação, de propósito**: é um app pessoal. Isso só é
 seguro porque nada fica exposto na rede:
 
 - API, front, Postgres e Redis escutam **só em `127.0.0.1`**. A API recusa
-  subir com outro host (`API_HOST`).
+  subir com outro host (`API_HOST`). No modo Docker, ela escuta a rede do
+  container e a porta é publicada só em `127.0.0.1`.
 - A API recusa qualquer `Host` que não seja `127.0.0.1`/`localhost`
   (proteção contra DNS rebinding) e só aceita escrita com
   `Content-Type: application/json` (barra POST disfarçado vindo de outro site).

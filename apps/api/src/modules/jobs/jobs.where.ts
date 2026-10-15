@@ -38,6 +38,7 @@ export function buildJobWhere(
   if (query.contractType) and.push({ contractType: { in: query.contractType } });
   if (query.seniority) and.push({ seniority: { in: query.seniority } });
   if (query.source) and.push({ source: { in: query.source } });
+  if (query.excludeSource) and.push({ source: { notIn: query.excludeSource } });
   if (query.stack) and.push({ stack: { hasSome: query.stack } });
 
   if (query.postedWithinDays) {

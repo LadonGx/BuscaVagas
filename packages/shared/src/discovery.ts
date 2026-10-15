@@ -51,10 +51,28 @@ export interface SourceRunDto {
   finishedAt: string | null;
 }
 
+/**
+ * Tipo de fonte: `search` (termos de busca), `company-board` (empresas
+ * acompanhadas) ou `mailbox` (alertas que chegam por e-mail —
+ * docs/features/20-email-alerts.md).
+ */
+export type SourceKindDto = 'search' | 'company-board' | 'mailbox';
+
+/**
+ * Sites cujas vagas só chegam por alerta de e-mail (o app nunca acessa esses
+ * sites). Nome de exibição do `source` dessas vagas.
+ */
+export const EMAIL_ALERT_SITES = {
+  linkedin: 'LinkedIn',
+  indeed: 'Indeed',
+  glassdoor: 'Glassdoor',
+} as const;
+export type EmailAlertSite = keyof typeof EMAIL_ALERT_SITES;
+
 export interface SourceInfoDto {
   id: string;
   displayName: string;
-  kind: 'search' | 'company-board';
+  kind: SourceKindDto;
   /**
    * `false` = a fonte existe mas não roda: board sem empresas acompanhadas
    * ou configuração inválida. O motivo vem em `reason`.

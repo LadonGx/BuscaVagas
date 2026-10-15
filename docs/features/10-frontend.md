@@ -143,7 +143,10 @@ Dados: `GET /api/jobs` (infinito), `GET /api/jobs/:id` no painel.
   o primeiro contra; incompatível mostra só o bloqueio; cobertura abaixo de 60%
   troca o contra por "nota sobre X% dos critérios"), status, "há X dias" e
   ações (salvar, descartar, detalhes, abrir no site).
-- Barra: busca (`q`, com 300 ms de espera), modalidade, nota mínima, ordem,
+- Barra: busca (`q`, com 300 ms de espera), modalidade, nota mínima, **fonte**
+  (cada fonte de busca e de boards; "Alertas por e-mail", que junta LinkedIn,
+  Indeed e Glassdoor, ou cada um deles; "Tudo menos e-mail" via
+  `excludeSource`; cadastro manual), ordem,
   "Esconder incompatíveis", "Esconder encerradas" (ligado por padrão; só na
   Caixa e em Descartadas — salvas e com candidatura nunca somem; ver
   [13](13-availability.md)). Pílulas: Caixa · Salvas · Com candidatura
@@ -151,7 +154,8 @@ Dados: `GET /api/jobs` (infinito), `GET /api/jobs/:id` no painel.
   Caixa sem as encerradas escondidas).
 - **Tudo na URL**, em português: `aba` (`salvas`, `candidatura`,
   `descartadas`; ausente = caixa), `busca`, `modelo` (`remote,hybrid`), `nota`,
-  `ordem` (`nota`/`recentes`), `incompativeis=ocultar`, `encerradas=mostrar` e `vaga=<id>` (painel
+  `ordem` (`nota`/`recentes`), `incompativeis=ocultar`, `encerradas=mostrar`, `fonte` (`gupy`, `email`,
+  `sem-email`, `linkedin`...) e `vaga=<id>` (painel
   aberto). Ex.: `/vagas?aba=salvas&modelo=remote&nota=700`.
 - Ações do cartão: Salvar (ou Tirar dos salvos), Descartar (some se a vaga tem
   candidatura — a API recusa), Voltar para a caixa (na aba Descartadas),

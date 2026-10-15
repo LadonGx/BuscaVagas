@@ -6,7 +6,8 @@ import type { JobFilters, JobTab } from '../../api/jobs';
 /**
  * Os filtros da tela vivem na URL (em português): voltar funciona e um filtro
  * pode ir para os favoritos. Ex.: /vagas?aba=salvas&modelo=remote&nota=700
- * (`encerradas=mostrar` desliga o "Esconder encerradas", que vem ligado)
+ * (`encerradas=mostrar` desliga o "Esconder encerradas", que vem ligado;
+ * `fonte=gupy`, `fonte=email` ou `fonte=sem-email` filtra pela origem)
  */
 
 const TAB_PARAM: Record<JobTab, string> = {
@@ -37,6 +38,7 @@ export function filtersFromParams(params: URLSearchParams): JobFilters {
     hideIncompatible: params.get('incompativeis') === 'ocultar' || undefined,
     // Ligado por padrão; a URL só guarda a exceção (`encerradas=mostrar`).
     hideClosed: params.get('encerradas') !== 'mostrar',
+    source: /^[a-z0-9-]{1,50}$/.test(params.get('fonte') ?? '') ? params.get('fonte')! : undefined,
   };
 }
 
@@ -75,6 +77,7 @@ export function useJobFilters() {
       setHideIncompatible: (hide: boolean) =>
         setParam('incompativeis', hide ? 'ocultar' : undefined),
       setHideClosed: (hide: boolean) => setParam('encerradas', hide ? undefined : 'mostrar'),
+      setSource: (source: string | undefined) => setParam('fonte', source),
       openJob: (id: string) => setParam('vaga', id),
       closeJob: () => setParam('vaga', undefined),
     }),

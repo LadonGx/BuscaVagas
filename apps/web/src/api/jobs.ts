@@ -1,12 +1,13 @@
-import type {
-  ApplicationDetailDto,
-  CreateJobInput,
-  JobDto,
-  JobHistoryDto,
-  JobSort,
-  Page,
-  TriageStatus,
-  WorkModel,
+import {
+  EMAIL_ALERT_SITES,
+  type ApplicationDetailDto,
+  type CreateJobInput,
+  type JobDto,
+  type JobHistoryDto,
+  type JobSort,
+  type Page,
+  type TriageStatus,
+  type WorkModel,
 } from '@busca-vagas/shared';
 import {
   useInfiniteQuery,
@@ -32,6 +33,24 @@ export interface JobFilters {
   hideIncompatible?: boolean;
   /** Esconde as encerradas (salvas e com candidatura ficam). Padrão da tela: ligado. */
   hideClosed?: boolean;
+  /**
+   * De onde veio a vaga: o id de uma fonte ("gupy", "linkedin", "manual"),
+   * `SOURCE_EMAIL` (os alertas por e-mail juntos) ou `SOURCE_NOT_EMAIL`.
+   */
+  source?: string;
+}
+
+/** Filtro de fonte: os três sites dos alertas por e-mail juntos. */
+export const SOURCE_EMAIL = 'email';
+/** Filtro de fonte: tudo menos os alertas por e-mail. */
+export const SOURCE_NOT_EMAIL = 'sem-email';
+const EMAIL_SITES = Object.keys(EMAIL_ALERT_SITES);
+
+function sourceQuery(source: string | undefined) {
+  if (!source) return {};
+  if (source === SOURCE_EMAIL) return { source: EMAIL_SITES };
+  if (source === SOURCE_NOT_EMAIL) return { excludeSource: EMAIL_SITES };
+  return { source: [source] };
 }
 
 export const PAGE_SIZE = 30;
@@ -50,6 +69,7 @@ export function jobListQuery(filters: JobFilters) {
     sort: filters.sort,
     hideIncompatible: filters.hideIncompatible || undefined,
     hideClosed: filters.hideClosed || undefined,
+    ...sourceQuery(filters.source),
     limit: PAGE_SIZE,
   };
 }

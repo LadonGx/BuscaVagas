@@ -350,6 +350,27 @@ export class JobsService {
     };
     if (byUrl.size === 0) return result;
 
+    // Mesma fonte e mesmo id, link diferente: é a mesma vaga (o Indeed manda
+    // um link de rastreio novo a cada e-mail — docs/features/20-email-alerts.md).
+    // Fica com o link que já está no banco.
+    const withId = [...byUrl.values()].filter((job) => job.externalId);
+    if (withId.length > 0) {
+      const sameId = await this.prisma.job.findMany({
+        where: {
+          OR: withId.map((job) => ({ source: job.source, externalId: job.externalId })),
+          url: { not: null },
+        },
+        select: { source: true, externalId: true, url: true },
+      });
+      const urlById = new Map(sameId.map((job) => [`${job.source}\n${job.externalId}`, job.url!]));
+      for (const [url, job] of [...byUrl]) {
+        const known = urlById.get(`${job.source}\n${job.externalId}`);
+        if (!known || known === url) continue;
+        byUrl.delete(url);
+        if (!byUrl.has(known)) byUrl.set(known, { ...job, url: known });
+      }
+    }
+
     // Descartadas que a retenção já apagou: a fonte trouxe de novo, mas você
     // já disse não. Ver docs/features/08-retention.md.
     const urls = [...byUrl.keys()];

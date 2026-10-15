@@ -22,7 +22,11 @@ import { fold, stackFromText } from '@busca-vagas/sources';
  * Plano e tabela de pesos: docs/features/07-preferences-score.md
  */
 
-/** Pesos fixos. Critério sem sinal sai da conta (não vale zero). */
+/**
+ * Pesos fixos. Critério sem sinal (a vaga não informa) vale UNKNOWN_VALUE:
+ * nem prêmio nem castigo. Antes ele saía da conta, e vaga quase sem dados
+ * (alerta por e-mail: só título, empresa e local) chegava a 1000.
+ */
 export const SCORE_WEIGHTS = {
   stack: 35,
   seniority: 25,
@@ -33,6 +37,9 @@ export const SCORE_WEIGHTS = {
 } as const satisfies Partial<Record<ScoreCriterion, number>>;
 
 type WeightedCriterion = keyof typeof SCORE_WEIGHTS;
+
+/** Valor de um critério que a vaga não informa: o meio-termo. */
+export const UNKNOWN_VALUE = 0.5;
 
 /** O que a nota lê de uma vaga. */
 export interface ScorableJob {
@@ -118,7 +125,8 @@ export function scoreJob(job: ScorableJob, prefs: PreferencesValues, now: Date):
   if (incompatible) {
     score = 0;
   } else if (availableWeight > 0) {
-    score = Math.round((MAX_SCORE * points) / availableWeight);
+    const unknownWeight = configuredWeight - availableWeight;
+    score = Math.round((MAX_SCORE * (points + UNKNOWN_VALUE * unknownWeight)) / configuredWeight);
   }
 
   return { score, coverage, reasons: [...blocks, ...reasons], incompatible };

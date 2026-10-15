@@ -24,7 +24,10 @@ import { QueueModule } from './queue/queue.module';
       isGlobal: true,
       // Rodando de apps/api: o .env local tem prioridade sobre o da raiz.
       envFilePath: ['.env', '../../.env'],
-      validate: validateEnv,
+      // Devolve também as variáveis que o schema da API não conhece: o
+      // ConfigModule só copia para process.env o que `validate` devolve, e as
+      // fontes leem a própria configuração de lá (GUPY_*, EMAIL_*...).
+      validate: (raw) => ({ ...raw, ...validateEnv(raw) }),
     }),
     PrismaModule,
     QueueModule,

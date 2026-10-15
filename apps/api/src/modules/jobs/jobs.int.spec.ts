@@ -107,6 +107,8 @@ describeDb('Vagas (integração)', () => {
     expect(await titles('workModel=remote,hybrid')).toEqual(['Backend Node', 'Full Stack']);
     expect(await titles('stack=React')).toEqual(['Frontend React', 'Full Stack']);
     expect(await titles('source=gupy')).toEqual([]);
+    expect(await titles('source=manual&q=node')).toEqual(['Backend Node', 'Full Stack']);
+    expect(await titles('excludeSource=manual')).toEqual([]);
   });
 
   it('pagina por cursor sem pular nem repetir, mesmo apagando entre páginas', async () => {

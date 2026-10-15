@@ -11,8 +11,10 @@ import type { HttpClient } from './http';
  *                   RemoteOK...). Volume alto, pouca curadoria.
  *   company-board   lê o board de uma empresa por vez (Greenhouse, Lever,
  *                   Ashby) e precisa de uma lista de empresas. Precisão alta.
+ *   mailbox         lê os alertas de vaga que chegam no seu e-mail (LinkedIn,
+ *                   Indeed, Glassdoor). Não acessa site nenhum.
  */
-export type SourceKind = 'search' | 'company-board';
+export type SourceKind = 'search' | 'company-board' | 'mailbox';
 
 export interface SourceQuery {
   /**
@@ -58,6 +60,11 @@ export interface JobSource {
   readonly kind: SourceKind;
   /** Prazo próprio, quando o padrão não serve (ex.: uma requisição por vaga). */
   readonly timeoutMs?: number;
+  /**
+   * Intervalo próprio da busca automática, em ms, no lugar de
+   * `DISCOVERY_INTERVAL_HOURS`. 0 = só pelo botão. Ausente = o padrão.
+   */
+  readonly scheduleEveryMs?: number;
 
   fetch(query: SourceQuery, ctx: SourceContext): Promise<SourceResult>;
 }

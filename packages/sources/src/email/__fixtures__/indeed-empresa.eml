@@ -1,0 +1,491 @@
+Authentication-Results: mx.google.com; dkim=pass header.i=@jobalert.indeed.com; spf=pass smtp.mailfrom=jobalert.indeed.com; dmarc=pass header.from=jobalert.indeed.com
+From: =?UTF-8?Q?Indeed?= <donotreply@jobalert.indeed.com>
+To: ana@example.com
+Subject: Novas vagas na empresa TOTVS
+Date: Wed, 14 Oct 2026 20:54:02 +0000
+Message-ID: <exemplo-1792011242000@jobalert.indeed.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="----=_exemplo_busca_vagas"
+
+------=_exemplo_busca_vagas
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+Indeed - Alerta de Vagas
+Novas vagas na empresa TOTVS
+
+Vagas 1-10 de 10 novas vagas
+Ver os resultados no Indeed: https://engage.=
+indeed.com/f/a/exemplo001~~/AAAAAA~/link-de-exemplo-1
+
+
+[Tech] Desenvolvimento de Software Pleno | Protheus (h=C3=ADbrido)
+TOTVS - S=C3=A3o Paulo, SP
+1 dia off por ano (Reset Day); TOTVS | S=C3=A3o =
+Paulo - SP | H=C3=ADbrido. Buscamos um(a) Analista Desenvolvedor(a) ADVPL /=
+ Protheus para integrar nosso time de=E2=80=A6
+h=C3=A1 5 dias
+https://engage.indeed.com/f/a/exemplo002~~/AAAAAA~/link-de-exemplo-2
+
+[Tech] Desenvolvimento de Software Pleno | Afirmativa para Mulheres cis ou =
+trans (Remoto)
+TOTVS - Remoto
+1 dia off por ano (Reset Day); Esta =C3=A9 =
+uma vaga afirmativa exclusiva para mulheres (cis ou trans). Conhecimento =
+s=C3=B3lido e pr=C3=A1tica no desenvolvimento com=E2=80=A6
+h=C3=A1 5 dias
+https://engage.indeed.com/f/a/exemplo003~~/AAAAAA~/link-de-exemplo-3
+
+[Tech] Especialista de Desenvolvimento de Software
+TOTVS - S=C3=A3o Paulo, =
+SP
+Contribuir com o time na an=C3=A1lise, desenvolvimento, =
+manuten=C3=A7=C3=A3o e evolu=C3=A7=C3=A3o cont=C3=ADnua das =
+solu=C3=A7=C3=B5es. 1 dia off por ano (Reset Day); TOTVS | S=C3=A3o Paulo -=
+ SP | H=C3=ADbrido.
+h=C3=A1 7 dias
+https://engage.indeed.=
+com/f/a/exemplo004~~/AAAAAA~/link-de-exemplo-4
+
+[Tech] =
+Coordena=C3=A7=C3=A3o de Engenharia de Software - TI
+TOTVS - S=C3=A3o Paulo, SP
+Promover uma atua=C3=A7=C3=A3o complementar com =
+os Tech Leads, respons=C3=A1veis pelo direcionamento t=C3=A9cnico das =
+solu=C3=A7=C3=B5es. 1 dia off por ano (Reset Day);
+h=C3=A1 5 dias
+https://engage.indeed.com/f/a/exemplo005~~/AAAAAA~/link-de-exemplo-5
+
+[Tech] Pesssoa Desenvolvedora S=C3=AAnior (Delphi)
+TOTVS - Cascavel, PR
+TOTVS | Cascavel - PR | H=C3=ADbrido. Para come=C3=A7ar a impactar =
+positivamente a sociedade, confere os nossos desafios como Pessoa =
+Desenvolvedora Delphi Senior no time=E2=80=A6
+h=C3=A1 7 dias
+https://engage.indeed.com/f/a/exemplo006~~/AAAAAA~/link-de-exemplo-6
+
+[Servi=C3=A7os] Analista de Servi=C3=A7os Junior - Cloud
+TOTVS - Ribeir=C3=A3o Preto, SP
+Garantir um atendimento t=C3=A9cnico =
+eficiente, eficaz e padronizado aos clientes da opera=C3=A7=C3=A3o TOTVS =
+Cloud Linha Consinco, atuando no suporte e na sustenta=C3=A7=C3=A3o =
+de=E2=80=A6
+h=C3=A1 7 dias
+https://engage.indeed.com/f/a/exemplo007~~/AAAAA=
+A~/link-de-exemplo-7
+
+[Cloud] Analista J=C3=BAnior de Servi=C3=A7os Cloud
+TOTVS - S=C3=A3o Paulo, SP
+1 dia off por ano (Reset Day); Conhecimento =
+intermedi=C3=A1rio em sistemas operacionais Windows e Linux; O QUE =
+VOC=C3=8A VAI FAZER.
+h=C3=A1 6 dias
+https://engage.indeed.=
+com/f/a/exemplo008~~/AAAAAA~/link-de-exemplo-8
+
+[Servi=C3=A7os] Analista de=
+ Suporte a Infraestrutura | AIOps
+TOTVS - S=C3=A3o Paulo, SP
+[Servi=C3=A7os] Analista de Suporte a Infraestrutura | AIOps TOTVS | =
+S=C3=A3o Paulo - SP | H=C3=ADbrido Descri=C3=A7=C3=A3o da vaga Dever=C3=A1 =
+atuar como Analista de Neg=C3=B3cios com foco=E2=80=A6
+h=C3=A1 5 dias
+https://engage.indeed.com/f/a/exemplo009~~/AAAAAA~/link-de-exemplo-9
+
+[Suporte] Analista de Suporte T=C3=A9cnico J=C3=BAnior - Framework Protheus
+TOTVS - S=C3=A3o Paulo, SP
+Prestar o suporte t=C3=A9cnico aos nossos =
+clientes provendo solu=C3=A7=C3=B5es com empatia, proatividade, garantindo =
+a satisfa=C3=A7=C3=A3o dos clientes com os produtos e servi=C3=A7os =
+TOTVS=E2=80=A6
+h=C3=A1 6 dias
+https://engage.indeed.=
+com/f/a/exemplo010~~/AAAAAA~/link-de-exemplo-10
+
+[Tech] Pessoa =
+Desenvolvedora Pleno (C#)
+TOTVS - S=C3=A3o Paulo, SP
+Experi=C3=AAncia com SQL Server, incluindo cria=C3=A7=C3=A3o e =
+manuten=C3=A7=C3=A3o de procedures, views e triggers, al=C3=A9m de =
+conhecimento em SQLite. Controle de vers=C3=A3o com Git, TFS;
+h=C3=A1 7 dias
+https://engage.indeed.com/f/a/exemplo011~~/AAAAAA~/link-de-e=
+xemplo-11
+
+
+
+N=C3=A3o compartilhe este e-mail
+Este e-mail cont=C3=A9m links=
+ seguros personalizados para voc=C3=AA. N=C3=A3o compartilhe o e-mail nem =
+os links com outras pessoas.
+
+Sal=C3=A1rios estimados, caso n=C3=A3o =
+dispon=C3=ADveis. Quando um an=C3=BAncio de vagas n=C3=A3o possui =
+informa=C3=A7=C3=B5es salariais, fazemos uma estimativa atrav=C3=A9s de =
+compara=C3=A7=C3=B5es com vagas semelhantes. Sal=C3=A1rios estimados =
+n=C3=A3o s=C3=A3o endossados pelas empresas que oferecem esses cargos e =
+podem ser diferentes dos sal=C3=A1rios reais.
+
+=C2=A9 2026 Indeed Ireland =
+Operations, Ltd.=20
+Indeed Ireland Operations Limited, Block B, Capital =
+Dock, 80 Sir John Rogerson's Quay, Grand Canal Dock, Dublin, 2, D02 HE36=20
+Pol=C3=ADtica de Privacidade: https://engage.indeed.=
+com/f/a/exemplo012~~/AAAAAA~/link-de-exemplo-12=20
+Termos: https://engage.=
+indeed.com/f/a/exemplo013~~/AAAAAA~/link-de-exemplo-13=20
+Central de Ajuda: https://engage.indeed.com/f/a/exemplo014~~/AAAAAA~/link-d=
+e-exemplo-14=20
+Gerenciar alertas de vagas: https://engage.indeed.=
+com/f/a/exemplo015~~/AAAAAA~/link-de-exemplo-15=20
+Cancelar o recebimento =
+desse alerta de vagas: https://engage.indeed.com/f/a/exemplo016~~/AAAAAA~/l=
+ink-de-exemplo-16
+
+------=_exemplo_busca_vagas
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
+w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html lang=3D"pt" =
+xmlns=3D"http://www.w3.org/1999/xhtml" xmlns:v=3D"urn:schemas-microsoft-com=
+:vml" xmlns:o=3D"urn:schemas-microsoft-com:office:office"><head><title>Inde=
+ed Job Alerts Email</title><meta http-equiv=3D"Content-Type" =
+content=3D"text/html; charset=3Dutf-8"/><meta name=3D"viewport" =
+content=3D"width=3Ddevice-width, initial-scale=3D1"/><meta =
+http-equiv=3D"X-UA-Compatible" content=3D"IE=3Dedge"/> </head><body =
+id=3D"body" class=3D"body"><div>Oportunidade para voc=C3=AA na empresa =
+TOTVS!</div><div>=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0=E2=80=8C =C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0 =E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0 =C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0=E2=80=8C =C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0 =E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0 =C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0=E2=80=8C =C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0 =E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0 =E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0 =E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0 =E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0</div><div id=3D"responsive_css_ping"></div><div =
+class=3D"full-wrap"><img alt=3D"" src=3D"https://subscriptions.indeed.=
+com/imgping"/><table class=3D"main" width=3D"100%" cellPadding=3D"0" =
+cellSpacing=3D"0" border=3D"0" role=3D"none"><tr><td class=3D"outer-box" =
+align=3D"center"><table width=3D"100%" cellPadding=3D"0" cellSpacing=3D"0" =
+role=3D"none"><tr><td align=3D"LEFT" class=3D"indeed-logo-left =
+jecl-Icon-wrapper"><a href=3D"https://engage.indeed.=
+com/f/a/exemplo017~~/AAAAAA~/link-de-exemplo-17"><img =
+class=3D"jecl-Icon-img" src=3D"https://subscriptions.indeed.=
+com/static/images/logos/indeed_retina@2x.png" alt=3D"Indeed homepage" =
+width=3D"100"/></a></td><td class=3D"r-y"><a href=3D"https://engage.indeed.=
+com/f/a/exemplo018~~/AAAAAA~/link-de-exemplo-18"><img =
+src=3D"https://subscriptions.indeed.com/static/images/ja/icon-messages-auro=
+ra-updated.png" alt=3D"ver mensagens" width=3D"44"/></a></td><td =
+class=3D"r-z"><a href=3D"https://engage.indeed.com/f/a/exemplo019~~/AAAAAA~=
+/link-de-exemplo-19"><img src=3D"https://subscriptions.indeed.=
+com/static/images/ja/icon-notification-aurora.png" alt=3D"ver =
+notifica=C3=A7=C3=B5es" width=3D"44"/></a></td></tr></table><table =
+class=3D"width-600" width=3D"100%" cellPadding=3D"0" cellSpacing=3D"0" =
+border=3D"0" role=3D"none"><tr><td class=3D"header-container" =
+align=3D"center"><table width=3D"100%" cellPadding=3D"0" cellSpacing=3D"0" =
+data-testid=3D"iconTable" role=3D"none"><tbody><tr><td align=3D"CENTER" =
+class=3D"company-banner-icon jecl-Icon-wrapper"><img =
+class=3D"jecl-Icon-img" src=3D"https://d2q79iu7y748jz.cloudfront.=
+net/s/_headerimage/980x200/1729b4ecd3fa1521be2134a69157ebf9" alt=3D"" =
+aria-hidden=3D"true" width=3D"100"/></td></tr></tbody></table></td></tr><tr=
+><td class=3D"company-block-wrapper"><table class=3D"company-block" =
+dir=3D"ltr" width=3D"100%" cellPadding=3D"0" cellSpacing=3D"0"><tr><td><tab=
+le width=3D"100%" cellPadding=3D"0" cellSpacing=3D"0"><tr><td =
+align=3D"left"><a href=3D"" class=3D"jecl-TextLink-text" =
+rel=3D"noreferrer"></a></td></tr><tr><td class=3D"companyReview"></td></tr>=
+</table></td></tr></table></td></tr><tr><td class=3D"content-box"><table =
+width=3D"100%" cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" =
+role=3D"none"><tr><td><table class=3D"job-alerts" width=3D"100%" =
+cellPadding=3D"0" cellSpacing=3D"0"><tr><td class=3D"section-header"><table=
+ width=3D"100%" cellPadding=3D"0" cellSpacing=3D"0"><tr><td><table =
+width=3D"100%" cellPadding=3D"0" cellSpacing=3D"0"><tr><td><h1 =
+align=3D"center" class=3D"r-v">Novas vagas na empresa =
+TOTVS</h1></td></tr><tr><td><p class=3D"r-11" align=3D"center">Filtros: =
+localiza=C3=A7=C3=A3o exata, TOTVS</p></td></tr><tr><td><p class=3D"r-12" =
+align=3D"center">Estes an=C3=BAncios de vagas correspondem ao alerta de =
+vagas salvo &sup1;</p></td></tr><tr><td>&nbsp;</td></tr></table></td></tr><=
+/table></td></tr></table></td></tr></table></td></tr><tr><td =
+class=3D"r-w"><table width=3D"100%" cellPadding=3D"0" cellSpacing=3D"0" =
+role=3D"presentation" border=3D"0"><tr><td align=3D"left" valign=3D"top" =
+class=3D"pb-24"><a href=3D"https://engage.indeed.com/f/a/exemplo002~~/AAAAA=
+A~/link-de-exemplo-2"><table cellPadding=3D"0" cellSpacing=3D"0" =
+border=3D"0" align=3D"left" width=3D"100%" role=3D"presentation"><tr><td =
+align=3D"left" valign=3D"top"><h2><a href=3D"https://engage.indeed.=
+com/f/a/exemplo002~~/AAAAAA~/link-de-exemplo-2" class=3D"strong-text-link">=
+[Tech] Desenvolvimento de Software Pleno | Protheus =
+(h=C3=ADbrido)</a></h2></td></tr><tr><td align=3D"left" =
+valign=3D"top"><table cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" =
+role=3D"presentation"><tr><td>TOTVS</td><td><strong>4.=
+2</strong></td><td><img width=3D"20" alt=3D"Pontua=C3=A7=C3=A3o: 4.2/5." =
+src=3D"https://prod.statics.indeed.com/eml/assets/images/icons/Star_neutral=
+_whitebg.png"/></td></tr></table></td></tr><tr><td align=3D"left" =
+valign=3D"top">S=C3=A3o Paulo, SP</td></tr><tr><td align=3D"left" =
+valign=3D"top">1 dia off por ano (Reset Day); TOTVS | S=C3=A3o Paulo - SP |=
+ H=C3=ADbrido. Buscamos um(a) Analista Desenvolvedor(a) ADVPL / Protheus =
+para integrar nosso time de=E2=80=A6</td></tr><tr><td align=3D"left" =
+valign=3D"top">h=C3=A1 5 dias</td></tr></table></a></td></tr><tr><td =
+align=3D"left" valign=3D"top" class=3D"pb-24"><a href=3D"https://engage.=
+indeed.com/f/a/exemplo003~~/AAAAAA~/link-de-exemplo-3"><table =
+cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" align=3D"left" =
+width=3D"100%" role=3D"presentation"><tr><td align=3D"left" =
+valign=3D"top"><h2><a href=3D"https://engage.indeed.=
+com/f/a/exemplo003~~/AAAAAA~/link-de-exemplo-3" class=3D"strong-text-link">=
+[Tech] Desenvolvimento de Software Pleno | Afirmativa para Mulheres cis ou =
+trans (Remoto)</a></h2></td></tr><tr><td align=3D"left" =
+valign=3D"top"><table cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" =
+role=3D"presentation"><tr><td>TOTVS</td><td><strong>4.=
+2</strong></td><td><img width=3D"20" alt=3D"Pontua=C3=A7=C3=A3o: 4.2/5." =
+src=3D"https://prod.statics.indeed.com/eml/assets/images/icons/Star_neutral=
+_whitebg.png"/></td></tr></table></td></tr><tr><td align=3D"left" =
+valign=3D"top">Remoto</td></tr><tr><td align=3D"left" valign=3D"top">1 dia =
+off por ano (Reset Day); Esta =C3=A9 uma vaga afirmativa exclusiva para =
+mulheres (cis ou trans). Conhecimento s=C3=B3lido e pr=C3=A1tica no =
+desenvolvimento com=E2=80=A6</td></tr><tr><td align=3D"left" =
+valign=3D"top">h=C3=A1 5 dias</td></tr></table></a></td></tr><tr><td =
+align=3D"left" valign=3D"top" class=3D"pb-24"><a href=3D"https://engage.=
+indeed.com/f/a/exemplo004~~/AAAAAA~/link-de-exemplo-4"><table =
+cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" align=3D"left" =
+width=3D"100%" role=3D"presentation"><tr><td align=3D"left" =
+valign=3D"top"><h2><a href=3D"https://engage.indeed.=
+com/f/a/exemplo004~~/AAAAAA~/link-de-exemplo-4" class=3D"strong-text-link">=
+[Tech] Especialista de Desenvolvimento de Software</a></h2></td></tr><tr><t=
+d align=3D"left" valign=3D"top"><table cellPadding=3D"0" cellSpacing=3D"0" =
+border=3D"0" role=3D"presentation"><tr><td>TOTVS</td><td><strong>4.=
+2</strong></td><td><img width=3D"20" alt=3D"Pontua=C3=A7=C3=A3o: 4.2/5." =
+src=3D"https://prod.statics.indeed.com/eml/assets/images/icons/Star_neutral=
+_whitebg.png"/></td></tr></table></td></tr><tr><td align=3D"left" =
+valign=3D"top">S=C3=A3o Paulo, SP</td></tr><tr><td align=3D"left" =
+valign=3D"top">Contribuir com o time na an=C3=A1lise, desenvolvimento, =
+manuten=C3=A7=C3=A3o e evolu=C3=A7=C3=A3o cont=C3=ADnua das =
+solu=C3=A7=C3=B5es. 1 dia off por ano (Reset Day); TOTVS | S=C3=A3o Paulo -=
+ SP | H=C3=ADbrido.</td></tr><tr><td align=3D"left" valign=3D"top">h=C3=A1 =
+7 dias</td></tr></table></a></td></tr><tr><td align=3D"left" valign=3D"top"=
+ class=3D"pb-24"><a href=3D"https://engage.indeed.com/f/a/exemplo005~~/AAAA=
+AA~/link-de-exemplo-5"><table cellPadding=3D"0" cellSpacing=3D"0" =
+border=3D"0" align=3D"left" width=3D"100%" role=3D"presentation"><tr><td =
+align=3D"left" valign=3D"top"><h2><a href=3D"https://engage.indeed.=
+com/f/a/exemplo005~~/AAAAAA~/link-de-exemplo-5" class=3D"strong-text-link">=
+[Tech] Coordena=C3=A7=C3=A3o de Engenharia de Software - =
+TI</a></h2></td></tr><tr><td align=3D"left" valign=3D"top"><table =
+cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" role=3D"presentation"><tr>=
+<td>TOTVS</td><td><strong>4.2</strong></td><td><img width=3D"20" =
+alt=3D"Pontua=C3=A7=C3=A3o: 4.2/5." src=3D"https://prod.statics.indeed.=
+com/eml/assets/images/icons/Star_neutral_whitebg.png"/></td></tr></table></=
+td></tr><tr><td align=3D"left" valign=3D"top">S=C3=A3o Paulo, =
+SP</td></tr><tr><td align=3D"left" valign=3D"top">Promover uma =
+atua=C3=A7=C3=A3o complementar com os Tech Leads, respons=C3=A1veis pelo =
+direcionamento t=C3=A9cnico das solu=C3=A7=C3=B5es. 1 dia off por ano =
+(Reset Day);</td></tr><tr><td align=3D"left" valign=3D"top">h=C3=A1 5 =
+dias</td></tr></table></a></td></tr><tr><td align=3D"left" valign=3D"top" =
+class=3D"pb-24"><a href=3D"https://engage.indeed.com/f/a/exemplo006~~/AAAAA=
+A~/link-de-exemplo-6"><table cellPadding=3D"0" cellSpacing=3D"0" =
+border=3D"0" align=3D"left" width=3D"100%" role=3D"presentation"><tr><td =
+align=3D"left" valign=3D"top"><h2><a href=3D"https://engage.indeed.=
+com/f/a/exemplo006~~/AAAAAA~/link-de-exemplo-6" class=3D"strong-text-link">=
+[Tech] Pesssoa Desenvolvedora S=C3=AAnior (Delphi)</a></h2></td></tr><tr><t=
+d align=3D"left" valign=3D"top"><table cellPadding=3D"0" cellSpacing=3D"0" =
+border=3D"0" role=3D"presentation"><tr><td>TOTVS</td><td><strong>4.=
+2</strong></td><td><img width=3D"20" alt=3D"Pontua=C3=A7=C3=A3o: 4.2/5." =
+src=3D"https://prod.statics.indeed.com/eml/assets/images/icons/Star_neutral=
+_whitebg.png"/></td></tr></table></td></tr><tr><td align=3D"left" =
+valign=3D"top">Cascavel, PR</td></tr><tr><td align=3D"left" =
+valign=3D"top">TOTVS | Cascavel - PR | H=C3=ADbrido. Para come=C3=A7ar a =
+impactar positivamente a sociedade, confere os nossos desafios como Pessoa =
+Desenvolvedora Delphi Senior no time=E2=80=A6</td></tr><tr><td =
+align=3D"left" valign=3D"top">h=C3=A1 7 dias</td></tr></table></a></td></tr=
+><tr><td align=3D"left" valign=3D"top" class=3D"pb-24"><a =
+href=3D"https://engage.indeed.com/f/a/exemplo007~~/AAAAAA~/link-de-exemplo-=
+7"><table cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" align=3D"left" =
+width=3D"100%" role=3D"presentation"><tr><td align=3D"left" =
+valign=3D"top"><h2><a href=3D"https://engage.indeed.=
+com/f/a/exemplo007~~/AAAAAA~/link-de-exemplo-7" class=3D"strong-text-link">=
+[Servi=C3=A7os] Analista de Servi=C3=A7os Junior - Cloud</a></h2></td></tr>=
+<tr><td align=3D"left" valign=3D"top"><table cellPadding=3D"0" =
+cellSpacing=3D"0" border=3D"0" role=3D"presentation"><tr><td>TOTVS</td><td>=
+<strong>4.2</strong></td><td><img width=3D"20" alt=3D"Pontua=C3=A7=C3=A3o: =
+4.2/5." src=3D"https://prod.statics.indeed.com/eml/assets/images/icons/Star=
+_neutral_whitebg.png"/></td></tr></table></td></tr><tr><td align=3D"left" =
+valign=3D"top">Ribeir=C3=A3o Preto, SP</td></tr><tr><td align=3D"left" =
+valign=3D"top">Garantir um atendimento t=C3=A9cnico eficiente, eficaz e =
+padronizado aos clientes da opera=C3=A7=C3=A3o TOTVS Cloud Linha Consinco, =
+atuando no suporte e na sustenta=C3=A7=C3=A3o de=E2=80=A6</td></tr><tr><td =
+align=3D"left" valign=3D"top">h=C3=A1 7 dias</td></tr></table></a></td></tr=
+><tr><td align=3D"left" valign=3D"top" class=3D"pb-24"><a =
+href=3D"https://engage.indeed.com/f/a/exemplo008~~/AAAAAA~/link-de-exemplo-=
+8"><table cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" align=3D"left" =
+width=3D"100%" role=3D"presentation"><tr><td align=3D"left" =
+valign=3D"top"><h2><a href=3D"https://engage.indeed.=
+com/f/a/exemplo008~~/AAAAAA~/link-de-exemplo-8" class=3D"strong-text-link">=
+[Cloud] Analista J=C3=BAnior de Servi=C3=A7os Cloud</a></h2></td></tr><tr><=
+td align=3D"left" valign=3D"top"><table cellPadding=3D"0" cellSpacing=3D"0"=
+ border=3D"0" role=3D"presentation"><tr><td>TOTVS</td><td><strong>4.=
+2</strong></td><td><img width=3D"20" alt=3D"Pontua=C3=A7=C3=A3o: 4.2/5." =
+src=3D"https://prod.statics.indeed.com/eml/assets/images/icons/Star_neutral=
+_whitebg.png"/></td></tr></table></td></tr><tr><td align=3D"left" =
+valign=3D"top">S=C3=A3o Paulo, SP</td></tr><tr><td align=3D"left" =
+valign=3D"top">1 dia off por ano (Reset Day); Conhecimento =
+intermedi=C3=A1rio em sistemas operacionais Windows e Linux; O QUE =
+VOC=C3=8A VAI FAZER.</td></tr><tr><td align=3D"left" valign=3D"top">h=C3=A1=
+ 6 dias</td></tr></table></a></td></tr><tr><td align=3D"left" =
+valign=3D"top" class=3D"pb-24"><a href=3D"https://engage.indeed.=
+com/f/a/exemplo009~~/AAAAAA~/link-de-exemplo-9"><table cellPadding=3D"0" =
+cellSpacing=3D"0" border=3D"0" align=3D"left" width=3D"100%" =
+role=3D"presentation"><tr><td align=3D"left" valign=3D"top"><h2><a =
+href=3D"https://engage.indeed.com/f/a/exemplo009~~/AAAAAA~/link-de-exemplo-=
+9" class=3D"strong-text-link">[Servi=C3=A7os] Analista de Suporte a =
+Infraestrutura | AIOps</a></h2></td></tr><tr><td align=3D"left" =
+valign=3D"top"><table cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" =
+role=3D"presentation"><tr><td>TOTVS</td><td><strong>4.=
+2</strong></td><td><img width=3D"20" alt=3D"Pontua=C3=A7=C3=A3o: 4.2/5." =
+src=3D"https://prod.statics.indeed.com/eml/assets/images/icons/Star_neutral=
+_whitebg.png"/></td></tr></table></td></tr><tr><td align=3D"left" =
+valign=3D"top">S=C3=A3o Paulo, SP</td></tr><tr><td align=3D"left" =
+valign=3D"top">[Servi=C3=A7os] Analista de Suporte a Infraestrutura | AIOps=
+ TOTVS | S=C3=A3o Paulo - SP | H=C3=ADbrido Descri=C3=A7=C3=A3o da vaga =
+Dever=C3=A1 atuar como Analista de Neg=C3=B3cios com =
+foco=E2=80=A6</td></tr><tr><td align=3D"left" valign=3D"top">h=C3=A1 5 =
+dias</td></tr></table></a></td></tr><tr><td align=3D"left" valign=3D"top" =
+class=3D"pb-24"><a href=3D"https://engage.indeed.com/f/a/exemplo010~~/AAAAA=
+A~/link-de-exemplo-10"><table cellPadding=3D"0" cellSpacing=3D"0" =
+border=3D"0" align=3D"left" width=3D"100%" role=3D"presentation"><tr><td =
+align=3D"left" valign=3D"top"><h2><a href=3D"https://engage.indeed.=
+com/f/a/exemplo010~~/AAAAAA~/link-de-exemplo-10" class=3D"strong-text-link"=
+>[Suporte] Analista de Suporte T=C3=A9cnico J=C3=BAnior - Framework =
+Protheus</a></h2></td></tr><tr><td align=3D"left" valign=3D"top"><table =
+cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" role=3D"presentation"><tr>=
+<td>TOTVS</td><td><strong>4.2</strong></td><td><img width=3D"20" =
+alt=3D"Pontua=C3=A7=C3=A3o: 4.2/5." src=3D"https://prod.statics.indeed.=
+com/eml/assets/images/icons/Star_neutral_whitebg.png"/></td></tr></table></=
+td></tr><tr><td align=3D"left" valign=3D"top">S=C3=A3o Paulo, =
+SP</td></tr><tr><td align=3D"left" valign=3D"top">Prestar o suporte =
+t=C3=A9cnico aos nossos clientes provendo solu=C3=A7=C3=B5es com empatia, =
+proatividade, garantindo a satisfa=C3=A7=C3=A3o dos clientes com os =
+produtos e servi=C3=A7os TOTVS=E2=80=A6</td></tr><tr><td align=3D"left" =
+valign=3D"top">h=C3=A1 6 dias</td></tr></table></a></td></tr><tr><td =
+align=3D"left" valign=3D"top" class=3D"pb-24"><a href=3D"https://engage.=
+indeed.com/f/a/exemplo011~~/AAAAAA~/link-de-exemplo-11"><table =
+cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" align=3D"left" =
+width=3D"100%" role=3D"presentation"><tr><td align=3D"left" =
+valign=3D"top"><h2><a href=3D"https://engage.indeed.=
+com/f/a/exemplo011~~/AAAAAA~/link-de-exemplo-11" class=3D"strong-text-link"=
+>[Tech] Pessoa Desenvolvedora Pleno (C#)</a></h2></td></tr><tr><td =
+align=3D"left" valign=3D"top"><table cellPadding=3D"0" cellSpacing=3D"0" =
+border=3D"0" role=3D"presentation"><tr><td>TOTVS</td><td><strong>4.=
+2</strong></td><td><img width=3D"20" alt=3D"Pontua=C3=A7=C3=A3o: 4.2/5." =
+src=3D"https://prod.statics.indeed.com/eml/assets/images/icons/Star_neutral=
+_whitebg.png"/></td></tr></table></td></tr><tr><td align=3D"left" =
+valign=3D"top">S=C3=A3o Paulo, SP</td></tr><tr><td align=3D"left" =
+valign=3D"top">Experi=C3=AAncia com SQL Server, incluindo cria=C3=A7=C3=A3o=
+ e manuten=C3=A7=C3=A3o de procedures, views e triggers, al=C3=A9m de =
+conhecimento em SQLite. Controle de vers=C3=A3o com Git, =
+TFS;</td></tr><tr><td align=3D"left" valign=3D"top">h=C3=A1 7 =
+dias</td></tr></table></a></td></tr></table></td></tr><tr><td =
+class=3D"r-x"><table cellPadding=3D"0" cellSpacing=3D"0"><tr><td =
+valign=3D"top"><table cellPadding=3D"0" cellSpacing=3D"0" border=3D"0" =
+align=3D"center" width=3D"100%" role=3D"presentation"><tr><td =
+align=3D"center"><table class=3D"width-100" cellPadding=3D"0" =
+cellSpacing=3D"0" border=3D"0" align=3D"center" role=3D"presentation"><tr><=
+td align=3D"center" class=3D"stack cta center-align-text"><a =
+href=3D"https://engage.indeed.com/f/a/exemplo001~~/AAAAAA~/link-de-exemplo-=
+1" class=3D"primary-button" data-eml-test-id=3D"view-all-button">
+<span>Ver todas as vagas
+</span></a></td></tr></table></td></tr></table></t=
+d></tr><tr><td class=3D"r-a"><p align=3D"center">Ver empregos: <a =
+href=3D"https://engage.indeed.com/f/a/exemplo020~~/AAAAAA~/link-de-exemplo-=
+20">desde ontem</a> - <a href=3D"https://engage.indeed.=
+com/f/a/exemplo021~~/AAAAAA~/link-de-exemplo-21">nos =C3=BAltimos 7 =
+dias</a></p></td></tr></table></td></tr></table><table =
+role=3D"none"><tr><td><table class=3D"hide-when-desktop" width=3D"100%" =
+cellPadding=3D"0" cellSpacing=3D"0" role=3D"presentation" =
+border=3D"0"><tbody><tr><td><table role=3D"none"><tbody><tr><td><table =
+role=3D"none"><tbody><tr><td><img width=3D"83" height=3D"66" =
+src=3D"https://subscriptions.indeed.com/static/images/ja/magua_device_usage=
+1.png" alt=3D"" aria-hidden=3D"true"/></td><td><table =
+role=3D"none"><tbody><tr><td aria-level=3D"2" role=3D"heading">Com o =
+aplicativo, voc=C3=AA n=C3=A3o perde atualiza=C3=A7=C3=B5es importantes das=
+ vagas</td></tr><tr><td>O aplicativo do Indeed para dispositivos =
+m=C3=B3veis facilita sua busca de emprego, com notifica=C3=A7=C3=B5es =
+oportunas e recomenda=C3=A7=C3=B5es personalizadas.</td></tr><tr><td><table=
+ role=3D"none"><tbody><tr><td><table role=3D"none"><tbody><tr><td><a =
+href=3D"https://engage.indeed.com/f/a/exemplo022~~/AAAAAA~/link-de-exemplo-=
+22"><img width=3D"132" height=3D"44" src=3D"https://subscriptions.indeed.=
+com/static/images/ja/magua_app_store.png" alt=3D"Baixar na App =
+Store"/></a></td><td><a href=3D"https://engage.indeed.=
+com/f/a/exemplo022~~/AAAAAA~/link-de-exemplo-22"><img width=3D"149" =
+height=3D"44" src=3D"https://subscriptions.indeed.com/static/images/ja/magu=
+a_google_play.png" alt=3D"Baixe no Google Play"/></a></td></tr></tbody></ta=
+ble></td></tr></tbody></table></td></tr></tbody></table></td></tr></tbody><=
+/table></td></tr></tbody></table></td></tr></tbody></table></td></tr></tabl=
+e><table class=3D"width-550" width=3D"100%" cellPadding=3D"0" =
+cellSpacing=3D"0" role=3D"none"><tr><td class=3D"footer-box"><table =
+cellPadding=3D"0" cellSpacing=3D"0" align=3D"center" role=3D"none"><tr><td =
+align=3D"center"><a href=3D"https://engage.indeed.com/f/a/exemplo023~~/AAAA=
+AA~/link-de-exemplo-23">Editar este Alerta de Vagas</a></td></tr><tr><td =
+class=3D"jecl-Disclaimer-text" align=3D"center"><strong role=3D"heading" =
+aria-level=3D"3">N=C3=A3o compartilhe este e-mail</strong></td></tr><tr><td=
+ class=3D"jecl-Disclaimer-text" align=3D"center">Este e-mail cont=C3=A9m =
+links seguros personalizados para voc=C3=AA. N=C3=A3o compartilhe o e-mail =
+nem os links com outras pessoas.</td></tr><tr><td class=3D"jecl-Disclaimer-=
+text" align=3D"center">Sal=C3=A1rios estimados, caso n=C3=A3o =
+dispon=C3=ADveis. Quando um an=C3=BAncio de vagas n=C3=A3o possui =
+informa=C3=A7=C3=B5es salariais, fazemos uma estimativa atrav=C3=A9s de =
+compara=C3=A7=C3=B5es com vagas semelhantes. Sal=C3=A1rios estimados =
+n=C3=A3o s=C3=A3o endossados pelas empresas que oferecem esses cargos e =
+podem ser diferentes dos sal=C3=A1rios reais.</td></tr><tr><td =
+class=3D"jecl-Disclaimer-text" align=3D"center">&sup1; Aqui s=C3=A3o =
+exibidos an=C3=BAncios de vagas que correspondem ao alerta de vagas que =
+voc=C3=AA criou. O Indeed pode ser remunerado por essas empresas, o que =
+ajuda a mant=C3=AA-lo gratuito para os candidatos. O Indeed classifica os =
+an=C3=BAncios de vagas com base em uma combina=C3=A7=C3=A3o entre as =
+campanhas das empresas e a relev=C3=A2ncia da vaga, relacionada aos termos =
+de busca usados e outras atividades suas no Indeed. Para obter mais =
+informa=C3=A7=C3=B5es, consulte os <a class=3D"terms-link" =
+href=3D"https://engage.indeed.com/f/a/exemplo013~~/AAAAAA~/link-de-exemplo-=
+13">Termos de Servi=C3=A7o do Indeed</a>.</td></tr></table><table =
+class=3D"jecl-Footer" width=3D"100%" cellPadding=3D"0" cellSpacing=3D"0" =
+role=3D"none" data-testid=3D"footer"><tr><td class=3D"r-7" lang=3D"en" =
+align=3D"center">=C2=A9 2026 Indeed Ireland Operations, Ltd.=
+</td></tr><tr><td class=3D"r-8" lang=3D"en" align=3D"center">Indeed Ireland=
+ Operations Limited, Block B, Capital Dock, 80 Sir John Rogerson's Quay, =
+Grand Canal Dock, Dublin, 2, D02 HE36</td></tr><tr><td class=3D"r-6" =
+align=3D"center" role=3D"list"><span role=3D"listitem"><a =
+href=3D"https://engage.indeed.com/f/a/exemplo012~~/AAAAAA~/link-de-exemplo-=
+12" title=3D"Pol=C3=ADtica de Privacidade" class=3D"r-0">Pol=C3=ADtica de =
+Privacidade</a><span class=3D"r-5"> | </span></span><span =
+role=3D"listitem"><a href=3D"https://engage.indeed.com/f/a/exemplo013~~/AAA=
+AAA~/link-de-exemplo-13" title=3D"Termos" class=3D"r-1">Termos</a><span =
+class=3D"r-5"> | </span></span><span role=3D"listitem"><a =
+href=3D"https://engage.indeed.com/f/a/exemplo014~~/AAAAAA~/link-de-exemplo-=
+14" title=3D"Central de Ajuda" class=3D"r-2">Central de =
+Ajuda</a></span><span role=3D"listitem"><br/><a href=3D"https://engage.=
+indeed.com/f/a/exemplo015~~/AAAAAA~/link-de-exemplo-15" title=3D"Gerenciar =
+alertas de vagas" class=3D"r-3">Gerenciar alertas de vagas</a></span><span =
+role=3D"listitem"><span class=3D"r-5"> | </span><a href=3D"https://engage.=
+indeed.com/f/a/exemplo016~~/AAAAAA~/link-de-exemplo-16" title=3D"Cancelar o=
+ recebimento desse alerta de vagas" class=3D"r-4">Cancelar o recebimento =
+desse alerta de vagas</a></span></td></tr></table></td></tr></table></td></=
+tr></table><img alt=3D"" src=3D"https://subscriptions.indeed.=
+com/imgping"/></div>
+<img border=3D"0" width=3D"1" height=3D"1" alt=3D"" src=3D"https://engage.=
+indeed.com/f/a/exemplo024~~/AAAAAA~/link-de-exemplo-24">
+</body></html>
+
+------=_exemplo_busca_vagas--

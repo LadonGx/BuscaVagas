@@ -14,8 +14,32 @@ const HOUR_MS = 60 * 60 * 1000;
 const FIRST_RUN_DELAY_MS = 60 * 1000;
 
 /**
- * Varredura automática a cada `DISCOVERY_INTERVAL_HOURS` horas, enquanto a
- * API estiver rodando. Usa os agendadores do BullMQ, que ficam no Redis.
+ * A agenda que a configuração pede. Cada fonte pode ter o próprio intervalo
+ * (o e-mail confere a cada hora); as outras seguem `DISCOVERY_INTERVAL_HOURS`.
+ * 0 = só pelo botão.
+ */
+export function desiredSchedules(
+  sources: readonly Pick<JobSource, 'id' | 'scheduleEveryMs'>[],
+  hours: number,
+  terms: string[],
+): ScheduleSpec<ScanJobData>[] {
+  return sources.flatMap((source) => {
+    const everyMs = source.scheduleEveryMs ?? hours * HOUR_MS;
+    return everyMs > 0
+      ? [
+          {
+            id: schedulerId(source.id),
+            everyMs,
+            data: { sourceId: source.id, terms, trigger: 'schedule' as const },
+          },
+        ]
+      : [];
+  });
+}
+
+/**
+ * Varredura automática a cada `DISCOVERY_INTERVAL_HOURS` horas (ou no
+ * intervalo próprio da fonte, `scheduleEveryMs`), enquanto a API estiver rodando. Usa os agendadores do BullMQ, que ficam no Redis.
  *
  * Na subida, compara a agenda que existe com a configuração e só mexe no que
  * mudou (ver `planSchedules`). Roda em segundo plano: Redis fora do ar não
@@ -42,14 +66,7 @@ export class DiscoveryScheduler implements OnApplicationBootstrap {
     const hours = this.config.get('DISCOVERY_INTERVAL_HOURS', { infer: true });
     const terms = this.config.get('DISCOVERY_TERMS', { infer: true });
 
-    const desired: ScheduleSpec<ScanJobData>[] =
-      hours > 0
-        ? this.sources.map((source) => ({
-            id: schedulerId(source.id),
-            everyMs: hours * HOUR_MS,
-            data: { sourceId: source.id, terms, trigger: 'schedule' },
-          }))
-        : [];
+    const desired = desiredSchedules(this.sources, hours, terms);
 
     const existing = (await this.queue.getJobSchedulers(0, -1)).map((scheduler) => ({
       id: scheduler.key,
@@ -76,11 +93,21 @@ export class DiscoveryScheduler implements OnApplicationBootstrap {
         `Agenda atualizada — criadas/alteradas: [${upserted.join(', ')}], removidas: [${plan.remove.join(', ')}]`,
       );
     }
+    const own = this.sources.filter((source) => source.scheduleEveryMs !== undefined);
+    const regular = this.sources.filter((source) => source.scheduleEveryMs === undefined);
     this.logger.log(
       hours > 0
-        ? `Varredura automática a cada ${hours}h: ${this.sources.map((s) => s.id).join(', ') || '(nenhuma fonte)'}`
+        ? `Varredura automática a cada ${hours}h: ${regular.map((s) => s.id).join(', ') || '(nenhuma fonte)'}`
         : 'Varredura automática desligada (DISCOVERY_INTERVAL_HOURS=0)',
     );
+    for (const source of own) {
+      const minutes = Math.round((source.scheduleEveryMs ?? 0) / 60_000);
+      this.logger.log(
+        minutes > 0
+          ? `${source.id}: confere a cada ${minutes} min`
+          : `${source.id}: só pelo "Buscar agora"`,
+      );
+    }
 
     return { upserted, removed: plan.remove };
   }

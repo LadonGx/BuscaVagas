@@ -163,6 +163,11 @@ Fontes → Empresas acompanhadas** (colar o link do board ou escolher no
 diretório). O `.env` só foi lido na primeira subida, para copiar a lista que já
 existia.
 
+**"Alertas por e-mail" desligado ou com erro em Preferências → Fontes.** Falta
+`EMAIL_USER`/`EMAIL_PASSWORD` no `.env` (no Gmail, uma senha de app), ou o
+marcador `BuscaVagas` não existe. Passo a passo em
+[`docs/features/20-email-alerts.md`](docs/features/20-email-alerts.md).
+
 **Erro de tipo do Prisma depois de uma migration** (`Property 'score' does not
 exist...`). Desde o Prisma 7, `migrate dev` não regenera o client. `pnpm dev:api`
 e `pnpm test` já rodam `pnpm db:generate` antes; em outro caso, rode-o à mão.

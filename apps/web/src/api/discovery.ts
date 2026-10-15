@@ -1,5 +1,7 @@
 import {
+  EMAIL_ALERT_SITES,
   MANUAL_SOURCE,
+  type EmailAlertSite,
   type Page,
   type ScanResultDto,
   type SourceInfoDto,
@@ -14,6 +16,7 @@ import {
 } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { api } from './client';
+import { SOURCE_EMAIL, SOURCE_NOT_EMAIL } from './jobs';
 import { keys } from './keys';
 
 /** Enquanto alguma fonte roda, confere a cada 3 s; parada, a cada minuto. */
@@ -29,16 +32,46 @@ export function useSources() {
   });
 }
 
-/** Nome de exibição da fonte de uma vaga ("gupy" → "Gupy"; manual → "cadastro manual"). */
+/**
+ * Nome de exibição da fonte de uma vaga ("gupy" → "Gupy"; manual → "cadastro
+ * manual"; vaga de alerta por e-mail → o site: "LinkedIn").
+ */
 export function useSourceName(): (sourceId: string) => string {
   const { data: sources } = useSources();
   return (sourceId) => {
     if (sourceId === MANUAL_SOURCE) return 'cadastro manual';
+    if (sourceId in EMAIL_ALERT_SITES) return EMAIL_ALERT_SITES[sourceId as EmailAlertSite];
     return (
       sources?.find((source) => source.id === sourceId)?.displayName ??
       sourceId.charAt(0).toUpperCase() + sourceId.slice(1)
     );
   };
+}
+
+export interface SourceOption {
+  value: string;
+  label: string;
+}
+
+/**
+ * Opções do filtro "Fonte" da tela de Vagas: as fontes de busca e de boards,
+ * os alertas por e-mail (juntos e por site), "tudo menos e-mail" e o
+ * cadastro manual.
+ */
+export function useSourceOptions(): SourceOption[] {
+  const { data: sources } = useSources();
+  return [
+    ...(sources ?? [])
+      .filter((source) => source.kind !== 'mailbox')
+      .map((source) => ({ value: source.id, label: source.displayName })),
+    { value: SOURCE_EMAIL, label: 'Alertas por e-mail' },
+    ...Object.entries(EMAIL_ALERT_SITES).map(([id, name]) => ({
+      value: id,
+      label: `${name} (e-mail)`,
+    })),
+    { value: SOURCE_NOT_EMAIL, label: 'Tudo menos e-mail' },
+    { value: MANUAL_SOURCE, label: 'Cadastro manual' },
+  ];
 }
 
 /** Histórico de buscas, da mais recente para trás. `null` = todas as fontes. */

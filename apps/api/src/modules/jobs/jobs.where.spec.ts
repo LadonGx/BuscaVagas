@@ -30,6 +30,16 @@ describe('buildJobWhere', () => {
     });
   });
 
+  it('fonte: só estas ou todas menos estas', () => {
+    expect(buildJobWhere({ source: ['gupy'], excludeSource: ['linkedin', 'indeed'] })).toEqual({
+      AND: [
+        defaultTriage,
+        { source: { in: ['gupy'] } },
+        { source: { notIn: ['linkedin', 'indeed'] } },
+      ],
+    });
+  });
+
   it('idade da vaga usa firstSeenAt quando não há postedAt', () => {
     const now = new Date('2026-10-09T12:00:00.000Z');
     const since = new Date('2026-10-02T12:00:00.000Z');

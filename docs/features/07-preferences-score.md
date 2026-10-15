@@ -63,13 +63,18 @@ informa o dado (ou o critério está desligado):
 | Idade da vaga      | 10   | até 7 dias = 1, cai até 0 em `maxAgeDays` (usa `postedAt`, senão a data de entrada)                                       |
 | Salário            | 10   | só quando a vaga informa em BRL: máximo ≥ seu mínimo = 1, abaixo = proporcional                                           |
 
-**Nota = 1000 × Σ(peso × valor) / Σ(peso dos critérios com sinal).**
-Critério sem sinal sai da conta em vez de valer zero: uma vaga da Gupy sem
-salário não perde pontos por isso.
+**Nota = 1000 × (Σ(peso × valor) + 0,5 × Σ(peso sem sinal)) / Σ(peso dos critérios ligados).**
+Critério sem sinal vale o meio-termo (0,5): uma vaga da Gupy sem salário não
+perde pontos como se o salário fosse ruim, mas também não ganha como se fosse
+bom. Até a Fase 3 ele saía da conta, e vaga quase sem dados (alerta por e-mail,
+[20](20-email-alerts.md): só título, empresa e local) chegava a 1000. Com tudo
+em branco, a nota fica em 500; batendo em tudo o que informa, uma vaga de
+alerta fica perto de 750–800. A migration `20261020120000_rescore_unknown_neutral`
+manda recalcular as vagas que já existiam.
 
-**Cobertura** = peso com sinal / peso dos critérios ligados (0–100%). Nota
-1000 com 40% de cobertura é diferente de nota 1000 com 100% — o front mostra
-as duas.
+**Cobertura** = peso com sinal / peso dos critérios ligados (0–100%). O
+front mostra as duas: nota 700 com 40% de cobertura é "faltam dados", não
+"vaga ruim".
 
 **Incompatível** (nota 0, motivo `block`, `incompatible: true`):
 

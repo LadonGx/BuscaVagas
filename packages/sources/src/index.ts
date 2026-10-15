@@ -11,3 +11,4 @@ export * from './core/normalize/values';
 export * from './core/boards';
 export * from './registry';
 export * from './core/availability';
+export * from './email';

@@ -1,4 +1,4 @@
-import type { ScanTrigger } from '@busca-vagas/shared';
+import type { ScanTrigger, SourceKindDto } from '@busca-vagas/shared';
 
 /** Token das fontes ativas (`JobSource[]`), já configuradas. */
 export const SOURCES = Symbol('SOURCES');
@@ -12,7 +12,7 @@ export const UNAVAILABLE_SOURCES = Symbol('UNAVAILABLE_SOURCES');
 export interface UnavailableSource {
   id: string;
   displayName: string;
-  kind: 'search' | 'company-board';
+  kind: SourceKindDto;
   reason: string;
 }
 

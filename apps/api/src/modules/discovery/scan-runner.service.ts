@@ -52,10 +52,10 @@ export class ScanRunner {
       throw new Error(`Fonte "${sourceId}" não está ativa.`);
     }
 
-    // Boards de empresa não usam termos (registrar ali só confundiria); usam
-    // as empresas acompanhadas, lidas do banco agora.
+    // Só as fontes de busca usam termos (registrar nas outras só confundiria).
+    // Boards de empresa usam as empresas acompanhadas, lidas do banco agora.
     const isBoard = source.kind === 'company-board';
-    const usedTerms = isBoard ? [] : terms;
+    const usedTerms = source.kind === 'search' ? terms : [];
     const companies = isBoard ? await this.companies.activeFor(sourceId) : undefined;
     if (companies?.length === 0) {
       this.logger.log(`${sourceId}: nenhuma empresa acompanhada — nada a buscar.`);

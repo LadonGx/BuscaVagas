@@ -57,13 +57,26 @@ describe('buildSources', () => {
     ]);
   });
 
-  it('o registro real: Gupy primeiro, depois os boards de empresa', () => {
-    expect(SOURCE_DEFINITIONS.map((d) => d.id)).toEqual(['gupy', 'greenhouse', 'lever', 'ashby']);
+  it('o registro real: Gupy primeiro, depois os boards de empresa e, por último, o e-mail', () => {
+    expect(SOURCE_DEFINITIONS.map((d) => d.id)).toEqual([
+      'gupy',
+      'greenhouse',
+      'lever',
+      'ashby',
+      'email',
+    ]);
   });
 
-  it('com o .env vazio, todas sobem: as empresas dos boards vêm do banco (API)', () => {
+  it('com o .env vazio, todas sobem (as empresas vêm do banco), menos o e-mail', () => {
     const result = buildSources({});
     expect(result.sources.map((s) => s.id)).toEqual(['gupy', 'greenhouse', 'lever', 'ashby']);
-    expect(result.inactive).toEqual([]);
+    expect(result.inactive).toEqual([
+      expect.objectContaining({ sourceId: 'email', kind: 'mailbox' }),
+    ]);
+  });
+
+  it('o e-mail sobe com usuário e senha no .env', () => {
+    const result = buildSources({ EMAIL_USER: 'ana@example.com', EMAIL_PASSWORD: 'x' });
+    expect(result.sources.map((s) => s.id)).toContain('email');
   });
 });

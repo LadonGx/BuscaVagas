@@ -2,6 +2,7 @@ import type { JobDto } from '@busca-vagas/shared';
 import { Plus, SearchX } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useJobList, type JobFilters } from '../../api/jobs';
+import { useSourceOptions } from '../../api/discovery';
 import { useJobCounts } from '../../api/overview';
 import { usePreferencesConfigured } from '../../api/preferences';
 import { useTriageAction } from '../../components/job/useTriageAction';
@@ -36,7 +37,13 @@ const EMPTY_TEXT: Record<JobFilters['tab'], { title: string; body: string }> = {
 };
 
 function hasFilters(filters: JobFilters): boolean {
-  return Boolean(filters.q || filters.workModel || filters.minScore || filters.hideIncompatible);
+  return Boolean(
+    filters.q ||
+    filters.workModel ||
+    filters.minScore ||
+    filters.hideIncompatible ||
+    filters.source,
+  );
 }
 
 export function VagasPage() {
@@ -48,6 +55,7 @@ export function VagasPage() {
   const triage = useTriageAction();
   const now = useNow(60_000);
   const [creating, setCreating] = useState(false);
+  const sourceOptions = useSourceOptions();
 
   const jobs = list.data?.pages.flatMap((page) => page.items) ?? [];
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = list;
@@ -101,6 +109,8 @@ export function VagasPage() {
         onSort={controls.setSort}
         onHideIncompatible={controls.setHideIncompatible}
         onHideClosed={controls.setHideClosed}
+        sourceOptions={sourceOptions}
+        onSource={controls.setSource}
       />
 
       {list.isPending ? (

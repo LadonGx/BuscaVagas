@@ -97,6 +97,27 @@ describeDb('Repostadas e duplicadas (integração)', () => {
     expect(job.lastSeenAt.getTime()).toBeGreaterThan(ago(1).getTime());
   });
 
+  it('mesma fonte e mesmo id com outro link (Indeed por e-mail): a mesma vaga, sem link extra', async () => {
+    const indeed = (link: string): JobPosting => ({
+      ...gupy(),
+      source: 'indeed',
+      externalId: 'abc123',
+      url: `https://engage.indeed.com/f/a/${link}`,
+    });
+    await jobs.ingest([indeed('primeiro')]);
+    await t.prisma.job.updateMany({ data: { firstSeenAt: ago(1), lastSeenAt: ago(1) } });
+
+    expect(await jobs.ingest([indeed('segundo'), indeed('terceiro')])).toMatchObject({
+      created: 0,
+      seen: 1,
+      duplicates: 0,
+    });
+    const all = await t.prisma.job.findMany({ include: { aliases: true } });
+    expect(all).toHaveLength(1);
+    expect(all[0]).toMatchObject({ url: 'https://engage.indeed.com/f/a/primeiro', aliases: [] });
+    expect(all[0]!.lastSeenAt.getTime()).toBeGreaterThan(ago(0.5).getTime());
+  });
+
   it('duas vezes na mesma leva: a segunda vira link da primeira', async () => {
     const result = await jobs.ingest([gupy(1), greenhouse(1), gupy(2)]);
     expect(result).toMatchObject({ created: 1, duplicates: 2 });

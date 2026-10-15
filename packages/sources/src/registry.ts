@@ -1,5 +1,6 @@
 import type { EnvLike, JobSource, SourceDefinition, SourceKind } from './core/job-source';
 import { ashbySourceDefinition } from './ashby';
+import { emailSourceDefinition } from './email';
 import { greenhouseSourceDefinition } from './greenhouse';
 import { gupySourceDefinition } from './gupy';
 import { leverSourceDefinition } from './lever';
@@ -16,6 +17,9 @@ export const SOURCE_DEFINITIONS: readonly SourceDefinition<never>[] = [
   greenhouseSourceDefinition as SourceDefinition<never>,
   leverSourceDefinition as SourceDefinition<never>,
   ashbySourceDefinition as SourceDefinition<never>,
+  // Por último: o alerta traz só título, empresa e local. Vaga que também
+  // vem de outra fonte fica com os dados mais completos dela.
+  emailSourceDefinition as SourceDefinition<never>,
 ];
 
 export interface BuildSourcesResult {

@@ -110,8 +110,9 @@ Ordem combinada, em blocos.
       estado anterior) e candidaturas em CSV (JS) ([18](features/18-backup.md))
 - [x] Docker Compose completo (API + tela num container, mesmo banco do dev, migrações ao
       subir, em `127.0.0.1:8080`) para quem só quer usar ([19](features/19-docker-app.md))
-- [ ] Alertas de vaga por e-mail (IMAP, só leitura, num marcador do Gmail): LinkedIn,
+- [x] Alertas de vaga por e-mail (IMAP, só leitura, num marcador do Gmail): LinkedIn,
       Glassdoor e Indeed mandam título, empresa, local e link (JT)
+      ([20](features/20-email-alerts.md))
 - [ ] Extensão do Chrome: enviar a vaga aberta no navegador para o app, sem scraping (VA)
 - [ ] Preencher formulário com Playwright, **nunca enviar** (JT)
 - [ ] Aviso de nota alta também no celular (ntfy ou Telegram), com horário de silêncio

@@ -19,6 +19,7 @@ import styles from './Preferencias.module.css';
 const KIND_LABEL: Record<SourceInfoDto['kind'], string> = {
   search: 'busca',
   'company-board': 'vagas de empresas',
+  mailbox: 'alertas do LinkedIn, Indeed e Glassdoor',
 };
 
 const RUN_STATUS: Record<SourceRunDto['status'], { label: string; tone: string }> = {

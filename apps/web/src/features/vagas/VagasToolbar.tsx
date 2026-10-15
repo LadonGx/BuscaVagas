@@ -6,6 +6,7 @@ import {
 } from '@busca-vagas/shared';
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import type { SourceOption } from '../../api/discovery';
 import type { JobFilters, JobTab } from '../../api/jobs';
 import { formatNumber } from '../../lib/format';
 import { MIN_SCORE_OPTIONS } from './useJobFilters';
@@ -43,6 +44,9 @@ interface VagasToolbarProps {
   onSort: (sort: 'score' | 'recent' | undefined) => void;
   onHideIncompatible: (hide: boolean) => void;
   onHideClosed: (hide: boolean) => void;
+  /** Opções do filtro de fonte (useSourceOptions). */
+  sourceOptions: SourceOption[];
+  onSource: (source: string | undefined) => void;
 }
 
 export function VagasToolbar(props: VagasToolbarProps) {
@@ -107,6 +111,25 @@ export function VagasToolbar(props: VagasToolbarProps) {
                 Nota ≥ {value}
               </option>
             ))}
+          </select>
+        </label>
+
+        <label className={styles.select}>
+          <span className="sr-only">Fonte</span>
+          <select
+            value={filters.source ?? ''}
+            onChange={(event) => props.onSource(event.target.value || undefined)}
+          >
+            <option value="">Qualquer fonte</option>
+            {props.sourceOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+            {filters.source &&
+              !props.sourceOptions.some((option) => option.value === filters.source) && (
+                <option value={filters.source}>{filters.source}</option>
+              )}
           </select>
         </label>
 

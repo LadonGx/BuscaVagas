@@ -109,6 +109,46 @@ describe('Vagas', () => {
     expect(await screen.findByRole('article', { name: 'Full Stack Júnior' })).toBeVisible();
   });
 
+  it('filtro de fonte: uma fonte, os alertas por e-mail juntos ou tudo menos e-mail', async () => {
+    const { lastList } = setup();
+    const { router } = renderApp('/vagas');
+    await screen.findByRole('article', { name: 'Full Stack Júnior' });
+    const select = screen.getByRole('combobox', { name: 'Fonte' });
+    // As fontes vêm da API (Gupy, Greenhouse); os sites de e-mail e o manual são fixos.
+    await waitFor(() => expect(within(select).getByRole('option', { name: 'Gupy' })).toBeTruthy());
+    expect(within(select).getByRole('option', { name: 'LinkedIn (e-mail)' })).toBeTruthy();
+
+    await userEvent.selectOptions(select, 'Gupy');
+    await waitFor(() => expect(lastList()?.get('source')).toBe('gupy'));
+    expect(router.state.location.search).toBe('?fonte=gupy');
+
+    await userEvent.selectOptions(select, 'Alertas por e-mail');
+    await waitFor(() => expect(lastList()?.get('source')).toBe('linkedin,indeed,glassdoor'));
+
+    await userEvent.selectOptions(select, 'Tudo menos e-mail');
+    await waitFor(() => expect(lastList()?.get('excludeSource')).toBe('linkedin,indeed,glassdoor'));
+    expect(lastList()?.get('source')).toBeNull();
+
+    await userEvent.selectOptions(select, 'Qualquer fonte');
+    await waitFor(() => expect(router.state.location.search).toBe(''));
+  });
+
+  it('vaga de alerta por e-mail mostra o site de origem', async () => {
+    const linkedin = job({
+      id: 'j3',
+      title: 'Dev Júnior',
+      company: 'Wevy',
+      source: 'linkedin',
+      url: 'https://www.linkedin.com/jobs/view/4476236394',
+    });
+    setup([linkedin]);
+    renderApp('/vagas');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Dev Júnior' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Dev Júnior' });
+    expect(within(dialog).getByText('Wevy · via LinkedIn')).toBeVisible();
+  });
+
   it('erro da API devolve o cartão e avisa', async () => {
     setup([acme, brisa], {
       'PUT /jobs/:id/triage': () => reply(409, { message: 'Esta vaga tem uma candidatura.' }),

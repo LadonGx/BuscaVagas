@@ -106,6 +106,8 @@ export const jobListQuerySchema = pageQuerySchema.extend({
   contractType: queryList(contractTypeSchema),
   seniority: queryList(seniorityLevelSchema),
   source: queryList(z.string().min(1).max(50)),
+  /** Fontes a esconder (ex.: os alertas por e-mail: `linkedin,indeed,glassdoor`). */
+  excludeSource: queryList(z.string().min(1).max(50)),
   stack: queryList(
     z
       .string()

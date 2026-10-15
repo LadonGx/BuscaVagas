@@ -65,15 +65,32 @@ describe('scoreJob — geral', () => {
     ]);
   });
 
-  it('critério sem sinal sai da conta em vez de zerar', () => {
+  it('critério sem sinal vale o meio-termo: nem zera, nem some da conta', () => {
     const noContract = scoreJob(job({ contractType: null }), MINE, NOW);
-    // Peso ligado: 35+25+20+10+10 = 100; sem contrato: 90 de 100.
-    expect(noContract).toMatchObject({ score: 1000, coverage: 90 });
+    // Peso ligado: 35+25+20+10+10 = 100; sem contrato: 90 + 10 × 0,5 = 95.
+    expect(noContract).toMatchObject({ score: 950, coverage: 90 });
     expect(noContract.reasons).toContainEqual({
       criterion: 'contract',
       kind: 'unknown',
       text: 'Contrato não informado',
     });
+  });
+
+  it('vaga de alerta por e-mail (só título, empresa e local) não chega a 1000', () => {
+    // Sem stack e sem contrato: senioridade, modalidade e idade batem (55 de 100).
+    const sparse = scoreJob(
+      job({ stack: [], contractType: null, workModel: 'remote', location: null }),
+      MINE,
+      NOW,
+    );
+    expect(sparse).toMatchObject({ score: 775, coverage: 55 });
+    // Fora da área, com só a modalidade e a idade batendo: abaixo dela.
+    const offArea = scoreJob(
+      job({ stack: [], contractType: null, seniority: null, workModel: 'remote', location: null }),
+      MINE,
+      NOW,
+    );
+    expect(offArea.score).toBe(650);
   });
 
   it('nenhum critério com sinal: sem nota, cobertura 0', () => {

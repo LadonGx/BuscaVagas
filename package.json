@@ -25,6 +25,7 @@
     "app:up": "docker compose -f docker-compose.yml -f docker-compose.app.yml up -d --build",
     "app:down": "docker compose -f docker-compose.yml -f docker-compose.app.yml down",
     "ext:build": "pnpm --filter @busca-vagas/extension build",
+    "candidatar": "pnpm --filter @busca-vagas/apply build && node apps/apply/dist/main.js",
     "app:logs": "docker compose -f docker-compose.yml -f docker-compose.app.yml logs -f app",
     "db:generate": "pnpm --filter @busca-vagas/api prisma:generate",
     "db:migrate": "pnpm --filter @busca-vagas/api prisma:migrate",

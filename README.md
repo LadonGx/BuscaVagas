@@ -33,6 +33,7 @@ apps/
   api/            NestJS: rotas, banco, fila, regras de negócio
   web/            React + Vite
   extension/      extensão do Chrome: manda a vaga aberta no navegador
+  apply/          pnpm candidatar: preenche a candidatura no navegador, sem enviar
 packages/
   shared/         schemas Zod e tipos usados por todos
   sources/        fontes de vagas — UMA PASTA POR SITE
@@ -71,6 +72,13 @@ Para mandar para o app a vaga que você está vendo em qualquer site: `pnpm
 ext:build` e carregue `apps/extension/dist` em `chrome://extensions` (Modo do
 desenvolvedor → Carregar sem compactação). Passo a passo em
 [`docs/features/21-extension.md`](docs/features/21-extension.md).
+
+### Preencher a candidatura (opcional)
+
+Com Node e pnpm instalados (`pnpm install` uma vez) e o Chrome ou o Edge,
+`pnpm candidatar <id da vaga>` abre a vaga e preenche o formulário com o seu
+Currículo. **Nunca envia**: quem confere e clica em enviar é você. Detalhes em
+[`docs/features/22-apply-fill.md`](docs/features/22-apply-fill.md).
 
 ## Começando (para programar)
 
@@ -125,6 +133,7 @@ Detalhes, regras e códigos de erro de cada uma: [`docs/features/`](docs/feature
 | `pnpm infra:up` / `infra:down` / `infra:logs` | Controla Postgres e Redis                            |
 | `pnpm app:up` / `app:down` / `app:logs`       | App completo no Docker, em `127.0.0.1:8080`          |
 | `pnpm ext:build`                              | Compila a extensão do Chrome (`apps/extension/dist`) |
+| `pnpm candidatar [id ou link]`                | Preenche a candidatura no navegador, sem enviar      |
 | `pnpm db:migrate --name <nome>`               | Cria migration após mudar o `schema.prisma`          |
 | `pnpm db:deploy`                              | Aplica as migrations existentes                      |
 | `pnpm db:studio`                              | Navega pelo banco no navegador                       |

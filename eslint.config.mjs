@@ -19,6 +19,11 @@ export default defineConfig(
     files: ['apps/web/**/*.{ts,tsx}'],
     languageOptions: { globals: globals.browser },
   },
+  // O preenchimento roda no Node, mas scan.ts roda dentro da página.
+  {
+    files: ['apps/apply/**/*.ts'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
   {
     files: ['apps/extension/**/*.ts'],
     languageOptions: { globals: { ...globals.browser, chrome: 'readonly' } },

@@ -186,6 +186,28 @@ describe('Vagas', () => {
     expect(router.state.location.search).toBe('');
   });
 
+  it('painel mostra o comando de preencher a candidatura; site restrito, não', async () => {
+    const linkedin = job({
+      id: 'j3',
+      title: 'Dev LinkedIn',
+      url: 'https://www.linkedin.com/jobs/view/1',
+    });
+    setup([acme, linkedin]);
+    const user = userEvent.setup();
+    const { router } = renderApp('/vagas?vaga=j1');
+
+    const dialog = await screen.findByRole('dialog', { name: 'Full Stack Júnior' });
+    const fill = within(dialog).getByRole('region', { name: 'Preencher a candidatura' });
+    expect(within(fill).getByText('pnpm candidatar j1')).toBeVisible();
+    await user.click(within(fill).getByRole('button', { name: 'Copiar o comando' }));
+    expect(await navigator.clipboard.readText()).toBe('pnpm candidatar j1');
+
+    await router.navigate('/vagas?vaga=j3');
+    const other = await screen.findByRole('dialog', { name: 'Dev LinkedIn' });
+    expect(within(other).getByText(/proíbe preenchimento automático/)).toBeVisible();
+    expect(within(other).queryByText(/pnpm candidatar/)).not.toBeInTheDocument();
+  });
+
   it('"Me candidatei" cria a candidatura', async () => {
     let posted: unknown;
     setup([acme, brisa], {

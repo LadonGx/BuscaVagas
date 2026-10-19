@@ -1,4 +1,4 @@
-import type { JobDto } from '@busca-vagas/shared';
+import { isRestrictedUrl, type JobDto } from '@busca-vagas/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { ExternalLink } from 'lucide-react';
 import { useState } from 'react';
@@ -11,6 +11,7 @@ import { ScoreBadge } from '../../components/job/ScoreBadge';
 import { useTriageAction } from '../../components/job/useTriageAction';
 import { useToast } from '../../components/toast/toast-context';
 import { Button } from '../../components/ui/Button';
+import { CopyButton } from '../../components/ui/CopyButton';
 import { Drawer } from '../../components/ui/Drawer';
 import { formatAgo } from '../../lib/format';
 import { scoreLabel } from '../../lib/score';
@@ -106,7 +107,38 @@ function JobDetails({ job }: { job: JobDto }) {
           Abrir a vaga no site (nova aba)
         </a>
       )}
+
+      {job.url && !job.application && <FillHint id={job.id} url={job.url} />}
     </>
+  );
+}
+
+/**
+ * O preenchimento roda no seu computador (pnpm candidatar): o app só mostra
+ * o comando. Nos sites que proíbem automação, nem isso.
+ * docs/features/22-apply-fill.md
+ */
+function FillHint({ id, url }: { id: string; url: string }) {
+  if (isRestrictedUrl(url)) {
+    return (
+      <p className={styles.muted}>
+        Este site proíbe preenchimento automático: copie seus dados na tela Currículo.
+      </p>
+    );
+  }
+  const command = `pnpm candidatar ${id}`;
+  return (
+    <section className={styles.block} aria-label="Preencher a candidatura">
+      <h3 className={styles.label}>Preencher a candidatura</h3>
+      <p className={styles.muted}>
+        No terminal, na pasta do BuscaVagas: abre a vaga numa janela do navegador e preenche com o
+        seu Currículo. Nada é enviado: quem confere e envia é você.
+      </p>
+      <div className={styles.command}>
+        <code>{command}</code>
+        <CopyButton text={command} what="o comando" />
+      </div>
+    </section>
   );
 }
 

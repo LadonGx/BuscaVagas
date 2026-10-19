@@ -116,7 +116,9 @@ Ordem combinada, em blocos.
 - [x] Extensão do Chrome: enviar a vaga aberta no navegador para o app, sem scraping (VA)
       — nos sites restritos só link e título da aba; nos outros, o JSON-LD da página
       ([21](features/21-extension.md))
-- [ ] Preencher formulário com Playwright, **nunca enviar** (JT)
+- [x] Preencher formulário com Playwright, **nunca enviar** (JT): `pnpm candidatar` abre a
+      vaga no Chrome/Edge, preenche com o Currículo e as respostas salvas e anexa o PDF; quem
+      envia é você ([22](features/22-apply-fill.md))
 - [ ] Aviso de nota alta também no celular (ntfy ou Telegram), com horário de silêncio
       (22h–8h, ajustável) — o sino já guarda os avisos; falta só o canal ([16](features/16-notifications.md))
 

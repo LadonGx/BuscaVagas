@@ -6,7 +6,7 @@ import {
   type TextItem,
 } from '@busca-vagas/shared';
 import { ArrowLeft, Printer } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useApplication, useApplicationResume } from '../../api/applications';
 import { useResume } from '../../api/resume';
@@ -104,6 +104,7 @@ export function ImprimirPage() {
   const { choices, choose } = usePdfChoices();
   const sections = data?.sections ?? [];
   const doc = buildDocument(sections, choices);
+  const [fit, setFit] = useState<FitResult | null>(null);
 
   // O título da aba vira o nome sugerido do arquivo PDF.
   useEffect(() => {
@@ -142,6 +143,15 @@ export function ImprimirPage() {
         >
           Salvar como PDF
         </Button>
+        {fit && fit.pages > 1 && (
+          <p className={styles.warning} role="alert">
+            Passa de 1 página ({fit.pages} páginas) mesmo com a letra no mínimo. Desmarque seções ou
+            encurte as descrições: muitos ATS recusam currículo com mais de uma página.
+          </p>
+        )}
+        {fit && fit.pages === 1 && fit.size < FONT_SIZES_PT[0]! && (
+          <p className={styles.hint}>Letra reduzida para {fit.size} pt para caber em 1 página.</p>
+        )}
         <p className={styles.hint}>
           Na janela de impressão, escolha <strong>Salvar como PDF</strong> no destino e desmarque{' '}
           <strong>Cabeçalhos e rodapés</strong> para tirar a data e o endereço da página.
@@ -160,7 +170,7 @@ export function ImprimirPage() {
       <div className={styles.stage}>
         {isPending && <p className={styles.hint}>Carregando currículo…</p>}
         {isError && <p className={styles.hint}>{error.message}</p>}
-        {data && <Paper doc={doc} />}
+        {data && <Paper doc={doc} onFit={setFit} />}
       </div>
     </div>
   );
@@ -207,53 +217,154 @@ function SectionChoice({
   );
 }
 
-function Paper({ doc }: { doc: PrintDocument }) {
+/**
+ * Uma página, sempre que der: o tamanho da letra desce de 10,5 pt até 9 pt
+ * até o conteúdo caber na área útil da A4 (as margens do `@page` no CSS).
+ * Os tamanhos da folha estão em `em`, então tudo encolhe junto.
+ */
+export const FONT_SIZES_PT = [10.5, 10, 9.5, 9] as const;
+/** A4 menos as margens de cima e de baixo do `@page` (12 mm cada). */
+export const PRINT_HEIGHT_MM = 297 - 2 * 12;
+
+export interface FitResult {
+  size: number;
+  pages: number;
+}
+
+const mmToPx = (mm: number) => (mm * 96) / 25.4;
+
+/** Ajusta a letra da folha e diz quantas páginas sobram. Mexe só no DOM. */
+export function fitToOnePage(paper: HTMLElement, content: HTMLElement): FitResult {
+  const limit = mmToPx(PRINT_HEIGHT_MM);
+  let height = 0;
+  for (const size of FONT_SIZES_PT) {
+    paper.style.fontSize = `${size}pt`;
+    height = content.getBoundingClientRect().height;
+    if (height <= limit + 1) return { size, pages: 1 };
+  }
+  return { size: FONT_SIZES_PT.at(-1)!, pages: Math.ceil(height / limit) };
+}
+
+/** Linhas que começam com "-", "•", "*" ou "–" viram lista; o resto, parágrafo. */
+export function splitDescription(text: string): { bullets: string[]; paragraphs: string[] }[] {
+  const groups: { bullets: string[]; paragraphs: string[] }[] = [];
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    const bullet = /^[-•*–]\s+(.*)$/.exec(line);
+    const last = groups.at(-1);
+    if (bullet) {
+      if (last && last.paragraphs.length === 0) last.bullets.push(bullet[1]!);
+      else groups.push({ bullets: [bullet[1]!], paragraphs: [] });
+    } else if (last && last.bullets.length === 0) last.paragraphs.push(line);
+    else groups.push({ bullets: [], paragraphs: [line] });
+  }
+  return groups;
+}
+
+export const isProjectSection = (title: string) =>
+  /\bproje(to|ct)s?\b/.test(title.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase());
+
+function Description({ text }: { text: string }) {
+  return splitDescription(text).map((group, index) =>
+    group.bullets.length > 0 ? (
+      <ul key={index} className={styles.docBullets}>
+        {group.bullets.map((bullet, item) => (
+          <li key={item}>{bullet}</li>
+        ))}
+      </ul>
+    ) : (
+      group.paragraphs.map((paragraph, item) => (
+        <p key={`${index}-${item}`} className={styles.docText}>
+          {paragraph}
+        </p>
+      ))
+    ),
+  );
+}
+
+/**
+ * A folha no formato que os ATS leem bem: uma coluna, fonte padrão (Times),
+ * texto de verdade (nada de imagem), títulos simples e cada experiência com
+ * empresa, local e período na mesma linha e o cargo embaixo.
+ */
+function Paper({ doc, onFit }: { doc: PrintDocument; onFit: (fit: FitResult) => void }) {
+  const paperRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const signature = JSON.stringify(doc);
+
+  useLayoutEffect(() => {
+    const paper = paperRef.current;
+    const content = contentRef.current;
+    if (!paper || !content) return;
+    const fit = () => {
+      const result = fitToOnePage(paper, content);
+      // O gerador do PDF (pnpm candidatar) espera por isto.
+      paper.dataset.pronto = 'sim';
+      onFit(result);
+    };
+    fit();
+    // A fonte da tela pode chegar depois e mudar a altura.
+    void document.fonts?.ready.then(fit);
+  }, [signature, onFit]);
+
   return (
-    <article className={styles.paper} aria-label="Prévia do currículo">
-      <header className={styles.docHeader}>
-        <h1 className={styles.name}>{doc.name ?? 'Currículo'}</h1>
-        {doc.contact.length > 0 && <p className={styles.contact}>{doc.contact.join(' · ')}</p>}
-      </header>
+    <article ref={paperRef} className={styles.paper} aria-label="Prévia do currículo">
+      <div ref={contentRef}>
+        <header className={styles.docHeader}>
+          <h1 className={styles.name}>{doc.name ?? 'Currículo'}</h1>
+          {doc.contact.length > 0 && <p className={styles.contact}>{doc.contact.join(' · ')}</p>}
+        </header>
 
-      {doc.blocks.length === 0 && (
-        <p className={styles.emptyDoc}>Nada para mostrar: preencha o currículo ou marque seções.</p>
-      )}
+        {doc.blocks.length === 0 && (
+          <p className={styles.emptyDoc}>
+            Nada para mostrar: preencha o currículo ou marque seções.
+          </p>
+        )}
 
-      {doc.blocks.map((block) => (
-        <section key={block.id} className={styles.docSection}>
-          <h2 className={styles.docTitle}>{block.title}</h2>
-          {block.kind === 'fields' && (
-            <dl className={styles.docFields}>
-              {block.fields.map((field) => (
-                <div key={field.id}>
-                  <dt>{field.label}:</dt>
-                  <dd>{field.value}</dd>
-                </div>
+        {doc.blocks.map((block) => (
+          <section key={block.id} className={styles.docSection}>
+            <h2 className={styles.docTitle}>{block.title}</h2>
+            {block.kind === 'fields' &&
+              block.fields.map((field) => (
+                <p key={field.id} className={styles.docField}>
+                  <strong>{field.label}:</strong> {field.value}
+                </p>
               ))}
-            </dl>
-          )}
-          {block.kind === 'text' &&
-            block.paragraphs.map((text, index) => (
-              <p key={index} className={styles.docText}>
-                {text}
-              </p>
-            ))}
-          {block.kind === 'entries' &&
-            block.entries.map((entry, index) => (
-              <div key={index} className={styles.docEntry}>
-                <div className={styles.docEntryHead}>
-                  <p>
-                    <strong>{entry.title}</strong>
-                    {entry.organization && ` — ${entry.organization}`}
-                    {entry.location && <span className={styles.docMuted}> · {entry.location}</span>}
-                  </p>
-                  <span className={styles.docMuted}>{formatPeriod(entry)}</span>
-                </div>
-                {entry.description && <p className={styles.docText}>{entry.description}</p>}
-              </div>
-            ))}
-        </section>
-      ))}
+            {block.kind === 'text' &&
+              block.paragraphs.map((text, index) => (
+                <p key={index} className={styles.docSummary}>
+                  {text}
+                </p>
+              ))}
+            {block.kind === 'entries' &&
+              block.entries.map((entry, index) => {
+                // Projeto: o nome em negrito e o contexto entre parênteses.
+                // Experiência e formação: a empresa em negrito e o cargo embaixo.
+                const project = isProjectSection(block.title);
+                return (
+                  <div key={index} className={styles.docEntry}>
+                    <div className={styles.docEntryHead}>
+                      <p>
+                        <strong>
+                          {project ? entry.title : (entry.organization ?? entry.title)}
+                        </strong>
+                        {project && entry.organization && ` (${entry.organization})`}
+                      </p>
+                      <span>
+                        {[entry.location, formatPeriod(entry)].filter(Boolean).join(' · ')}
+                      </span>
+                    </div>
+                    {!project && entry.organization && (
+                      <p className={styles.docRole}>{entry.title}</p>
+                    )}
+                    {entry.description && <Description text={entry.description} />}
+                  </div>
+                );
+              })}
+          </section>
+        ))}
+      </div>
     </article>
   );
 }

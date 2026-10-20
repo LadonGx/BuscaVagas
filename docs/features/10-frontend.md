@@ -309,7 +309,22 @@ igual; muda só a apresentação (formulário centralizado, como no job-tracker)
   aviso "Versão enviada em …" e "Voltar à candidatura"
   ([14](14-resume-versions.md)).
 - Fora do layout do app (sem menu). Folha A4 em preto no branco nos dois
-  temas; `@page` A4 com margem; painel de opções e avisos não saem no papel.
+  temas; `@page` A4 com margem (12 mm × 14 mm); painel de opções e avisos não
+  saem no papel.
+- **Formato para ATS** (inspirado num currículo de uma página que passa nos
+  filtros): uma coluna, Times (fonte de sistema: texto comum no PDF, nunca
+  "Type 3"), nome em maiúsculas centralizado, contato numa linha com " · ",
+  resumo centralizado, títulos de seção centralizados e sublinhados, cada
+  experiência/formação com a **empresa** em negrito, local · período à
+  direita e o _cargo_ embaixo; projeto com o **nome** e o contexto entre
+  parênteses; linhas da descrição que começam com "-" ou "•" viram lista;
+  campos como "**Rótulo:** valor", um por linha.
+- **Uma página:** a letra começa em 10,5 pt e desce até 9 pt
+  (`fitToOnePage`, tudo na folha em `em`) até caber na área útil da A4. O
+  painel diz quando reduziu; se nem em 9 pt cabe, avisa quantas páginas são e
+  pede para desmarcar seções ou encurtar descrições (muitos ATS recusam mais
+  de uma página). Ao terminar, a folha ganha `data-pronto`, que o
+  `pnpm candidatar` espera antes de gerar o PDF ([22](22-apply-fill.md)).
 - "Salvar como PDF" chama `window.print()`; a dica lembra de escolher
   "Salvar como PDF" e desmarcar "Cabeçalhos e rodapés". O título da aba
   ("Currículo — Nome") vira o nome sugerido do arquivo.

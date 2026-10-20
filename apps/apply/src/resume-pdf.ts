@@ -38,6 +38,9 @@ export async function makeResumePdf(webOrigin: string, dir: string): Promise<Res
     await page.goto(`${webOrigin}/curriculo/imprimir`, { waitUntil: 'load', timeout: 20_000 });
     const paper = page.locator('article[aria-label="Prévia do currículo"]');
     await paper.waitFor({ timeout: 20_000 });
+    // A tela ajusta a letra para caber em 1 página e marca quando terminou.
+    await page.locator('article[data-pronto]').waitFor({ timeout: 20_000 });
+    await page.evaluate(() => document.fonts.ready);
     if ((await paper.getByText('Nada para mostrar').count()) > 0) return null;
     const person = (await paper.locator('h1').first().textContent())?.trim() ?? null;
     // Como o "Salvar como PDF" do navegador: sem as cores de fundo da tela.

@@ -39,6 +39,15 @@
   font-size: 13px;
 }
 
+.warning {
+  padding: 10px 12px;
+  border: 1px solid var(--bad);
+  background: var(--bad-bg);
+  border-radius: var(--radius);
+  color: var(--bad-fg);
+  font-size: 13px;
+}
+
 .version {
   display: flex;
   flex-direction: column;
@@ -111,81 +120,87 @@
 
 /* ------------------------------------------------------------ folha */
 
+/*
+ * Formato de currículo para ATS: uma coluna, Times, preto no branco, títulos
+ * de seção centralizados e sublinhados. Tamanhos em `em`: o ajuste para caber
+ * em 1 página (fitToOnePage) muda só o font-size da folha. O padding da tela
+ * é igual às margens do @page, para a medida na tela valer para o PDF.
+ */
 .paper {
   width: 210mm;
   max-width: 100%;
   min-height: 297mm;
-  padding: 18mm 18mm 20mm;
+  padding: 12mm 14mm;
   border-radius: 4px;
   background: #fff;
   box-shadow: 0 12px 40px rgb(0 0 0 / 30%);
-  color: #1f1d29;
-  font-family: var(--font-body);
+  color: #000;
+  font-family: 'Times New Roman', Times, 'Liberation Serif', serif;
   font-size: 10.5pt;
-  line-height: 1.45;
+  line-height: 1.25;
+}
+
+.paper p,
+.paper ul {
+  margin: 0;
+}
+
+/* Os títulos do app usam outra fonte: na folha, tudo em Times (fonte de
+   sistema vira texto comum no PDF; fonte da web pode virar "Type 3", que
+   alguns ATS não conseguem ler). */
+.paper h1,
+.paper h2 {
+  font-family: inherit;
 }
 
 .docHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 14pt;
-  padding-bottom: 10pt;
-  border-bottom: 2px solid #4a33b0;
+  margin-bottom: 0.6em;
+  text-align: center;
 }
 
 .name {
-  color: #16131f;
-  font-size: 22pt;
+  margin: 0;
+  font-size: 1.5em;
   font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .contact {
-  color: #4b475c;
-  font-size: 10pt;
+  margin-top: 0.25em;
+  font-size: 0.9em;
 }
 
 .emptyDoc {
-  color: #6b6780;
+  color: #555;
+  text-align: center;
 }
 
 .docSection {
-  margin-top: 12pt;
+  margin-top: 0.7em;
 }
 
 .docTitle {
-  margin-bottom: 6pt;
-  padding-bottom: 3pt;
-  border-bottom: 1px solid #dddbe6;
-  color: #4a33b0;
-  font-size: 10.5pt;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  margin: 0 0 0.35em;
+  font-size: 1.15em;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
   break-after: avoid;
 }
 
-.docFields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 3pt 18pt;
-  margin: 0;
-}
-
-.docFields div {
-  display: flex;
-  gap: 4pt;
-}
-
-.docFields dt {
-  flex: none;
-  color: #4b475c;
-  font-weight: 600;
-}
-
-.docFields dd {
-  margin: 0;
+.docSummary {
+  text-align: center;
   white-space: pre-line;
+}
+
+.docSummary + .docSummary {
+  margin-top: 0.3em;
+}
+
+.docField {
+  font-size: 0.95em;
 }
 
 .docText {
@@ -193,7 +208,7 @@
 }
 
 .docEntry {
-  margin-top: 6pt;
+  margin-top: 0.45em;
   break-inside: avoid;
 }
 
@@ -205,21 +220,35 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12pt;
+  gap: 1em;
 }
 
 .docEntryHead span {
   flex: none;
+  font-size: 0.9em;
 }
 
-.docMuted {
-  color: #6b6780;
-  font-size: 9.5pt;
+.docRole {
+  font-style: italic;
+}
+
+.docBullets {
+  padding-left: 1.6em;
+  list-style: none;
+}
+
+.docBullets li {
+  position: relative;
+}
+
+.docBullets li::before {
+  position: absolute;
+  left: -0.8em;
+  content: '-';
 }
 
 .docEntry .docText {
-  margin-top: 2pt;
-  color: #33303f;
+  margin-top: 0.1em;
 }
 
 @media (width < 1000px) {
@@ -242,7 +271,7 @@
 
 @page {
   size: A4;
-  margin: 14mm 16mm;
+  margin: 12mm 14mm;
 }
 
 @media print {

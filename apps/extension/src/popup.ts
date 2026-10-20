@@ -157,7 +157,8 @@ export async function startPopup(root: HTMLElement, deps: PopupDeps): Promise<vo
     const retry = h('button', { type: 'submit', class: 'primary' }, 'Salvar e tentar de novo');
     const form = h(
       'form',
-      { class: 'card', 'aria-label': 'App não encontrado' },
+      // novalidate: quem confere o endereço é o submit abaixo, com a mensagem dele.
+      { class: 'card', 'aria-label': 'App não encontrado', novalidate: true },
       message(
         `Não achei o BuscaVagas em ${DEFAULT_APP_URLS.map((url) => url.replace('http://', '')).join(' nem em ')}. O app está rodando?`,
         'error',
@@ -166,8 +167,12 @@ export async function startPopup(root: HTMLElement, deps: PopupDeps): Promise<vo
       input,
       retry,
     );
+    // O aviso de endereço inválido some ao digitar: senão o navegador barra
+    // todo envio seguinte, mesmo com o endereço já corrigido.
+    input.addEventListener('input', () => input.setCustomValidity(''));
     form.addEventListener('submit', (event) => {
       event.preventDefault();
+      input.setCustomValidity('');
       const url = input.value.trim() ? normalizeAppUrl(input.value) : null;
       if (input.value.trim() && !url) {
         input.setCustomValidity('Use um endereço desta máquina, ex.: http://127.0.0.1:8080');

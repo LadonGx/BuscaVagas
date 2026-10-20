@@ -161,6 +161,53 @@ describe('Deslizar', () => {
     expect(screen.queryByRole('status', { name: /Salva:/ })).not.toBeInTheDocument();
   });
 
+  it('falha no meio de triagens rápidas: a vaga que falhou volta e pode ser triada de novo', async () => {
+    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    const items = [first, second].map((item) => ({ ...item }));
+    const puts: string[] = [];
+    let failed = false;
+    setup([], {
+      'GET /jobs': () => ({
+        items: items.filter((item) => item.triage === 'inbox'),
+        nextCursor: null,
+      }),
+      'PUT /jobs/:id/triage': async (_url, init, { id }) => {
+        puts.push(id);
+        const body = JSON.parse(String(init.body)) as { status: JobDto['triage'] };
+        // A primeira da Primeira vaga falha, e antes de a Segunda terminar.
+        if (id === 'a' && !failed) {
+          failed = true;
+          await wait(30);
+          return reply(500, { message: 'Falhou' });
+        }
+        await wait(id === 'b' ? 120 : 0);
+        const target = items.find((item) => item.id === id)!;
+        target.triage = body.status;
+        return target;
+      },
+    });
+    renderApp('/deslizar');
+    await screen.findByRole('article', { name: 'Vaga atual: Primeira vaga' });
+
+    fireEvent.keyDown(document, { key: 'ArrowRight' });
+    await screen.findByRole('article', { name: 'Vaga atual: Segunda vaga' });
+    fireEvent.keyDown(document, { key: 'ArrowRight' });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Falhou');
+    await waitFor(() => expect(puts).toEqual(['a', 'b']));
+    await waitFor(() => expect(currentTitle()).toHaveTextContent('Primeira vaga'), {
+      timeout: 2_000,
+    });
+    await waitFor(() =>
+      expect(screen.getByText(/Nesta sessão:/)).toHaveTextContent('1 salva · 0 descartadas'),
+    );
+
+    // Não ficou presa: a mesma vaga vai de novo.
+    fireEvent.keyDown(document, { key: 'ArrowRight' });
+    expect(await screen.findByRole('heading', { name: 'Tudo triado' })).toBeVisible();
+    expect(puts).toEqual(['a', 'b', 'a']);
+  });
+
   it('caixa vazia diz quando vem a próxima busca', async () => {
     setup([]);
     renderApp('/deslizar');

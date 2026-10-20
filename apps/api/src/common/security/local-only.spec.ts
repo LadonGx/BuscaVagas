@@ -15,7 +15,7 @@ describe('isLoopbackHost', () => {
 });
 
 describe('rejectNonLocal', () => {
-  const local = { host: '127.0.0.1:3333', contentType: undefined, hasBody: false };
+  const local = { host: '127.0.0.1:3333', contentType: undefined };
 
   it('libera leitura local', () => {
     expect(rejectNonLocal({ ...local, method: 'GET' })).toBeNull();
@@ -29,15 +29,27 @@ describe('rejectNonLocal', () => {
     const result = rejectNonLocal({
       ...local,
       method: 'POST',
-      hasBody: true,
       contentType: 'text/plain',
     });
     expect(result?.status).toBe(415);
   });
 
+  it.each(['POST', 'PUT', 'PATCH', 'DELETE'])(
+    'barra %s sem corpo e sem Content-Type (<form> vazio de outro site)',
+    (method) => {
+      expect(rejectNonLocal({ ...local, method })?.status).toBe(415);
+    },
+  );
+
+  it('libera escrita sem corpo quando vem Content-Type: application/json', () => {
+    expect(
+      rejectNonLocal({ ...local, method: 'DELETE', contentType: 'application/json' }),
+    ).toBeNull();
+  });
+
   it('libera o .zip do backup (também pede preflight); multipart e form continuam barrados', () => {
     const write = (contentType: string) =>
-      rejectNonLocal({ ...local, method: 'POST', hasBody: true, contentType });
+      rejectNonLocal({ ...local, method: 'POST', contentType });
     expect(write('application/zip')).toBeNull();
     expect(write('multipart/form-data; boundary=x')?.status).toBe(415);
     expect(write('application/x-www-form-urlencoded')?.status).toBe(415);
@@ -47,7 +59,6 @@ describe('rejectNonLocal', () => {
     const result = rejectNonLocal({
       ...local,
       method: 'PATCH',
-      hasBody: true,
       contentType: 'application/json; charset=utf-8',
     });
     expect(result).toBeNull();

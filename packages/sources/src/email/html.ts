@@ -28,14 +28,41 @@ export function cleanText(text: string): string {
     .trim();
 }
 
+/**
+ * Tira comentários e `<script>`/`<style>`/`<head>`/`<title>` com indexOf, em
+ * tempo linear: as regexes com `[\s\S]*?` voltavam ao fim do texto a cada
+ * abertura sem fechamento. Sem fechamento, o resto fica (como antes).
+ */
+function stripHidden(html: string): string {
+  const lower = html.toLowerCase();
+  const opener = /<!--|<(script|style|head|title)\b[^<>]*>/g;
+  const unclosed = new Set<string>();
+  let out = '';
+  let from = 0;
+  for (let found = opener.exec(lower); found; found = opener.exec(lower)) {
+    const close = found[1] ? `</${found[1]}` : '-->';
+    if (unclosed.has(close)) continue;
+    const end = lower.indexOf(close, opener.lastIndex);
+    if (end === -1) {
+      // Não há fechamento daqui em diante: nenhuma abertura igual depois terá.
+      unclosed.add(close);
+      continue;
+    }
+    const after = found[1] ? lower.indexOf('>', end) : end + close.length - 1;
+    out += `${html.slice(from, found.index)} `;
+    from = after === -1 ? html.length : after + 1;
+    opener.lastIndex = from;
+  }
+  return out + html.slice(from);
+}
+
 export function htmlTokens(html: string): HtmlToken[] {
-  const body = html
-    .replace(/<!--[\s\S]*?-->/g, ' ')
-    .replace(/<(script|style|head|title)\b[^>]*>[\s\S]*?<\/\1>/gi, ' ');
+  const body = stripHidden(html);
 
   const tokens: HtmlToken[] = [];
   let href: string | null = null;
-  const pattern = /<(\/?)([a-z][a-z0-9]*|!)([^>]*)>|([^<]+)/gi;
+  // `[^<>]*`: um "<" sem ">" para no próximo "<", sem varrer o resto do texto.
+  const pattern = /<(\/?)([a-z][a-z0-9]*|!)([^<>]*)>|([^<]+)/gi;
 
   for (const match of body.matchAll(pattern)) {
     const [, closing, tag, attributes, raw] = match;

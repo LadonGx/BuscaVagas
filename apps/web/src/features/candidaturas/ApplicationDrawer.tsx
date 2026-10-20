@@ -94,10 +94,15 @@ function NextStep({ application }: { application: ApplicationDetailDto }) {
   const update = useUpdateApplication(application.id);
   const toast = useToast();
   const [editing, setEditing] = useState(false);
-  const [when, setWhen] = useState(
-    application.nextStepAt ? toLocalInput(application.nextStepAt) : '',
-  );
-  const [note, setNote] = useState(application.nextStepNote ?? '');
+  const [when, setWhen] = useState('');
+  const [note, setNote] = useState('');
+
+  /** O formulário sempre abre com o que está salvo (não com uma edição cancelada). */
+  function startEditing() {
+    setWhen(application.nextStepAt ? toLocalInput(application.nextStepAt) : '');
+    setNote(application.nextStepNote ?? '');
+    setEditing(true);
+  }
 
   function save(event: FormEvent) {
     event.preventDefault();
@@ -152,7 +157,7 @@ function NextStep({ application }: { application: ApplicationDetailDto }) {
           'Nenhuma próxima etapa marcada.'
         )}
       </p>
-      <button type="button" className={styles.iconButton} onClick={() => setEditing(true)}>
+      <button type="button" className={styles.iconButton} onClick={startEditing}>
         {application.nextStepAt ? 'Editar' : 'Marcar'}
       </button>
       {application.nextStepAt && (
@@ -292,11 +297,25 @@ function TimelineItem({
   const remove = useDeleteEvent();
   const toast = useToast();
   const [editing, setEditing] = useState(false);
-  const [when, setWhen] = useState(toLocalInput(event.occurredAt));
-  const [note, setNote] = useState(event.note ?? '');
+  const [when, setWhen] = useState('');
+  const [note, setNote] = useState('');
+  const [whenError, setWhenError] = useState<string>();
+
+  /** O formulário sempre abre com o que está salvo (não com uma edição cancelada). */
+  function startEditing() {
+    setWhen(toLocalInput(event.occurredAt));
+    setNote(event.note ?? '');
+    setWhenError(undefined);
+    setEditing(true);
+  }
 
   function save(formEvent: FormEvent) {
     formEvent.preventDefault();
+    // Data apagada (ou incompleta) não vira data: `toISOString` quebraria.
+    if (!when || Number.isNaN(new Date(when).getTime())) {
+      setWhenError('Informe quando aconteceu.');
+      return;
+    }
     update.mutate(
       { eventId: event.id, occurredAt: new Date(fromLocalInput(when)), note },
       {
@@ -312,12 +331,15 @@ function TimelineItem({
       {editing ? (
         <form className={styles.eventBody} onSubmit={save}>
           <span className={styles.eventTitle}>{APPLICATION_STATUS_LABELS[event.status]}</span>
-          <Field label="Quando aconteceu">
+          <Field label="Quando aconteceu" required error={whenError}>
             <input
               type="datetime-local"
               value={when}
               max={toLocalInput(new Date())}
-              onChange={(e) => setWhen(e.target.value)}
+              onChange={(e) => {
+                setWhen(e.target.value);
+                setWhenError(undefined);
+              }}
             />
           </Field>
           <Field label="Anotação">
@@ -352,7 +374,7 @@ function TimelineItem({
               type="button"
               className={styles.iconButton}
               aria-label={`Editar etapa ${APPLICATION_STATUS_LABELS[event.status]}`}
-              onClick={() => setEditing(true)}
+              onClick={startEditing}
             >
               <Pencil size={14} aria-hidden="true" /> Editar
             </button>
@@ -386,11 +408,17 @@ function ProcessInfo({ application }: { application: ApplicationDetailDto }) {
   const update = useUpdateApplication(application.id);
   const toast = useToast();
   const [editing, setEditing] = useState(false);
-  const [via, setVia] = useState(application.appliedVia ?? '');
-  const [salary, setSalary] = useState(
-    application.salaryExpectation === null ? '' : String(application.salaryExpectation),
-  );
-  const [notes, setNotes] = useState(application.notes ?? '');
+  const [via, setVia] = useState('');
+  const [salary, setSalary] = useState('');
+  const [notes, setNotes] = useState('');
+
+  /** O formulário sempre abre com o que está salvo (não com uma edição cancelada). */
+  function startEditing() {
+    setVia(application.appliedVia ?? '');
+    setSalary(application.salaryExpectation === null ? '' : String(application.salaryExpectation));
+    setNotes(application.notes ?? '');
+    setEditing(true);
+  }
 
   function save(event: FormEvent) {
     event.preventDefault();
@@ -449,7 +477,7 @@ function ProcessInfo({ application }: { application: ApplicationDetailDto }) {
     <section className={styles.section}>
       <div className={styles.sectionHead}>
         <h3 className={styles.label}>Dados do processo</h3>
-        <button type="button" className={styles.iconButton} onClick={() => setEditing(true)}>
+        <button type="button" className={styles.iconButton} onClick={startEditing}>
           <Pencil size={14} aria-hidden="true" /> Editar
         </button>
       </div>

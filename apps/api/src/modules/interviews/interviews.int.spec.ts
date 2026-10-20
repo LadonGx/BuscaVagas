@@ -171,7 +171,10 @@ describeDb('Perguntas de entrevista (integração)', () => {
     expect(again.asked.find((item) => item.applicationId === first.id)?.note).toBe('Fui bem');
 
     const removed = (
-      await api().delete(`/api/interview-questions/${question.id}/asked/${second.id}`).expect(200)
+      await api()
+        .delete(`/api/interview-questions/${question.id}/asked/${second.id}`)
+        .set('Content-Type', 'application/json')
+        .expect(200)
     ).body as InterviewQuestionDto;
     expect(removed.asked.map((item) => item.company)).toEqual(['Acme']);
 
@@ -190,7 +193,10 @@ describeDb('Perguntas de entrevista (integração)', () => {
     });
     expect(created.asked).toMatchObject([{ applicationId: application.id, company: 'Acme' }]);
 
-    await api().delete(`/api/applications/${application.id}`).expect(204);
+    await api()
+      .delete(`/api/applications/${application.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(204);
     const after = (await api().get(`/api/interview-questions/${created.id}`).expect(200))
       .body as InterviewQuestionDto;
     expect(after.asked).toEqual([]);
@@ -208,9 +214,15 @@ describeDb('Perguntas de entrevista (integração)', () => {
       category: 'hr',
       askedIn: application.id,
     });
-    await api().delete(`/api/interview-questions/${created.id}`).expect(204);
+    await api()
+      .delete(`/api/interview-questions/${created.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(204);
     expect(await t.prisma.interviewAsked.count()).toBe(0);
     await api().get(`/api/interview-questions/${created.id}`).expect(404);
-    await api().delete(`/api/interview-questions/${created.id}`).expect(404);
+    await api()
+      .delete(`/api/interview-questions/${created.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(404);
   });
 });

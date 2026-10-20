@@ -147,12 +147,39 @@ describeDb('Candidaturas (integração)', () => {
 
     // Apaga a proposta: o status volta para applied.
     const removed = (
-      await api().delete(`/api/applications/${app.id}/events/${offerEvent.id}`).expect(200)
+      await api()
+        .delete(`/api/applications/${app.id}/events/${offerEvent.id}`)
+        .set('Content-Type', 'application/json')
+        .expect(200)
     ).body as ApplicationDetailDto;
     expect(removed.status).toBe('applied');
 
     // O último evento não pode ser apagado.
-    await api().delete(`/api/applications/${app.id}/events/${firstEvent.id}`).expect(409);
+    await api()
+      .delete(`/api/applications/${app.id}/events/${firstEvent.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(409);
+  });
+
+  it('apagar os dois eventos ao mesmo tempo: um sai, o outro é 409 (nunca fica sem evento)', async () => {
+    const job = await createJob();
+    const app = await apply(job.id, { occurredAt: '2026-10-02' });
+    const detail = (
+      await api()
+        .post(`/api/applications/${app.id}/events`)
+        .send({ status: 'in_process', occurredAt: '2026-10-05' })
+        .expect(201)
+    ).body as ApplicationDetailDto;
+
+    const responses = await Promise.all(
+      detail.events.map((event) =>
+        api()
+          .delete(`/api/applications/${app.id}/events/${event.id}`)
+          .set('Content-Type', 'application/json'),
+      ),
+    );
+    expect(responses.map((response) => response.status).sort()).toEqual([200, 409]);
+    expect(await t.prisma.statusEvent.count({ where: { applicationId: app.id } })).toBe(1);
   });
 
   it('evento de outra candidatura -> 404', async () => {
@@ -253,7 +280,7 @@ describeDb('Candidaturas (integração)', () => {
     const job = await createJob();
     const app = await apply(job.id);
 
-    await api().delete(`/api/jobs/${job.id}`).expect(409);
+    await api().delete(`/api/jobs/${job.id}`).set('Content-Type', 'application/json').expect(409);
     await api().put(`/api/jobs/${job.id}/triage`).send({ status: 'dismissed' }).expect(409);
 
     const other = await createJob('Outra');
@@ -264,10 +291,13 @@ describeDb('Candidaturas (integração)', () => {
     expect(bulk.body).toEqual({ updated: 1, skipped: [job.id] });
 
     // Apagar a candidatura leva o histórico junto e libera a vaga.
-    await api().delete(`/api/applications/${app.id}`).expect(204);
+    await api()
+      .delete(`/api/applications/${app.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(204);
     expect(await t.prisma.statusEvent.count()).toBe(0);
     const jobAfter = (await api().get(`/api/jobs/${job.id}`).expect(200)).body as JobDto;
     expect(jobAfter).toMatchObject({ triage: 'saved', application: null });
-    await api().delete(`/api/jobs/${job.id}`).expect(204);
+    await api().delete(`/api/jobs/${job.id}`).set('Content-Type', 'application/json').expect(204);
   });
 });

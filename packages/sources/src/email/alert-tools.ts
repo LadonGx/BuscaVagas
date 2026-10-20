@@ -96,32 +96,64 @@ const ONLY_MODE =
   /^(trabalho |vaga )?(remoto|remota|100% remoto|home office|hibrido|hibrida|presencial|remote|hybrid|on-?site)$/;
 
 /**
- * "há 5 dias", "4 dia(s)", "30+ dias", "24h", "hoje", "Novo" → data
- * aproximada da publicação, contada a partir do envio do e-mail.
+ * "há 5 dias", "4 dia(s)", "30+ dias", "há mais de 30 dias", "24h", "há 1
+ * hora", "há 2 semanas", "há 1 mês", "hoje", "Novo" → data aproximada da
+ * publicação, contada a partir do envio do e-mail.
  */
 export function postedFromAge(text: string, sentAt: Date | null): Date | null | undefined {
   if (!sentAt) return null;
   const value = fold(text);
-  const DAY = 86_400_000;
-  const days = /^(?:ha\s+)?(\d+)\+?\s*(?:dias?|dia\(s\)|d)\+?$/.exec(value);
-  if (days) return new Date(sentAt.getTime() - Number(days[1]) * DAY);
-  const hours = /^(?:ha\s+)?(\d+)\s*(?:h|horas?)$/.exec(value);
-  if (hours) return new Date(sentAt.getTime() - Number(hours[1]) * 3_600_000);
+  const HOUR = 3_600_000;
+  const DAY = 24 * HOUR;
+  const found = /^(?:ha\s+)?(?:mais de\s+)?(\d+)\+?\s*([a-z()]+)\+?$/.exec(value);
+  if (found) {
+    const unit = AGE_UNITS.find(([pattern]) => pattern.test(found[2]!))?.[1];
+    if (unit === 'hour') return new Date(sentAt.getTime() - Number(found[1]) * HOUR);
+    if (unit === 'day') return new Date(sentAt.getTime() - Number(found[1]) * DAY);
+    if (unit === 'week') return new Date(sentAt.getTime() - Number(found[1]) * 7 * DAY);
+    // Mês aproximado: 30 dias.
+    if (unit === 'month') return new Date(sentAt.getTime() - Number(found[1]) * 30 * DAY);
+  }
   if (/^(hoje|novo|nova|agora|publicada hoje|just posted)$/.test(value)) return sentAt;
   return undefined;
 }
 
+const AGE_UNITS: [RegExp, 'hour' | 'day' | 'week' | 'month'][] = [
+  [/^(h|horas?)$/, 'hour'],
+  [/^(d|dias?|dia\(s\))$/, 'day'],
+  [/^semanas?$/, 'week'],
+  [/^(mes|meses)$/, 'month'],
+];
+
 /** O texto é uma idade de anúncio ("há 5 dias", "4 dia(s)")? */
 export const isAge = (text: string) => postedFromAge(text, new Date(0)) !== undefined;
 
+/**
+ * Valor em reais. Com "mil"/"K", "2.5" e "2,5" são decimais (2.500); sem
+ * sufixo, o ponto separa milhar ("2.500") e a vírgula, centavos ("25,50").
+ */
 const parseBrl = (amount: string, thousands: boolean) => {
-  const number = Number(amount.replace(/\./g, '').replace(',', '.'));
+  const text = amount.replace(/[.,]+$/, '');
+  const number =
+    thousands && /^\d+[.,]\d{1,2}$/.test(text)
+      ? Number(text.replace(',', '.'))
+      : /^\d{1,3}(,\d{3})+$/.test(text)
+        ? Number(text.replace(/,/g, ''))
+        : Number(text.replace(/\./g, '').replace(',', '.'));
   return Number.isFinite(number) ? number * (thousands ? 1000 : 1) : null;
 };
 
+/** "/ano", "por ano", "anual", "/yr"... */
+const YEARLY = /\/\s*(ano|yr|year)\b|\b(ano|anual|anuais|yr|year|yearly|annual|annually)\b/;
+/** "/h", "/hr", "por hora", "hourly"... */
+const HOURLY = /\/\s*(h|hr|hora|hour)\b|\b(hora|horas|hr|hour|hourly)\b/;
+/** Semanal: não há esse período no projeto. */
+const WEEKLY = /\/\s*(sem|wk|week)\b|\b(semana|semanal|semanais|wk|week|weekly)\b/;
+
 /**
  * Salário em reais como os alertas escrevem: "R$ 4 mil", "R$ 3 mil - R$ 5
- * mil", "R$ 2.500 - R$ 3.000 por mês", "R$ 60 mil por ano", "R$ 25 por hora".
+ * mil", "R$ 2.500 - R$ 3.000 por mês", "R$ 60 mil por ano", "R$ 25 por hora",
+ * "R$2.5K/yr - R$3.5K/yr". Por semana → `null` (o projeto não tem o período).
  */
 export function salaryFromText(text: string): SalaryRange | null {
   const value = text.replace(/\u00a0/g, ' ');
@@ -130,11 +162,8 @@ export function salaryFromText(text: string): SalaryRange | null {
   );
   if (amounts.length === 0 || amounts.some((amount) => amount === null)) return null;
   const folded = fold(value);
-  const period = /\b(ano|anual|year)\b/.test(folded)
-    ? 'year'
-    : /\b(hora|hour)\b/.test(folded)
-      ? 'hour'
-      : 'month';
+  if (WEEKLY.test(folded)) return null;
+  const period = YEARLY.test(folded) ? 'year' : HOURLY.test(folded) ? 'hour' : 'month';
   return buildSalary({
     min: amounts[0],
     max: amounts[1] ?? amounts[0],

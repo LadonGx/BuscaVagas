@@ -95,8 +95,15 @@ export function ImportDialog({ open, onClose, resume }: ImportDialogProps) {
   const toast = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
+  /**
+   * Leitura em andamento. Fechar (ou escolher outro PDF) troca o número, e o
+   * resultado de uma leitura antiga é ignorado — senão reabrir mostraria a
+   * revisão de um arquivo que a pessoa já tinha abandonado.
+   */
+  const readId = useRef(0);
 
   function close() {
+    readId.current += 1;
     setStep({ name: 'pick', error: null });
     apply.reset();
     onClose();
@@ -106,9 +113,11 @@ export function ImportDialog({ open, onClose, resume }: ImportDialogProps) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
+    const id = ++readId.current;
     setStep({ name: 'reading', file: file.name });
     try {
       const lines = await readPdfLines(file);
+      if (id !== readId.current) return;
       const draft = parseResumeLines(lines);
       setStep({
         name: 'review',
@@ -118,6 +127,7 @@ export function ImportDialog({ open, onClose, resume }: ImportDialogProps) {
         changes: buildImportPlan(resume, draft),
       });
     } catch (error) {
+      if (id !== readId.current) return;
       // Erro inesperado (bug do leitor, PDF estranho): o detalhe fica no console.
       if (!(error instanceof PdfReadError)) console.error('Importar de PDF:', error);
       setStep({

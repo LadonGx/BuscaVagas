@@ -137,7 +137,7 @@ Detalhes, regras e códigos de erro de cada uma: [`docs/features/`](docs/feature
 | `pnpm db:migrate --name <nome>`               | Cria migration após mudar o `schema.prisma`          |
 | `pnpm db:deploy`                              | Aplica as migrations existentes                      |
 | `pnpm db:studio`                              | Navega pelo banco no navegador                       |
-| `pnpm scores:rescore`                         | Recalcula a nota de todas as vagas (API rodando)     |
+| `pnpm scores:rescore`                         | Recalcula a nota de todas as vagas (app rodando)     |
 
 ## Segurança
 
@@ -148,8 +148,9 @@ seguro porque nada fica exposto na rede:
   subir com outro host (`API_HOST`). No modo Docker, ela escuta a rede do
   container e a porta é publicada só em `127.0.0.1`.
 - A API recusa qualquer `Host` que não seja `127.0.0.1`/`localhost`
-  (proteção contra DNS rebinding) e só aceita escrita com
-  `Content-Type: application/json` (barra POST disfarçado vindo de outro site).
+  (proteção contra DNS rebinding) e só aceita escrita (POST, PUT, PATCH,
+  DELETE, mesmo sem corpo) com `Content-Type: application/json` — o backup
+  usa `application/zip`. Isso barra formulário disfarçado vindo de outro site.
 - Credenciais ficam só no `.env`, que está no `.gitignore`.
 
 **Não publique esta API num servidor** sem antes adicionar autenticação.

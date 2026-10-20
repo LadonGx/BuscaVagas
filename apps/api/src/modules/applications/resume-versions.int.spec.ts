@@ -129,8 +129,12 @@ describeDb('Currículo de cada candidatura (integração)', () => {
       where: { id: emailId },
       data: { data: { label: 'E-mail', value: 'hoje@example.com' } },
     });
-    const saved = (await api().post(`/api/applications/${app.id}/resume`).expect(200))
-      .body as ApplicationDetailDto;
+    const saved = (
+      await api()
+        .post(`/api/applications/${app.id}/resume`)
+        .set('Content-Type', 'application/json')
+        .expect(200)
+    ).body as ApplicationDetailDto;
 
     expect(saved.resume).toMatchObject({ sameAsCurrent: true });
     expect(saved.resume!.snapshotId).not.toBe(old);
@@ -141,12 +145,19 @@ describeDb('Currículo de cada candidatura (integração)', () => {
 
   it('candidatura antiga (sem cópia) ganha a de hoje; currículo vazio responde 400', async () => {
     const app = await apply();
-    const empty = await api().post(`/api/applications/${app.id}/resume`).expect(400);
+    const empty = await api()
+      .post(`/api/applications/${app.id}/resume`)
+      .set('Content-Type', 'application/json')
+      .expect(400);
     expect(empty.body.message).toMatch(/currículo está vazio/);
 
     await fillResume();
-    const saved = (await api().post(`/api/applications/${app.id}/resume`).expect(200))
-      .body as ApplicationDetailDto;
+    const saved = (
+      await api()
+        .post(`/api/applications/${app.id}/resume`)
+        .set('Content-Type', 'application/json')
+        .expect(200)
+    ).body as ApplicationDetailDto;
     expect(saved.resume).toMatchObject({ sameAsCurrent: true });
   });
 
@@ -155,9 +166,15 @@ describeDb('Currículo de cada candidatura (integração)', () => {
     const first = await apply();
     const second = await apply();
 
-    await api().delete(`/api/applications/${first.id}`).expect(204);
+    await api()
+      .delete(`/api/applications/${first.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(204);
     expect(await t.prisma.resumeSnapshot.count()).toBe(1);
-    await api().delete(`/api/applications/${second.id}`).expect(204);
+    await api()
+      .delete(`/api/applications/${second.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(204);
     expect(await t.prisma.resumeSnapshot.count()).toBe(0);
   });
 
@@ -197,8 +214,12 @@ describeDb('Currículo de cada candidatura (integração)', () => {
     expect(replaced.resumeFile).toMatchObject({ name: 'v2.pdf' });
     expect(await t.prisma.applicationFile.count()).toBe(1);
 
-    const removed = (await api().delete(`/api/applications/${app.id}/resume-file`).expect(200))
-      .body as ApplicationDetailDto;
+    const removed = (
+      await api()
+        .delete(`/api/applications/${app.id}/resume-file`)
+        .set('Content-Type', 'application/json')
+        .expect(200)
+    ).body as ApplicationDetailDto;
     expect(removed.resumeFile).toBeNull();
     await api().get(`/api/applications/${app.id}/resume-file`).expect(404);
   });
@@ -228,7 +249,10 @@ describeDb('Currículo de cada candidatura (integração)', () => {
       .put(`/api/applications/${app.id}/resume-file`)
       .send({ name: 'cv.pdf', contentBase64: pdf().toString('base64') })
       .expect(200);
-    await api().delete(`/api/applications/${app.id}`).expect(204);
+    await api()
+      .delete(`/api/applications/${app.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(204);
     expect(await t.prisma.applicationFile.count()).toBe(0);
   });
 });

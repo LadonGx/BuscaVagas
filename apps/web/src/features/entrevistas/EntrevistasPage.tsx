@@ -4,13 +4,13 @@ import {
   type InterviewQuestionDto,
 } from '@busca-vagas/shared';
 import { Dumbbell, MessagesSquare, Plus, Search, SearchX, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useInterviewQuestions } from '../../api/interviews';
 import { Button } from '../../components/ui/Button';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { formatNumber } from '../../lib/format';
+import { useSearchText } from '../../lib/useSearchText';
 import {
   categoryParam,
   countByCategory,
@@ -134,15 +134,8 @@ function Toolbar({
   total: number;
 }) {
   const { filters } = controls;
-  const [text, setText] = useState(filters.q ?? '');
-  const { setQuery } = controls;
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (text.trim() !== (filters.q ?? '')) setQuery(text);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [text, filters.q, setQuery]);
+  // Busca depois que a pessoa para de digitar; Voltar ou um link trazem o texto da URL.
+  const search = useSearchText(filters.q ?? '', controls.setQuery, SEARCH_DEBOUNCE_MS);
 
   return (
     <div className={styles.toolbar}>
@@ -152,8 +145,8 @@ function Toolbar({
           <span className="sr-only">Buscar nas perguntas e respostas</span>
           <input
             type="search"
-            value={text}
-            onChange={(event) => setText(event.target.value)}
+            value={search.text}
+            onChange={(event) => search.onChange(event.target.value)}
             placeholder="Buscar nas perguntas e respostas…"
           />
         </label>

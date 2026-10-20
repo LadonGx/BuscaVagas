@@ -357,7 +357,9 @@ describeDb('Descoberta (integração)', () => {
 
   it('POST /discovery/scan enfileira com os termos do .env ou os pedidos', async () => {
     await track('acme');
-    const byEnv = (await api().post('/api/discovery/scan').expect(202)).body as ScanResultDto;
+    const byEnv = (
+      await api().post('/api/discovery/scan').set('Content-Type', 'application/json').expect(202)
+    ).body as ScanResultDto;
     expect(byEnv.queued).toEqual([
       { sourceId: 'fake', jobId: 'job-fake' },
       { sourceId: 'board', jobId: 'job-board' },
@@ -379,7 +381,9 @@ describeDb('Descoberta (integração)', () => {
   });
 
   it('POST /discovery/scan avisa que a fonte desligada não buscou nada, e por quê', async () => {
-    const all = (await api().post('/api/discovery/scan').expect(202)).body as ScanResultDto;
+    const all = (
+      await api().post('/api/discovery/scan').set('Content-Type', 'application/json').expect(202)
+    ).body as ScanResultDto;
     expect(all.queued.map((item) => item.sourceId)).toEqual(['fake']);
     expect(all.inactive).toEqual([
       { sourceId: 'board', reason: NO_COMPANIES_REASON },
@@ -401,7 +405,9 @@ describeDb('Descoberta (integração)', () => {
     await track('acme');
     queue.getDeduplicationJobId.mockResolvedValue('job-antigo');
 
-    const result = (await api().post('/api/discovery/scan').expect(202)).body as ScanResultDto;
+    const result = (
+      await api().post('/api/discovery/scan').set('Content-Type', 'application/json').expect(202)
+    ).body as ScanResultDto;
 
     expect(result).toMatchObject({ queued: [], alreadyQueued: ['fake', 'board'] });
     expect(queue.add).not.toHaveBeenCalled();

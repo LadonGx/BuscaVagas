@@ -32,7 +32,11 @@ export interface ScanJobData {
   trigger: ScanTrigger;
 }
 
-/** Dedup na fila: a mesma fonte não entra duas vezes enquanto espera/roda. */
+/**
+ * Dedup na fila (botão "Buscar agora"): a mesma fonte não entra duas vezes
+ * enquanto espera/roda. Os jobs do agendador não passam por aqui — quem
+ * impede duas buscas da mesma fonte juntas é o `SourceScanProcessor`.
+ */
 export const scanDedupId = (sourceId: string) => `scan:${sourceId}`;
 
 /** Id do agendador de uma fonte. */

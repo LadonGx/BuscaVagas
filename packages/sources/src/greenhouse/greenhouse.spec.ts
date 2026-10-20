@@ -134,8 +134,8 @@ describe('GreenhouseSource', () => {
         jobs: 7,
         kept: 3,
         error: null,
-        // Todas as válidas do board, inclusive as filtradas.
-        externalIds: ['4001', '4002', '4003', '4004', '4005'],
+        // Todas do board, inclusive as filtradas e as descartadas (o id vem do item cru).
+        externalIds: ['4001', '4002', '4003', '4004', '4005', '4006', '4007'],
       },
     ]);
   });

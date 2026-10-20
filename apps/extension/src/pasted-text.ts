@@ -18,7 +18,8 @@ import { workModelFromText, type Draft } from './draft';
  *   <descrição>
  *
  * Funciona também com a página inteira (Ctrl+A): a linha "local · data" mais
- * perto de "Sobre a vaga" é a da vaga aberta.
+ * perto de "Sobre a vaga" é a da vaga aberta. Indeed ("Descrição completa da
+ * vaga", "Full job description") e Gupy ("Descrição da vaga") também.
  */
 export type PastedFields = Partial<
   Pick<
@@ -50,8 +51,14 @@ const fold = (text: string) =>
     .toLowerCase()
     .trim();
 
+/** O título da descrição: "Sobre a vaga" (LinkedIn), "Descrição completa da vaga" (Indeed)... */
 const DESCRIPTION_START =
-  /^(sobre a vaga|about the job|descricao da vaga|descricao|job description|sobre a oportunidade)$/;
+  /^(sobre a vaga|sobre esta vaga|sobre essa vaga|about the job|about this job|about the role|about this role|about the position|descricao completa da vaga|descricao completa|descricao da vaga|descricao do cargo|descricao da oportunidade|descricao|job description|full job description|full description|sobre a oportunidade|sobre o cargo)$/;
+/**
+ * Sem nenhum dos de cima: "Detalhes da vaga" / "Job details" (no Indeed vem
+ * antes da descrição, com salário e benefícios).
+ */
+const DETAILS_START = /^(detalhes da vaga|job details)$/;
 const DESCRIPTION_END =
   /^(sobre a empresa|about the company|mostrar menos|exibir menos|ver menos|show less)$/;
 
@@ -81,19 +88,40 @@ function ageInDays(segment: string): number | null {
 const isApplicants = (segment: string) =>
   /candidat|clicaram|applicant|clicked|inscri/.test(fold(segment));
 
+/**
+ * A linha (ou o trecho) é só a modalidade: "Remoto", "100% remoto",
+ * "Modelo de trabalho: Híbrido". Frase que só cita ("empresa 100% remota, mas
+ * esta vaga é presencial") não conta.
+ */
+function onlyWorkModel(text: string) {
+  const workModel = workModelFromText(text);
+  const only =
+    workModel &&
+    /^((modelo|tipo|local|regime) de trabalho:? |modalidade:? )?(trabalho |vaga )?(100% )?(remoto|remota|home office|hibrido|hibrida|presencial|remote|hybrid|on-?site|teletrabalho)$/.test(
+      fold(text),
+    );
+  return only ? workModel : null;
+}
+
 /** "Brasil (Remoto)" → lugar + modalidade; "Remoto" sozinho não é lugar. */
 function splitPlace(text: string) {
   const inParens = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(text);
   if (inParens && workModelFromText(inParens[2]!)) {
     return { place: inParens[1]!.trim(), workModel: workModelFromText(inParens[2]!) };
   }
-  const workModel = workModelFromText(text);
-  const onlyMode =
-    workModel &&
-    /^(trabalho |vaga )?(100% )?(remoto|remota|home office|hibrido|hibrida|presencial|remote|hybrid|on-?site)$/.test(
-      fold(text),
-    );
-  return { place: onlyMode ? '' : text, workModel };
+  const workModel = onlyWorkModel(text);
+  return { place: workModel ? '' : text, workModel };
+}
+
+/** "Cidade, UF" / "Cidade - UF" / "Cidade/UF", com ", Brasil" opcional. */
+const UF_PLACE =
+  /^[^\d·•|,()]{2,40}(,|\s[-–]|\/)\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)(\s*,\s*(Brasil|Brazil))?$/;
+
+/** "Campinas, SP", "São Paulo - SP", "Brasil", "Campinas, SP (Híbrido)": é lugar, não título. */
+function isPlace(text: string) {
+  const { place, workModel } = splitPlace(text);
+  if (!place) return Boolean(workModel);
+  return UF_PLACE.test(place) || /^(brasil|brazil|remoto|remote)$/.test(fold(place));
 }
 
 const CHIP_CONTRACT: [RegExp, ContractType][] = [
@@ -114,17 +142,33 @@ const parseBrl = (amount: string, thousands: boolean) => {
   return Number.isFinite(number) && number > 0 ? Math.round(number * (thousands ? 1000 : 1)) : null;
 };
 
+/**
+ * A linha fala de salário: "Salário: R$ 4 mil", "Faixa salarial", "Bolsa",
+ * ou começa pelo valor ("R$ 1.800/mês", "A partir de R$ 3.000"). "Vale-refeição
+ * de R$ 35 por dia" não.
+ */
+const isSalaryLine = (line: string) =>
+  /R\$/.test(line) &&
+  (/sal[aá]ri|remunera|faixa|bolsa/i.test(line) ||
+    /^(a partir de |at[eé] |de |entre )?R\$/i.test(line));
+
+/** O período colado no valor: "R$ 60 mil/ano", "R$ 120.000 anual", "R$ 50/h", "por hora". */
+const YEAR_AFTER =
+  /^\s*(?:(?:\/|por|ao|per|an?)\s*)?(?:ano|anual|annual(?:ly)?|year(?:ly)?|yr)(?!\p{L})/iu;
+const HOUR_AFTER =
+  /^\s*(?:\/\s*(?:h|hr|hora|hour)|(?:por|per|an?)\s+(?:hora|hour)|hourly)(?!\p{L})/iu;
+
 /** "R$ 3.000/mês - R$ 4.000/mês", "R$ 4 mil", "Salário: R$ 2.500,00". */
 function salaryFromLine(line: string) {
-  const amounts = [...line.matchAll(/R\$\s*([\d.,]+)\s*(mil\b|k\b)?/gi)].map((match) =>
-    parseBrl(match[1]!, Boolean(match[2])),
-  );
+  const matches = [...line.matchAll(/R\$\s*([\d.,]+)\s*(mil\b|k\b)?/gi)];
+  const amounts = matches.map((match) => parseBrl(match[1]!, Boolean(match[2])));
   if (amounts.length === 0 || amounts.some((amount) => amount === null)) return null;
   const [min, max = min] = amounts as number[];
-  const value = fold(line);
-  const period: SalaryPeriod = /\b(ano|anual|year|yr)\b/.test(value)
+  // Só vale o período logo depois de um valor: "R$ 4.000 + bônus anual" é por mês.
+  const after = matches.map((match) => line.slice(match.index + match[0].length));
+  const period: SalaryPeriod = after.some((rest) => YEAR_AFTER.test(rest))
     ? 'year'
-    : /\b(hora|hour|hr)\b/.test(value)
+    : after.some((rest) => HOUR_AFTER.test(rest))
       ? 'hour'
       : 'month';
   return {
@@ -147,7 +191,10 @@ export function readPastedText(text: string, now: Date): PastedFields {
   if (!lines.some(Boolean)) return result;
 
   // Descrição: de "Sobre a vaga" até "Sobre a empresa" (ou o fim).
-  const start = lines.findIndex((line) => DESCRIPTION_START.test(fold(line).replace(/:$/, '')));
+  const startAt = (pattern: RegExp) =>
+    lines.findIndex((line) => pattern.test(fold(line).replace(/:$/, '')));
+  let start = startAt(DESCRIPTION_START);
+  if (start < 0) start = startAt(DETAILS_START);
   const header = start >= 0 ? lines.slice(0, start) : lines;
   let body = start >= 0 ? lines.slice(start + 1) : lines;
   const end = body.findIndex((line) => DESCRIPTION_END.test(fold(line)));
@@ -160,7 +207,7 @@ export function readPastedText(text: string, now: Date): PastedFields {
 
   // A linha "local · há 1 semana · 100 candidaturas" mais perto da descrição.
   const filled = header.map((line, index) => ({ line, index })).filter(({ line }) => line);
-  let chipsFrom = 0;
+  let dateAt = -1;
   for (let k = filled.length - 1; k >= 0; k--) {
     const segments = filled[k]!.line.split(/\s*[·•]\s*/).filter(Boolean);
     const ageAt = segments.findIndex((segment) => ageInDays(segment) !== null);
@@ -170,39 +217,51 @@ export function readPastedText(text: string, now: Date): PastedFields {
     result.age = segments[ageAt];
     result.postedAt = isoDay(new Date(now.getTime() - days * DAY_MS));
     const before = segments.slice(0, ageAt).filter((segment) => !isApplicants(segment));
-    if (before.length > 0) {
-      const { place, workModel } = splitPlace(before.at(-1)!);
+    // "Brasil · Remoto · há 2 dias": a modalidade sozinha não é empresa nem lugar.
+    const places = before.filter((segment) => {
+      const mode = onlyWorkModel(segment);
+      if (mode) result.workModel ??= mode;
+      return !mode;
+    });
+    if (places.length > 0) {
+      const { place, workModel } = splitPlace(places.at(-1)!);
       if (place) result.location = place;
-      if (workModel) result.workModel = workModel;
+      if (workModel) result.workModel ??= workModel;
     }
     // Formato antigo: "Empresa · Local · há 2 dias". Novo: empresa e título
     // nas duas linhas de cima.
-    if (before.length > 1) result.company = before[0];
+    const segmentCompany = places.length > 1 && !isPlace(places[0]!);
+    if (segmentCompany) result.company = places[0];
     const above = filled.slice(Math.max(0, k - 2), k).map(({ line }) => line);
-    if (above.length === 2) {
+    if (above.length > 0 && isPlace(above.at(-1)!)) {
+      // Linha de cima é o local ("Campinas, SP"), não o título: título e
+      // empresa ficam com o título da aba.
+      result.location ??= splitPlace(above.at(-1)!).place || undefined;
+    } else if (above.length === 2) {
       result.company ??= above[0];
       result.title = above[1];
-    } else if (above.length === 1 && before.length > 1) {
+    } else if (above.length === 1 && segmentCompany) {
       result.title = above[0];
     }
-    chipsFrom = filled[k]!.index + 1;
+    dateAt = filled[k]!.index;
     break;
   }
 
-  // Etiquetas ("Remoto", "Tempo integral", "R$ 4 mil/mês") depois da linha da
-  // data; sem ela, as linhas curtas do topo.
-  const chips = header.slice(chipsFrom).filter((line) => line && line.length <= 120);
-  for (const line of chips) {
-    result.workModel ??= workModelFromText(line) ?? undefined;
+  // Etiquetas ("Remoto", "Tempo integral", "R$ 4 mil/mês"): só no topo, antes
+  // da descrição. Com o título da descrição, as linhas entre a da data e ele
+  // (ou todo o topo, sem a data); sem o título, as linhas acima da data; sem
+  // nenhum dos dois, nada (o texto todo é descrição).
+  const chips = start >= 0 ? header.slice(dateAt + 1) : dateAt >= 0 ? header.slice(0, dateAt) : [];
+  for (const line of chips.filter((chip) => chip && chip.length <= 120)) {
+    result.workModel ??= onlyWorkModel(line) ?? undefined;
     const contract = CHIP_CONTRACT.find(([pattern]) => pattern.test(fold(line)));
     if (contract) result.contractType ??= contract[1];
-    if (result.salaryMin === undefined) Object.assign(result, salaryFromLine(line) ?? {});
+    if (result.salaryMin === undefined && isSalaryLine(line)) {
+      Object.assign(result, salaryFromLine(line) ?? {});
+    }
   }
   if (result.salaryMin === undefined) {
-    const line = body.find(
-      (candidate) =>
-        /R\$/.test(candidate) && /sal[aá]rio|remunera|faixa|bolsa|^R\$/i.test(candidate),
-    );
+    const line = body.find(isSalaryLine);
     if (line) Object.assign(result, salaryFromLine(line) ?? {});
   }
   if (result.description)

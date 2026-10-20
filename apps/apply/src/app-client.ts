@@ -20,13 +20,19 @@ async function call<T>(
 ): Promise<{ status: number; body: T | null }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), init.timeoutMs ?? 10_000);
+  // A API exige `Content-Type: application/json` em todo método que muda
+  // algo (POST, PUT, PATCH, DELETE), mesmo sem corpo.
+  const method = (init.method ?? 'GET').toUpperCase();
+  const unsafe = !['GET', 'HEAD', 'OPTIONS'].includes(method);
+  const { timeoutMs: _timeoutMs, ...rest } = init;
   try {
     const response = await fetchFn(url, {
-      ...init,
+      ...rest,
+      method,
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
-        ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(unsafe || init.body ? { 'Content-Type': 'application/json' } : {}),
       },
     });
     const text = await response.text();

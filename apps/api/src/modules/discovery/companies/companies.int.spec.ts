@@ -238,13 +238,23 @@ describeDb('Empresas acompanhadas (integração)', () => {
     await api().patch(`/api/companies/${company.id}`).send({}).expect(400);
 
     boards.acme = 3;
-    const rechecked = (await api().post(`/api/companies/${company.id}/check`).expect(200))
-      .body as TrackedCompanyDto;
+    const rechecked = (
+      await api()
+        .post(`/api/companies/${company.id}/check`)
+        .set('Content-Type', 'application/json')
+        .expect(200)
+    ).body as TrackedCompanyDto;
     expect(rechecked.lastMatched).toBe(3);
     boards.acme = 2;
 
-    await api().delete(`/api/companies/${company.id}`).expect(204);
-    await api().delete(`/api/companies/${company.id}`).expect(404);
+    await api()
+      .delete(`/api/companies/${company.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(204);
+    await api()
+      .delete(`/api/companies/${company.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(404);
     await api().patch(`/api/companies/${company.id}`).send({ active: true }).expect(404);
   });
 

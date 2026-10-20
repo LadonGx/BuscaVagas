@@ -10,6 +10,10 @@ import {
   AVAILABILITY_FIRST_RUN_DELAY_MS,
   AVAILABILITY_JOB_NAME,
   AVAILABILITY_SCHEDULER_ID,
+  RECENCY_EVERY_MS,
+  RECENCY_FIRST_RUN_DELAY_MS,
+  RECENCY_JOB_NAME,
+  RECENCY_SCHEDULER_ID,
   RETENTION_EVERY_MS,
   RETENTION_FIRST_RUN_DELAY_MS,
   RETENTION_JOB_NAME,
@@ -25,11 +29,15 @@ const JOBS: Record<string, { name: string; firstRunDelayMs: number }> = {
     name: AVAILABILITY_JOB_NAME,
     firstRunDelayMs: AVAILABILITY_FIRST_RUN_DELAY_MS,
   },
+  [RECENCY_SCHEDULER_ID]: {
+    name: RECENCY_JOB_NAME,
+    firstRunDelayMs: RECENCY_FIRST_RUN_DELAY_MS,
+  },
 };
 
 /**
- * Agenda a retenção e a conferência das salvas, uma vez por dia. Mesma regra da descoberta: só mexe no
- * agendador quando a configuração muda, para o modo dev (que reinicia a cada
+ * Agenda a retenção, a conferência das salvas e a idade das vagas na nota,
+ * uma vez por dia. Mesma regra da descoberta: só mexe no agendador quando a configuração muda, para o modo dev (que reinicia a cada
  * arquivo salvo) não empurrar nem disparar a limpeza.
  */
 @Injectable()
@@ -56,6 +64,7 @@ export class MaintenanceScheduler implements OnApplicationBootstrap {
         ? [{ id: RETENTION_SCHEDULER_ID, everyMs: RETENTION_EVERY_MS, data: { days } }]
         : []),
       { id: AVAILABILITY_SCHEDULER_ID, everyMs: AVAILABILITY_EVERY_MS, data: {} },
+      { id: RECENCY_SCHEDULER_ID, everyMs: RECENCY_EVERY_MS, data: {} },
     ];
 
     const existing = (await this.queue.getJobSchedulers(0, -1)).map((scheduler) => ({

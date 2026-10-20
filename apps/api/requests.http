@@ -110,6 +110,7 @@ GET {{api}}/applications/{{apply.response.body.id}}/resume
 
 ### Guardar o currículo de hoje (troca a cópia)
 POST {{api}}/applications/{{apply.response.body.id}}/resume
+Content-Type: application/json
 
 ### Anexar o PDF enviado (base64; "JVBERi0xLjQK" = "%PDF-1.4\n")
 PUT {{api}}/applications/{{apply.response.body.id}}/resume-file
@@ -147,6 +148,7 @@ GET {{api}}/notifications
 
 ### Marcar tudo como lido
 POST {{api}}/notifications/read
+Content-Type: application/json
 
 ### Nota mínima (0 desliga)
 PUT {{api}}/notifications/settings
@@ -237,6 +239,7 @@ GET {{api}}/discovery/sources
 
 ### Buscar agora (todas as fontes, termos do .env)
 POST {{api}}/discovery/scan
+Content-Type: application/json
 
 ### Buscar agora com termos próprios
 POST {{api}}/discovery/scan
@@ -258,6 +261,7 @@ Content-Type: application/json
 
 ### A vaga ainda está aberta? Confere agora — docs/features/13-availability.md
 POST {{api}}/jobs/{{createJob.response.body.id}}/check
+Content-Type: application/json
 
 ### Caixa sem as encerradas (padrão da tela de Vagas)
 GET {{api}}/jobs?triage=inbox&hideClosed=true&limit=20
@@ -295,9 +299,11 @@ Content-Type: application/json
 
 ### Ler o board de novo agora
 POST {{api}}/companies/{{addCompany.response.body.company.id}}/check
+Content-Type: application/json
 
 ### Remover
 DELETE {{api}}/companies/{{addCompany.response.body.company.id}}
+Content-Type: application/json
 
 ############################################################ Preferências e nota
 # docs/features/07-preferences-score.md — a nota é calculada em segundo plano.
@@ -333,6 +339,7 @@ GET {{api}}/preferences/stacks
 
 ### Recalcular todas as notas (segundo plano)
 POST {{api}}/preferences/rescore
+Content-Type: application/json
 
 ### Vagas pela nota (padrão quando há preferências)
 GET {{api}}/jobs?limit=20
@@ -351,6 +358,7 @@ GET {{api}}/maintenance/retention
 
 ### Rodar a limpeza agora
 POST {{api}}/maintenance/retention
+Content-Type: application/json
 
 ############################################################ Dados para as telas
 # docs/features/09-screen-data.md

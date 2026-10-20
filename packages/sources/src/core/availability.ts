@@ -1,7 +1,8 @@
 import { isRestrictedUrl } from '@busca-vagas/shared';
 import { parseBoardUrl } from './boards/board-url';
-import { HttpError, type HttpClient } from './http';
+import { HttpError, RedirectBlockedError, type HttpClient } from './http';
 import { decodeEntities } from './normalize/text';
+import { DEADLINE_TIME_ZONE, toIsoDeadline } from './normalize/values';
 
 /**
  * "A vaga ainda está aberta?" — uma requisição por vaga, pelo jeito certo de
@@ -32,16 +33,38 @@ export interface AvailabilityTarget {
  */
 export const isRestrictedHost = isRestrictedUrl;
 
-/** Frases de vaga fechada nas páginas (Gupy, sites de carreira, ATS). */
-const CLOSED_TEXT =
-  /(vaga (foi )?encerrada|vaga (n[aã]o est[aá] mais|indispon[ií]vel)|inscri[cç][oõ]es (foram )?encerradas|processo seletivo (foi )?encerrado|esta vaga n[aã]o (est[aá]|existe)|n[aã]o (est[aá] mais )?(aceitando|recebendo) (candidaturas|inscri[cç][oõ]es)|job (is )?(closed|no longer available)|position (has been )?(filled|closed)|no longer accepting applications|this job (posting )?(has )?(expired|closed))/i;
+/**
+ * Frases INTEIRAS de vaga fechada nas páginas (Gupy, sites de carreira, ATS).
+ * "Esta vaga não está disponível para PcD" não conta: precisa do "mais", de
+ * "encerrada" ou de "não existe".
+ */
+const CLOSED_TEXT = new RegExp(
+  [
+    'vaga (foi )?encerrada',
+    '(esta )?vaga n[aã]o est[aá] mais (dispon[ií]vel|aberta|ativa)',
+    '(esta )?vaga n[aã]o existe( mais)?',
+    'vaga (est[aá] )?indispon[ií]vel(?! (para|pra|a|ao|aos|em|no|na)\\b)',
+    'inscri[cç][oõ]es (foram |est[aã]o )?encerradas',
+    'processo seletivo (foi |est[aá] )?encerrado',
+    'n[aã]o (est[aá] mais |estamos mais )?(aceitando|recebendo) (mais )?(candidaturas|inscri[cç][oõ]es)',
+    'this job is no longer available',
+    'job (posting )?(is )?no longer available',
+    'this job (posting )?(has )?(expired|closed|been closed)',
+    'job (posting )?(is )?closed',
+    'position (has been )?(filled|closed)',
+    'no longer accepting applications',
+  ]
+    .map((phrase) => `\\b${phrase}\\b`)
+    .join('|'),
+  'i',
+);
 
-/** `"validThrough": "2026-10-01..."` do JSON-LD `JobPosting`. */
+/** `"validThrough": "2026-10-01..."` do JSON-LD `JobPosting`; só a data = até o fim do dia. */
 function validThrough(html: string): Date | null {
   const found = /"validThrough"\s*:\s*"([^"]+)"/.exec(html);
   if (!found) return null;
-  const date = new Date(found[1]!);
-  return Number.isNaN(date.getTime()) ? null : date;
+  const iso = toIsoDeadline(found[1]!);
+  return iso ? new Date(iso) : null;
 }
 
 const pageText = (html: string) =>
@@ -73,8 +96,16 @@ async function checkApi(url: string, http: HttpClient, where: string): Promise<A
 async function checkPage(url: string, http: HttpClient, now: Date): Promise<AvailabilityResult> {
   let html: string;
   try {
-    html = await http.getText(url);
+    // Link encurtado ou de empresa pode redirecionar para o LinkedIn & cia.: cada salto é conferido antes.
+    html = await http.getText(url, { allowRedirect: (next) => !isRestrictedHost(next) });
   } catch (error) {
+    if (error instanceof RedirectBlockedError) {
+      return {
+        state: 'unknown',
+        reason:
+          'O link leva a um site que não permite conferência automática: abra o link para ver',
+      };
+    }
     if (isGone(error)) return { state: 'closed', reason: 'A página da vaga não existe mais' };
     return unknownFrom(error);
   }
@@ -83,7 +114,7 @@ async function checkPage(url: string, http: HttpClient, now: Date): Promise<Avai
   if (until && until < now) {
     return {
       state: 'closed',
-      reason: `Inscrições até ${until.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}`,
+      reason: `Inscrições até ${until.toLocaleDateString('pt-BR', { timeZone: DEADLINE_TIME_ZONE })}`,
     };
   }
   const closed = CLOSED_TEXT.exec(pageText(html));

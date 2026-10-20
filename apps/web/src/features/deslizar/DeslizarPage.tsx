@@ -63,16 +63,13 @@ export function DeslizarPage() {
       acted.current.add(current.id);
       const action: Action = { before: current, status };
       setHistory((previous) => [...previous, action].slice(-UNDO_LIMIT));
-      triage.mutate(
-        { job: current, status },
-        {
-          onError: (error) => {
-            acted.current.delete(action.before.id);
-            setHistory((previous) => previous.filter((item) => item !== action));
-            toast.show({ tone: 'error', message: error.message });
-          },
-        },
-      );
+      // `mutateAsync` por chamada: o `onError` do `mutate` só roda para a última
+      // chamada, e uma falha no meio de uma sequência rápida prenderia a vaga.
+      void triage.mutateAsync({ job: current, status }).catch((error: Error) => {
+        acted.current.delete(action.before.id);
+        setHistory((previous) => previous.filter((item) => item !== action));
+        toast.show({ tone: 'error', message: error.message });
+      });
     },
     [current, triage, toast],
   );
@@ -82,14 +79,13 @@ export function DeslizarPage() {
     if (!last) return;
     acted.current.delete(last.before.id);
     setHistory((previous) => previous.slice(0, -1));
-    triage.mutate(
-      {
+    void triage
+      .mutateAsync({
         job: { ...last.before, triage: last.status },
         status: last.before.triage,
         reason: last.before.dismissReason,
-      },
-      { onError: (error) => toast.show({ tone: 'error', message: error.message }) },
-    );
+      })
+      .catch((error: Error) => toast.show({ tone: 'error', message: error.message }));
   }, [history, triage, toast]);
 
   const openDetail = useCallback(() => {

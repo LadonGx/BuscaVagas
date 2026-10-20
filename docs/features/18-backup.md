@@ -43,11 +43,13 @@ buscavagas-backup-20261014-1830.zip
    - backup de um banco com migração que este não tem (rode `pnpm db:deploy`
      com o app atualizado).
 4. "Substituir tudo pelo backup" → `POST /api/backup/restore`:
-   - grava a cópia de segurança `buscavagas-antes-de-restaurar-<data>.zip`;
+   - grava a cópia de segurança `buscavagas-antes-de-restaurar-<data e hora>.zip`
+     (com segundos; nunca sobrescreve uma cópia anterior);
    - apaga as tabelas e insere o backup na ordem das dependências;
    - liga as repostagens (vaga que aponta para outra) só depois que todas as
      vagas existem;
-   - deu erro (ex.: campo que este banco não tem): desfaz tudo e avisa.
+   - deu erro (ex.: campo que este banco não tem): desfaz tudo e avisa;
+   - deu certo: recalcula a nota de todas as vagas com as regras de agora.
 5. Todas as telas recarregam da API.
 
 Backup feito com uma versão **mais antiga** do app restaura: as colunas novas

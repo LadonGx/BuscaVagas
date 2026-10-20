@@ -6,12 +6,13 @@ import {
   type BackupManifest,
   type BackupRestoreResultDto,
 } from '@busca-vagas/shared';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
 import type { Env } from '../../config/env';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { SCORE_REQUESTER, type ScoreRequester } from '../scoring/scoring.constants';
 
 type Row = Record<string, unknown>;
 type Client = Prisma.TransactionClient | PrismaService;
@@ -60,12 +61,66 @@ const CHUNK = 500;
 const delegate = (client: Client, table: string) =>
   (client as unknown as Record<string, Delegate>)[table.charAt(0).toLowerCase() + table.slice(1)]!;
 
-const stamp = (date: Date) =>
-  date.toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '-');
+/** `20261014-1530`, ou `20261014-153045` com os segundos. */
+const stamp = (date: Date, seconds = false) =>
+  date
+    .toISOString()
+    .slice(0, seconds ? 19 : 16)
+    .replace(/[-:]/g, '')
+    .replace('T', '-');
 
 /** `buscavagas-backup-20261014-1530.zip`. */
 export const backupFileName = (date: Date, prefix = 'backup') =>
   `buscavagas-${prefix}-${stamp(date)}.zip`;
+
+/**
+ * `buscavagas-antes-de-restaurar-20261014-153045.zip` (com segundos: duas
+ * restaurações no mesmo minuto não podem sobrescrever a cópia uma da outra).
+ * `attempt` > 1 acrescenta `-2`, `-3`… se o nome já existir.
+ */
+export const safetyCopyFileName = (date: Date, attempt = 1) =>
+  `buscavagas-antes-de-restaurar-${stamp(date, true)}${attempt > 1 ? `-${attempt}` : ''}.zip`;
+
+/** Leitura do backup: uma foto só do banco, mesmo com busca e nota gravando no meio. */
+const EXPORT_TX = {
+  isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead,
+  timeout: 10 * 60_000,
+  maxWait: 30_000,
+};
+
+const corrupt = (detail: string) =>
+  new BadRequestException({ statusCode: 400, message: `Backup corrompido: ${detail}.` });
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** O manifest no formato esperado (normalizado), ou null. */
+function parseManifest(value: unknown): BackupManifest | null {
+  if (!isPlainObject(value)) return null;
+  const { app, format, createdAt, migrations, counts } = value;
+  if (app !== 'BuscaVagas' || typeof format !== 'number' || !Number.isFinite(format)) return null;
+  if (createdAt !== undefined && typeof createdAt !== 'string') return null;
+  if (
+    migrations !== undefined &&
+    migrations !== null &&
+    !(Array.isArray(migrations) && migrations.every((name) => typeof name === 'string'))
+  ) {
+    return null;
+  }
+  if (
+    counts !== undefined &&
+    !(isPlainObject(counts) && Object.values(counts).every((n) => typeof n === 'number'))
+  ) {
+    return null;
+  }
+  return {
+    app,
+    format,
+    createdAt: createdAt ?? '',
+    migrations: (migrations as string[] | null | undefined) ?? null,
+    counts: (counts as Record<string, number> | undefined) ?? {},
+  };
+}
 
 /**
  * Backup e restauração (docs/features/18-backup.md).
@@ -80,14 +135,26 @@ export class BackupService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService<Env, true>,
+    /** Recalcular as notas depois de restaurar. Opcional: nos testes sem Redis não existe. */
+    @Optional() @Inject(SCORE_REQUESTER) private readonly scoring?: ScoreRequester,
   ) {}
 
   async export(now = new Date()): Promise<Uint8Array> {
     const files: Zippable = {};
     const counts: Record<string, number> = {};
 
-    for (const table of BACKUP_TABLES) {
-      const rows = await delegate(this.prisma, table).findMany();
+    // Tudo numa transação REPEATABLE READ: as tabelas saem do mesmo instante.
+    // Lidas uma a uma sem isso, uma vaga gravada no meio podia entrar sem o
+    // "pai" (ou o filho sem a vaga) e o .zip não restaurava (chave estrangeira).
+    const snapshot = await this.prisma.$transaction(async (tx) => {
+      const tables: { table: (typeof BACKUP_TABLES)[number]; rows: Row[] }[] = [];
+      for (const table of BACKUP_TABLES) {
+        tables.push({ table, rows: await delegate(tx, table).findMany() });
+      }
+      return tables;
+    }, EXPORT_TX);
+
+    for (const { table, rows } of snapshot) {
       counts[table] = rows.length;
       const data = rows.map((row) => {
         if (table !== 'ApplicationFile') return row;
@@ -157,6 +224,9 @@ export class BackupService {
           for (const { id, repostOfId } of reposts) {
             await tx.$executeRaw`UPDATE "Job" SET "repostOfId" = ${repostOfId} WHERE id = ${id}`;
           }
+          // Notas recalculadas do zero: um backup antigo pode ter sido pontuado
+          // antes de uma migração que mudou a nota (e que só mexe nos dados).
+          await tx.$executeRaw`UPDATE "Job" SET "scoredVersion" = NULL`;
         },
         { timeout: 10 * 60_000, maxWait: 30_000 },
       );
@@ -167,6 +237,10 @@ export class BackupService {
         message: `Não consegui restaurar; nada foi mudado. O arquivo não combina com esta versão do banco (${reason}).`,
       });
     }
+
+    // Sem esperar: a fila recalcula em segundo plano (Redis fora do ar = as
+    // notas ficam na fila até o próximo pedido).
+    void this.scoring?.request('backup:restore');
 
     this.logger.log(
       `Backup de ${manifest.createdAt} restaurado. Cópia do que havia antes: ${safetyBackup}`,
@@ -186,11 +260,11 @@ export class BackupService {
     const raw = files['manifest.json'];
     let manifest: BackupManifest | null;
     try {
-      manifest = raw ? (JSON.parse(strFromU8(raw)) as BackupManifest) : null;
+      manifest = raw ? parseManifest(JSON.parse(strFromU8(raw))) : null;
     } catch {
       manifest = null;
     }
-    if (!manifest || manifest.app !== 'BuscaVagas' || typeof manifest.format !== 'number') {
+    if (!manifest) {
       throw new BadRequestException({
         statusCode: 400,
         message: 'Este .zip não é um backup do BuscaVagas (falta o manifest.json).',
@@ -202,7 +276,15 @@ export class BackupService {
   private rows(files: Record<string, Uint8Array>, table: string): Row[] {
     const raw = files[`data/${table}.json`];
     if (!raw) return []; // tabela que não existia quando o backup foi feito
-    const rows = JSON.parse(strFromU8(raw)) as Row[];
+    let rows: unknown;
+    try {
+      rows = JSON.parse(strFromU8(raw));
+    } catch {
+      throw corrupt(`data/${table}.json não é um JSON válido`);
+    }
+    if (!Array.isArray(rows) || !rows.every(isPlainObject)) {
+      throw corrupt(`data/${table}.json não é uma lista de linhas`);
+    }
     if (table !== 'ApplicationFile') return rows;
     return rows.map(({ contentFile, ...row }) => {
       const content = files[String(contentFile)];
@@ -246,9 +328,17 @@ export class BackupService {
 
   private async saveSafetyCopy(now: Date): Promise<string> {
     const dir = resolve(process.cwd(), this.config.get('BACKUP_DIR', { infer: true }));
-    const name = backupFileName(now, 'antes-de-restaurar');
     await mkdir(dir, { recursive: true });
-    await writeFile(resolve(dir, name), await this.export(now));
-    return name;
+    const zip = await this.export(now);
+    // `wx`: nunca sobrescreve uma cópia anterior; nome ocupado ganha um sufixo.
+    for (let attempt = 1; ; attempt += 1) {
+      const name = safetyCopyFileName(now, attempt);
+      try {
+        await writeFile(resolve(dir, name), zip, { flag: 'wx' });
+        return name;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST' || attempt >= 100) throw error;
+      }
+    }
   }
 }

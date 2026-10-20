@@ -221,7 +221,8 @@ export function useMuteReposts(id: string) {
 
 /**
  * "Conferir se ainda está aberta" (docs/features/13-availability.md). A vaga
- * muda no painel e nas listas na hora; contagens e o Início vêm da API.
+ * muda no painel e nas listas na hora; contagens, listas e o Início são
+ * recarregados da API.
  */
 export function useCheckJob() {
   const queryClient = useQueryClient();
@@ -241,7 +242,13 @@ export function useCheckJob() {
           })),
         });
       }
-      await queryClient.invalidateQueries({ queryKey: keys.dashboard });
+      // A vaga pode ter fechado: as contagens e as listas que escondem as
+      // fechadas mudam; quem decide é a API.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: keys.jobs.counts }),
+        queryClient.invalidateQueries({ queryKey: keys.jobs.lists }),
+        queryClient.invalidateQueries({ queryKey: keys.dashboard }),
+      ]);
     },
   });
 }

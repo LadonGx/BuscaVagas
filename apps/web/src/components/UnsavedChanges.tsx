@@ -29,6 +29,12 @@ export function useUnsavedChanges({
       dirty && !allowLeave.current && currentLocation.pathname !== nextLocation.pathname,
   );
 
+  /** O bloqueio da renderização mais recente (o clique espera o `save`). */
+  const blockerRef = useRef(blocker);
+  useEffect(() => {
+    blockerRef.current = blocker;
+  });
+
   useEffect(() => {
     if (!dirty) return;
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -71,8 +77,11 @@ export function useUnsavedChanges({
               variant="primary"
               disabled={saving}
               onClick={async () => {
-                if (await save()) blocker.proceed?.();
-                else blocker.reset?.();
+                const saved = await save();
+                const current = blockerRef.current;
+                if (current.state !== 'blocked') return;
+                if (saved) current.proceed();
+                else current.reset();
               }}
             >
               Salvar e sair

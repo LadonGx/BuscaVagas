@@ -222,7 +222,10 @@ describeDb('Preferências e nota (integração)', () => {
     await scoring.scoreStale();
     requester.request.mockClear();
 
-    const response = await api().post('/api/preferences/rescore').expect(202);
+    const response = await api()
+      .post('/api/preferences/rescore')
+      .set('Content-Type', 'application/json')
+      .expect(202);
     expect(response.body).toEqual({ queued: true });
     expect((await list()).items[0]?.scorePending).toBe(true);
     expect(await scoring.scoreStale()).toMatchObject({ scored: 1 });

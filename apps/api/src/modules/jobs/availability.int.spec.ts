@@ -156,7 +156,9 @@ describeDb('Disponibilidade (integração)', () => {
     const getJson = vi.spyOn(http, 'getJson');
 
     getJson.mockRejectedValueOnce(new HttpError('HTTP 404', 'https://x', 404));
-    let dto = (await api().post(`/api/jobs/${id}/check`).expect(200)).body as JobDto;
+    let dto = (
+      await api().post(`/api/jobs/${id}/check`).set('Content-Type', 'application/json').expect(200)
+    ).body as JobDto;
     expect(getJson).toHaveBeenLastCalledWith(
       'https://boards-api.greenhouse.io/v1/boards/acme/jobs/1',
     );
@@ -167,12 +169,16 @@ describeDb('Disponibilidade (integração)', () => {
     expect(dto.availability.checkedAt).not.toBeNull();
 
     getJson.mockRejectedValueOnce(new Error('timeout'));
-    dto = (await api().post(`/api/jobs/${id}/check`).expect(200)).body as JobDto;
+    dto = (
+      await api().post(`/api/jobs/${id}/check`).set('Content-Type', 'application/json').expect(200)
+    ).body as JobDto;
     expect(dto.availability.state).toBe('closed'); // continua: o sinal antigo vale
     expect((await byExternal(1)).checkState).toBe('unknown');
 
     getJson.mockResolvedValueOnce({ id: 1 });
-    dto = (await api().post(`/api/jobs/${id}/check`).expect(200)).body as JobDto;
+    dto = (
+      await api().post(`/api/jobs/${id}/check`).set('Content-Type', 'application/json').expect(200)
+    ).body as JobDto;
     expect(dto.availability).toMatchObject({ state: 'open', closedAt: null });
   });
 
@@ -185,14 +191,22 @@ describeDb('Disponibilidade (integração)', () => {
     ).body as JobDto;
     const getText = vi.spyOn(http, 'getText');
 
-    const dto = (await api().post(`/api/jobs/${created.id}/check`).expect(200)).body as JobDto;
+    const dto = (
+      await api()
+        .post(`/api/jobs/${created.id}/check`)
+        .set('Content-Type', 'application/json')
+        .expect(200)
+    ).body as JobDto;
     expect(getText).not.toHaveBeenCalled();
     expect(dto.availability.state).toBe('unknown');
     expect(dto.availability.reason).toMatch(/não permite conferência automática/);
   });
 
   it('POST /jobs/:id/check em vaga inexistente: 404', async () => {
-    await api().post('/api/jobs/00000000-0000-0000-0000-000000000000/check').expect(404);
+    await api()
+      .post('/api/jobs/00000000-0000-0000-0000-000000000000/check')
+      .set('Content-Type', 'application/json')
+      .expect(404);
   });
 
   it('rodada diária: só salvas, sem candidatura, abertas e não conferidas há 20 h', async () => {

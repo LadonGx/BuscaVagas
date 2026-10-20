@@ -20,3 +20,10 @@ export const AVAILABILITY_EVERY_MS = DAY_MS;
 
 /** Primeira conferência: 10 minutos depois de a agenda ser criada. */
 export const AVAILABILITY_FIRST_RUN_DELAY_MS = 10 * 60 * 1000;
+
+/** Recalcular a idade das vagas na nota (`RecencyRefreshService`). */
+export const RECENCY_JOB_NAME = 'recency';
+export const RECENCY_SCHEDULER_ID = 'schedule:recency';
+export const RECENCY_EVERY_MS = DAY_MS;
+/** Primeira execução: 15 minutos depois de a agenda ser criada. */
+export const RECENCY_FIRST_RUN_DELAY_MS = 15 * 60 * 1000;

@@ -4,6 +4,10 @@ import type { FieldInfo } from './match.js';
  * Funções que rodam DENTRO da página (Playwright `frame.evaluate`): precisam
  * ser autocontidas, sem imports nem nada de fora (só tipos). Leem os campos e
  * escrevem valores; nunca clicam em botão, nunca enviam formulário.
+ *
+ * `restricted`: os sites restritos (RESTRICTED_SITES). O filler confere o
+ * endereço antes, mas o quadro pode ter navegado nesse meio-tempo: cada função
+ * confere de novo, na página, e não faz nada num desses sites.
  */
 
 /** Uma resposta para aplicar: texto (`value`) ou opção (`index`). */
@@ -18,7 +22,10 @@ export interface Apply {
  * já tem valor (o site preencheu, ou você) é marcado e fica de fora: nada é
  * sobrescrito.
  */
-export function collectFields(): FieldInfo[] {
+export function collectFields(restricted: readonly string[]): FieldInfo[] {
+  const host = location.hostname.toLowerCase().replace(/\.+$/, '');
+  if (restricted.some((site) => host === site || host.endsWith(`.${site}`))) return [];
+
   const ATTR = 'data-bv-id';
   const CONTROLS = 'input, select, textarea, button';
   const state = window as unknown as { __bvNext?: number };
@@ -28,13 +35,25 @@ export function collectFields(): FieldInfo[] {
   };
   const clean = (text: string | null | undefined) => (text ?? '').replace(/\s+/g, ' ').trim();
 
-  const isHidden = (element: Element) => {
+  /**
+   * Escondido de quem usa a página: `hidden`, `display: none`, `aria-hidden`,
+   * opacidade 0 ou fora da tela (o campo-armadilha para robôs costuma ficar
+   * assim). `own = false` (radio): o próprio campo pode estar transparente ou
+   * fora da tela, porque o site desenha a bolinha por cima; vale o que está em
+   * volta. Tamanho zero não conta: sem layout (jsdom) não dá para saber.
+   */
+  const isHidden = (element: Element, own = true) => {
     for (let node: Element | null = element; node; node = node.parentElement) {
-      if (node.hasAttribute('hidden')) return true;
+      if (node.hasAttribute('hidden') || node.getAttribute('aria-hidden') === 'true') return true;
       const style = getComputedStyle(node);
       if (style.display === 'none' || style.visibility === 'hidden') return true;
+      if ((own || node !== element) && parseFloat(style.opacity) === 0) return true;
     }
-    return false;
+    if (!own) return false;
+    const rect = element.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) return false;
+    // Em coordenadas da página: campo que só rolou para cima da tela vale.
+    return rect.right + window.scrollX < 0 || rect.bottom + window.scrollY < 0;
   };
 
   /** Texto do elemento sem o texto dos campos e opções dentro dele. */
@@ -167,7 +186,7 @@ export function collectFields(): FieldInfo[] {
 
   for (const radios of radioGroups.values()) {
     // Grupo ainda escondido (próxima etapa): fica para quando aparecer.
-    if (radios.every((radio) => isHidden(radio))) continue;
+    if (radios.every((radio) => isHidden(radio, false))) continue;
     if (radios.some((radio) => radio.checked)) {
       radios.forEach((radio) => radio.setAttribute(ATTR, 'ja-tem'));
       continue;
@@ -219,7 +238,16 @@ export function collectFields(): FieldInfo[] {
  * destaca o campo. Campo que ganhou valor nesse meio-tempo fica como está.
  * Devolve os ids preenchidos.
  */
-export function applyAnswers(answers: Apply[]): string[] {
+export function applyAnswers({
+  answers,
+  restricted,
+}: {
+  answers: Apply[];
+  restricted: readonly string[];
+}): string[] {
+  const host = location.hostname.toLowerCase().replace(/\.+$/, '');
+  if (restricted.some((site) => host === site || host.endsWith(`.${site}`))) return [];
+
   const done: string[] = [];
   const mark = (element: HTMLElement) => {
     element.setAttribute('data-bv-filled', '');
@@ -266,6 +294,14 @@ export function applyAnswers(answers: Apply[]): string[] {
   return done;
 }
 
+/** Quantos campos de arquivo o quadro tem (todos, já vistos ou não). */
+export function countFileInputs(restricted: readonly string[]): number {
+  const host = location.hostname.toLowerCase().replace(/\.+$/, '');
+  if (restricted.some((site) => host === site || host.endsWith(`.${site}`))) return 0;
+  return Array.from(document.querySelectorAll('input')).filter((input) => input.type === 'file')
+    .length;
+}
+
 /** Destaca um campo preenchido fora daqui (o currículo no campo de arquivo). */
 export function markFilled(id: string): void {
   const element = document.querySelector<HTMLElement>(`[data-bv-id="${CSS.escape(id)}"]`);
@@ -278,7 +314,16 @@ export function markFilled(id: string): void {
 }
 
 /** O aviso no canto da página: o que foi preenchido e que quem envia é você. */
-export function showBanner(text: string): void {
+export function showBanner({
+  message,
+  restricted,
+}: {
+  message: string;
+  restricted: readonly string[];
+}): void {
+  const host = location.hostname.toLowerCase().replace(/\.+$/, '');
+  if (restricted.some((site) => host === site || host.endsWith(`.${site}`))) return;
+
   const ID = 'buscavagas-aviso';
   const state = window as unknown as { __bvBannerClosed?: boolean };
   if (state.__bvBannerClosed) return;
@@ -324,5 +369,5 @@ export function showBanner(text: string): void {
     banner.append(text, close);
     document.body.append(banner);
   }
-  banner.querySelector('p')!.textContent = text;
+  banner.querySelector('p')!.textContent = message;
 }

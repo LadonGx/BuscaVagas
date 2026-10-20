@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { normalizeAppUrl, openUrlFor } from './app-client';
+import { describe, expect, it, vi } from 'vitest';
+import { createJob, findApp, normalizeAppUrl, openUrlFor } from './app-client';
 import { emptyDraft, toCreateInput } from './draft';
 import { draftFromJsonLd } from './jsonld';
 import { describePasted, readPastedText } from './pasted-text';
@@ -204,6 +204,109 @@ describe('texto colado da página', () => {
     });
   });
 
+  it('Indeed: "Descrição completa da vaga"; benefício e frase sobre a empresa não viram etiqueta', () => {
+    const text = [
+      'Desenvolvedor Full Stack Júnior',
+      'Acme Tecnologia',
+      'Campinas, SP',
+      'Publicada há 2 dias',
+      'Presencial',
+      'R$ 4.000 - R$ 5.500 por mês',
+      'Candidatar-se',
+      'Detalhes da vaga',
+      'Benefícios',
+      'Vale-refeição de R$ 35 por dia',
+      'Descrição completa da vaga',
+      'A Acme é uma empresa 100% remota, mas esta vaga é presencial em Campinas.',
+      'Bônus anual.',
+    ].join('\n');
+    const fields = readPastedText(text, now);
+    expect(fields).toMatchObject({
+      location: 'Campinas, SP',
+      workModel: 'onsite',
+      postedAt: '2026-10-13',
+      salaryMin: 4000,
+      salaryMax: 5500,
+      salaryPeriod: 'month',
+      description:
+        'A Acme é uma empresa 100% remota, mas esta vaga é presencial em Campinas.\nBônus anual.',
+    });
+    // "Campinas, SP" é o local, não o título.
+    expect(fields.title).toBeUndefined();
+    expect(fields.company).toBeUndefined();
+  });
+
+  it('Indeed sem título nem data: nada de etiqueta; salário só com a palavra salário', () => {
+    const text = [
+      'Desenvolvedor Full Stack Júnior',
+      'Campinas, SP',
+      'Benefícios',
+      'Vale-refeição de R$ 35 por dia',
+      'A Acme é uma empresa 100% remota, mas esta vaga é presencial.',
+      'Remuneração: R$ 4.000 + bônus anual',
+    ].join('\n');
+    const fields = readPastedText(text, now);
+    expect(fields.workModel).toBeUndefined();
+    expect(fields.title).toBeUndefined();
+    expect(fields).toMatchObject({ salaryMin: 4000, salaryMax: 4000, salaryPeriod: 'month' });
+    expect(
+      readPastedText('Vale-refeição de R$ 35 por dia\nTrabalho remoto às sextas', now),
+    ).not.toHaveProperty('salaryMin');
+  });
+
+  it('"Brasil · Remoto · há 2 dias": Brasil é o local, a empresa vem de cima', () => {
+    const text = [
+      'Acme',
+      'Desenvolvedor Júnior',
+      'Brasil · Remoto · há 2 dias · 30 candidaturas',
+      'Full job description',
+      'Vaga para dev júnior.',
+    ].join('\n');
+    expect(readPastedText(text, now)).toMatchObject({
+      company: 'Acme',
+      title: 'Desenvolvedor Júnior',
+      location: 'Brasil',
+      workModel: 'remote',
+      description: 'Vaga para dev júnior.',
+    });
+  });
+
+  it.each([
+    ['Descrição da vaga'],
+    ['Descrição completa da vaga'],
+    ['Full job description'],
+    ['Job details'],
+    ['Sobre a vaga:'],
+  ])('título da descrição: %s', (heading) => {
+    expect(readPastedText(`Acme\n${heading}\nTexto da vaga.`, now).description).toBe(
+      'Texto da vaga.',
+    );
+  });
+
+  it('período do salário: só o que vem colado no valor', () => {
+    const salary = (line: string) => {
+      const { salaryMin, salaryMax, salaryPeriod } = readPastedText(
+        `${line}\nSobre a vaga\nx`,
+        now,
+      );
+      return { salaryMin, salaryMax, salaryPeriod };
+    };
+    expect(salary('R$ 60 mil/ano')).toEqual({
+      salaryMin: 60000,
+      salaryMax: 60000,
+      salaryPeriod: 'year',
+    });
+    expect(salary('Salário: R$ 120.000 por ano')).toMatchObject({ salaryPeriod: 'year' });
+    expect(salary('Salário: R$ 120.000 anual')).toMatchObject({ salaryPeriod: 'year' });
+    expect(salary('R$ 50/h')).toMatchObject({ salaryMin: 50, salaryPeriod: 'hour' });
+    expect(salary('R$ 50 por hora')).toMatchObject({ salaryPeriod: 'hour' });
+    expect(salary('R$ 4.000 + bônus anual')).toMatchObject({
+      salaryMin: 4000,
+      salaryPeriod: 'month',
+    });
+    expect(salary('R$ 4.000 há 2 dias')).toMatchObject({ salaryPeriod: 'month' });
+  });
+
   it('texto sem os dados da vaga: só a descrição', () => {
     const fields = readPastedText('Uma vaga legal.\nMande seu currículo.', now);
     expect(fields).toEqual({ description: 'Uma vaga legal.\nMande seu currículo.' });
@@ -243,6 +346,27 @@ describe('rascunho e endereço do app', () => {
     expect(normalizeAppUrl('http://192.168.0.5:8080')).toBeNull();
     expect(normalizeAppUrl('https://127.0.0.1:8080')).toBeNull();
     expect(normalizeAppUrl('lixo')).toBeNull();
+  });
+
+  it('POST com Content-Type: application/json; GET sem', async () => {
+    const fetchFn = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ status: 'ok', id: 'j1' }), {
+          status: 201,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+    await findApp(fetchFn as unknown as typeof fetch, null);
+    await createJob(
+      fetchFn as unknown as typeof fetch,
+      'http://127.0.0.1:8080',
+      toCreateInput({ ...emptyDraft('https://x.com/v/1'), title: 'Dev', company: 'Acme' }, 'inbox'),
+    );
+    const calls = fetchFn.mock.calls as unknown as [string, RequestInit][];
+    const type = (init: RequestInit) => new Headers(init.headers).get('Content-Type');
+    expect(type(calls[0]![1])).toBeNull();
+    expect(calls.at(-1)![1].method).toBe('POST');
+    expect(type(calls.at(-1)![1])).toBe('application/json');
   });
 
   it('link da vaga no app: Docker na mesma porta; dev na porta do Vite', () => {

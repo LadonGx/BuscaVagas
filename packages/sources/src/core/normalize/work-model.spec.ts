@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSalary, toIsoDate } from './values';
+import { buildSalary, toIsoDate, toIsoDeadline } from './values';
 import { contractFromText, workModelFromText } from './work-model';
 
 describe('modalidade pelo texto', () => {
@@ -40,6 +40,17 @@ describe('valores', () => {
     expect(toIsoDate(1_790_000_000_000)).toBe(new Date(1_790_000_000_000).toISOString());
     expect(toIsoDate('ontem')).toBeNull();
     expect(toIsoDate(null)).toBeNull();
+  });
+
+  it('prazo só com a data: até o fim do dia em São Paulo', () => {
+    expect(toIsoDeadline('2026-10-18')).toBe('2026-10-19T02:59:59.999Z');
+    expect(toIsoDeadline('2026-10-18T00:00:00.000Z')).toBe('2026-10-19T02:59:59.999Z');
+    expect(toIsoDeadline('2026-10-18T00:00:00Z')).toBe('2026-10-19T02:59:59.999Z');
+    // Com hora de verdade: como veio.
+    expect(toIsoDeadline('2026-10-18T18:00:00-03:00')).toBe('2026-10-18T21:00:00.000Z');
+    expect(toIsoDeadline('2026-02-30')).toBeNull();
+    expect(toIsoDeadline('2026-13-01')).toBeNull();
+    expect(toIsoDeadline(null)).toBeNull();
   });
 
   it('salário só com moeda, período e algum valor', () => {

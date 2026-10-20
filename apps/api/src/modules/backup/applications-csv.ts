@@ -27,10 +27,21 @@ const HEADER = [
   'Link',
 ];
 
-/** Campo do CSV: entre aspas se tiver separador, aspas ou quebra de linha. */
+/**
+ * Texto que o Excel/Sheets leria como fórmula (`=`, `+`, `-`, `@`, tab, CR no
+ * começo). Título, empresa e anotações vêm de sites de terceiros: uma vaga com
+ * título `=HYPERLINK(...)` viraria fórmula ao abrir o CSV (CSV injection).
+ */
+const FORMULA_START = /^[=+\-@\t\r]/;
+
+/**
+ * Campo do CSV: texto que pareça fórmula ganha um `'` na frente (o Excel
+ * mostra como texto); entre aspas se tiver separador, aspas ou quebra de linha.
+ * Números (pretensão) não passam pelo `'`: são números de verdade.
+ */
 export function csvField(value: string | number | null): string {
   if (value === null) return '';
-  const text = String(value);
+  const text = typeof value === 'string' && FORMULA_START.test(value) ? `'${value}` : String(value);
   return /[;"\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 

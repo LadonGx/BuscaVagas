@@ -35,6 +35,14 @@ export const imapReader: MailboxReader = async (config, { since, known, signal }
   });
   const abort = () => client.close();
   signal.addEventListener('abort', abort, { once: true });
+  // Erro de socket/timeout depois do connect() chega como evento 'error': sem
+  // ouvinte, derruba o processo. Guarda o erro e fecha: o que estiver em
+  // andamento rejeita e cai no catch abaixo.
+  let socketError: unknown = null;
+  client.on('error', (error: unknown) => {
+    socketError ??= error;
+    client.close();
+  });
 
   try {
     await client.connect();
@@ -58,7 +66,8 @@ export const imapReader: MailboxReader = async (config, { since, known, signal }
     return { keys, fresh };
   } catch (error) {
     client.close();
-    throw new Error(describeImapError(error, config), { cause: error });
+    // Caiu o socket: o erro dele explica melhor que o "conexão fechada" do comando.
+    throw new Error(describeImapError(socketError ?? error, config), { cause: error });
   } finally {
     signal.removeEventListener('abort', abort);
   }

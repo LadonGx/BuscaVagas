@@ -51,6 +51,35 @@ describe('apiRequest', () => {
     });
   });
 
+  it('escrita sem corpo também manda Content-Type: application/json (a API exige)', async () => {
+    const fetch = respond(204);
+    vi.stubGlobal('fetch', fetch);
+
+    await api.delete('/jobs/1');
+    await api.post('/discovery/scan');
+    await api.put('/jobs/1/reposts');
+    await api.patch('/jobs/1');
+    for (const [, init] of fetch.mock.calls as unknown as [string, RequestInit][]) {
+      expect(init.headers).toEqual({ 'Content-Type': 'application/json' });
+      expect(init.body).toBeUndefined();
+    }
+    expect(fetch).toHaveBeenCalledTimes(4);
+  });
+
+  it('upload vai cru, com o tipo do arquivo', async () => {
+    const fetch = respond(200, { ok: true });
+    vi.stubGlobal('fetch', fetch);
+    const zip = new Blob(['PK'], { type: 'application/zip' });
+
+    await api.upload('/backup/inspect', zip, 'application/zip');
+    expect(fetch).toHaveBeenCalledWith('/api/backup/inspect', {
+      method: 'POST',
+      signal: undefined,
+      body: zip,
+      headers: { 'Content-Type': 'application/zip' },
+    });
+  });
+
   it('204 devolve undefined', async () => {
     vi.stubGlobal('fetch', respond(204));
     await expect(api.delete('/jobs/1')).resolves.toBeUndefined();

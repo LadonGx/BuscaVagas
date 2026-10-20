@@ -3,6 +3,7 @@ import { canonicalUrl } from '../core/canonical-url';
 import { seniorityFromTitle } from '../core/normalize/seniority';
 import { stackFromText } from '../core/normalize/stack';
 import { fold, htmlToText } from '../core/normalize/text';
+import { toIsoDeadline } from '../core/normalize/values';
 import { gupyJobSchema, type GupyJob } from './gupy.schema';
 
 export const GUPY_SOURCE_ID = 'gupy';
@@ -60,7 +61,8 @@ export function mapGupyJob(raw: unknown): JobPosting | null {
     stack: stackFromText(title, description),
     salary: null,
     postedAt: toIsoDate(job.publishedDate),
-    deadline: toIsoDate(job.applicationDeadline),
+    // Campo de data: vale até o fim do dia em São Paulo, não meia-noite UTC.
+    deadline: toIsoDeadline(job.applicationDeadline),
   };
 }
 

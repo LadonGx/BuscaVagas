@@ -258,7 +258,9 @@ export class JobsService {
     if (input.url !== undefined) {
       const url = this.canonicalOrNull(input.url);
       if (url && url !== current.url) {
-        await this.assertUrlFree(url);
+        await this.assertUrlFree(url, id);
+        // Era um dos outros links desta vaga: vira o principal e sai da lista.
+        data.aliases = { deleteMany: { url } };
       }
       data.url = url;
     }
@@ -736,14 +738,21 @@ export class JobsService {
     return url ? canonicalUrl(siteJobUrl(url)) : null;
   }
 
-  private async assertUrlFree(url: string): Promise<void> {
-    const existing = await this.prisma.job.findUnique({ where: { url }, select: { id: true } });
+  /**
+   * O link não pode ser de outra vaga — nem o principal, nem um dos outros
+   * links dela (`JobAlias`). `selfId`: a vaga sendo editada pode adotar um
+   * dos próprios outros links.
+   */
+  private async assertUrlFree(url: string, selfId?: string): Promise<void> {
+    const existingId =
+      (await this.prisma.job.findUnique({ where: { url }, select: { id: true } }))?.id ??
+      (await this.prisma.jobAlias.findUnique({ where: { url }, select: { jobId: true } }))?.jobId;
 
-    if (existing) {
+    if (existingId && existingId !== selfId) {
       throw new ConflictException({
         statusCode: 409,
         message: 'Esta vaga já está cadastrada.',
-        existingJobId: existing.id,
+        existingJobId: existingId,
       });
     }
   }

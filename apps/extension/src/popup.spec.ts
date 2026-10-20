@@ -265,6 +265,28 @@ describe('janelinha da extensão', () => {
     expect(await deps.loadAppUrl()).toBe('http://127.0.0.1:9000');
   });
 
+  it('endereço inválido: avisa, e depois de corrigido o formulário envia', async () => {
+    const { deps } = setup({
+      tab: { id: 1, url: 'https://acme.gupy.io/jobs/1', title: 'Dev | Acme' },
+      up: ['http://127.0.0.1:9000'],
+    });
+    await startPopup(root(), deps);
+    const input = root().querySelector<HTMLInputElement>('#app-url')!;
+    const form = root().querySelector('form')!;
+
+    input.value = 'http://192.168.0.5:8080';
+    form.requestSubmit();
+    expect(input.validationMessage).toContain('Use um endereço desta máquina');
+    expect(await deps.loadAppUrl()).toBeNull();
+
+    input.value = 'http://127.0.0.1:9000';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(input.validationMessage).toBe('');
+    form.requestSubmit();
+    await vi.waitFor(() => expect(button('Mandar para a Caixa')).toBeDefined());
+    expect(await deps.loadAppUrl()).toBe('http://127.0.0.1:9000');
+  });
+
   it('página que não é de site (chrome://): explica', async () => {
     const { deps } = setup({ tab: { id: 1, url: 'chrome://extensions', title: 'Extensões' } });
     await startPopup(root(), deps);

@@ -10,6 +10,12 @@
 export interface HttpRequestOptions {
   signal?: AbortSignal;
   headers?: Record<string, string>;
+  /**
+   * Para links de qualquer site: segue os redirecionamentos um a um (no máximo
+   * MAX_REDIRECTS) e só vai para o próximo endereço se ele passar aqui. Senão
+   * lança `RedirectBlockedError` sem acessar o destino.
+   */
+  allowRedirect?: (url: string) => boolean;
 }
 
 export interface HttpClient {
@@ -36,6 +42,20 @@ export class HttpError extends Error {
   }
 }
 
+/** O link redirecionou para um endereço que `allowRedirect` recusou. */
+export class RedirectBlockedError extends HttpError {
+  constructor(
+    url: string,
+    readonly location: string,
+  ) {
+    super('Redirecionamento para um endereço não permitido', url);
+    this.name = 'RedirectBlockedError';
+  }
+}
+
+export const MAX_REDIRECTS = 5;
+const REDIRECT_STATUS = new Set([301, 302, 303, 307, 308]);
+
 export const DEFAULT_USER_AGENT = 'busca-vagas/0.1 (+https://github.com/LadonGx/busca-vagas)';
 const DEFAULT_TIMEOUT_MS = 15_000;
 /** Board grande do Greenhouse, com descrições, passa de 4 MB. */
@@ -53,16 +73,47 @@ export function createHttpClient(config: HttpClientConfig = {}): HttpClient {
       signals.push(options.signal);
     }
 
+    const signal = AbortSignal.any(signals);
+    const send = async (target: string, redirect: 'follow' | 'manual') => {
+      try {
+        return await fetchImpl(target, {
+          headers: { 'User-Agent': userAgent, Accept: accept, ...options.headers },
+          signal,
+          redirect,
+        });
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        throw new HttpError(`Falha de rede: ${reason}`, url);
+      }
+    };
+
     let response: Response;
-    try {
-      response = await fetchImpl(url, {
-        headers: { 'User-Agent': userAgent, Accept: accept, ...options.headers },
-        signal: AbortSignal.any(signals),
-        redirect: 'follow',
-      });
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      throw new HttpError(`Falha de rede: ${reason}`, url);
+    const allow = options.allowRedirect;
+    if (!allow) {
+      response = await send(url, 'follow');
+    } else {
+      // Um salto por vez: cada destino passa por `allowRedirect` ANTES de ser acessado.
+      let current = url;
+      response = await send(current, 'manual');
+      for (let hops = 0; REDIRECT_STATUS.has(response.status); hops += 1) {
+        const location = response.headers.get('location');
+        if (!location) break;
+        await response.body?.cancel().catch(() => undefined);
+        let next: URL;
+        try {
+          next = new URL(location, current);
+        } catch {
+          throw new HttpError('Redirecionamento para um endereço inválido', url);
+        }
+        if (!/^https?:$/.test(next.protocol) || !allow(next.toString())) {
+          throw new RedirectBlockedError(url, next.toString());
+        }
+        if (hops >= MAX_REDIRECTS) {
+          throw new HttpError(`Mais de ${MAX_REDIRECTS} redirecionamentos`, url);
+        }
+        current = next.toString();
+        response = await send(current, 'manual');
+      }
     }
 
     if (!response.ok) {

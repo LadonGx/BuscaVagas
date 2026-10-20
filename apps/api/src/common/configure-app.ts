@@ -21,9 +21,6 @@ export function configureApp(app: INestApplication): void {
       host: request.headers.host,
       method: request.method,
       contentType: request.headers['content-type'],
-      hasBody:
-        Number(request.headers['content-length'] ?? 0) > 0 ||
-        'transfer-encoding' in request.headers,
     });
 
     if (!rejection) {

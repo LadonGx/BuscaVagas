@@ -1,9 +1,11 @@
 import { isRestrictedUrl, siteJobUrl, type JobDto } from '@busca-vagas/shared';
+import { rmSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { setTimeout as sleep } from 'node:timers/promises';
+import type { BrowserContext } from 'playwright-core';
 import { AppClient, findApp, webOrigin } from './app-client.js';
 import { BrowserError, openBrowser, PROFILE_DIR } from './browser.js';
 import { describeEvent, Filler } from './filler.js';
@@ -29,6 +31,13 @@ function siteName(url: string): string {
 async function ask(question: string): Promise<string> {
   if (!process.stdin.isTTY) return '';
   const rl = createInterface({ input: process.stdin, output: process.stdout });
+  // Ctrl+C na pergunta: o terminal manda para cá, não para o processo. Repassa
+  // (para apagar a pasta temporária) ou, sem quem cuide, sai.
+  rl.on('SIGINT', () => {
+    rl.close();
+    if (process.listenerCount('SIGINT') > 0) process.emit('SIGINT', 'SIGINT');
+    else process.exit(130);
+  });
   try {
     return (await rl.question(question)).trim();
   } finally {
@@ -84,7 +93,8 @@ async function main(): Promise<number> {
       return 1;
     }
   }
-  url = job?.url ?? url;
+  // Com link, abre o link que você passou; a vaga do app só serve para registrar.
+  url ??= job?.url ?? null;
   if (!url) {
     say('Essa vaga não tem link: não há formulário para abrir.');
     return 1;
@@ -106,6 +116,22 @@ async function main(): Promise<number> {
   }
 
   const dir = await mkdtemp(join(tmpdir(), 'buscavagas-'));
+  // Ctrl+C: com a janela aberta, fecha a janela (e segue para o fim normal,
+  // que apaga a pasta). Antes dela (gerando o PDF), depois dela ou no segundo
+  // Ctrl+C: apaga a pasta temporária aqui mesmo e sai.
+  let context: BrowserContext | null = null;
+  let closed = false;
+  let interrupted = false;
+  const onSigint = () => {
+    if (context && !closed && !interrupted) {
+      interrupted = true;
+      void context.close().catch(() => undefined);
+      return;
+    }
+    rmSync(dir, { recursive: true, force: true });
+    process.exit(130);
+  };
+  process.on('SIGINT', onSigint);
   try {
     let pdf: ResumePdf | null = null;
     try {
@@ -118,14 +144,25 @@ async function main(): Promise<number> {
       say(`A tela do app precisa abrir em ${web}/curriculo/imprimir.`);
     }
 
-    const context = await openBrowser();
-    let closed = false;
-    context.on('close', () => {
+    const browser = await openBrowser();
+    context = browser;
+    browser.on('close', () => {
       closed = true;
     });
-    process.once('SIGINT', () => void context.close());
 
-    const page = context.pages()[0] ?? (await context.newPage());
+    const seen = new Set<string>();
+    const filler = new Filler(profile, pdf?.path ?? null, (event) => {
+      const line = describeEvent(event);
+      if (!seen.has(line)) {
+        seen.add(line);
+        say(line);
+      }
+    });
+    // Os alertas do site ficam na tela para você (sem isso, o Playwright os fecha).
+    browser.pages().forEach((open) => filler.watch(open));
+    browser.on('page', (open) => filler.watch(open));
+
+    const page = browser.pages()[0] ?? (await browser.newPage());
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60_000 }).catch(() => undefined);
 
     say('');
@@ -138,18 +175,14 @@ async function main(): Promise<number> {
     say(`(Perfil do navegador: ${PROFILE_DIR})`);
     say('');
 
-    const seen = new Set<string>();
-    const filler = new Filler(profile, pdf?.path ?? null, (event) => {
-      const line = describeEvent(event);
-      if (!seen.has(line)) {
-        seen.add(line);
-        say(line);
-      }
-    });
-    while (!closed) {
-      for (const open of context.pages()) await filler.fillPage(open);
+    // Cada aba na sua volta, sem esperar as outras: uma aba parada (alerta
+    // aberto, página lenta) não segura o resto nem o fim.
+    while (!closed && browser.pages().length > 0) {
+      for (const open of browser.pages()) void filler.fillPage(open).catch(() => undefined);
       await sleep(1_500);
     }
+    // Todas as abas fechadas, mas o navegador ainda aberto (macOS): fecha.
+    await browser.close().catch(() => undefined);
 
     say('');
     say(
@@ -173,6 +206,7 @@ async function main(): Promise<number> {
     say(`Candidatura registrada: ${web}/candidaturas/${application.id}`);
     return 0;
   } finally {
+    process.off('SIGINT', onSigint);
     await rm(dir, { recursive: true, force: true });
   }
 }

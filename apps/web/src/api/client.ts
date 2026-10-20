@@ -57,7 +57,10 @@ export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   query?: Query;
   body?: unknown;
-  /** Arquivo enviado cru, com o próprio Content-Type (ex.: o .zip do backup). */
+  /**
+   * Arquivo enviado cru, com o próprio Content-Type (ex.: o .zip do backup,
+   * `application/zip` — o único tipo além de JSON que a API aceita na escrita).
+   */
   file?: { data: Blob; type: string };
   signal?: AbortSignal;
 }
@@ -96,9 +99,13 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   if (file) {
     init.body = file.data;
     init.headers = { 'Content-Type': file.type };
-  } else if (body !== undefined) {
-    init.body = JSON.stringify(body);
-    init.headers = { 'Content-Type': 'application/json' };
+  } else {
+    if (body !== undefined) init.body = JSON.stringify(body);
+    // Escrita sempre com Content-Type: application/json, mesmo sem corpo: a API
+    // recusa as outras (proteção contra POST "simples" de outro site — CSRF).
+    if (body !== undefined || method !== 'GET') {
+      init.headers = { 'Content-Type': 'application/json' };
+    }
   }
 
   let response: Response;

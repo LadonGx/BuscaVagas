@@ -1,6 +1,14 @@
 import type { ResumeSectionDto } from '@busca-vagas/shared';
 import { describe, expect, it } from 'vitest';
-import { answerScore, decide, pickOption, toIsoDate, toNumber, type FieldInfo } from './match.js';
+import {
+  acceptsPdf,
+  answerScore,
+  decide,
+  pickOption,
+  toIsoDate,
+  toNumber,
+  type FieldInfo,
+} from './match.js';
 import { buildProfile, classify, splitLocation } from './profile.js';
 import { pdfName } from './resume-pdf.js';
 
@@ -178,6 +186,38 @@ describe('campo do formulário → resposta', () => {
     });
   });
 
+  it('tipo tel/email só decide quando o rótulo não diz outra coisa nem há resposta salva', () => {
+    // Sem rótulo: o tipo do campo decide.
+    expect(decide(field({ control: 'tel', name: 'f12' }), profile)).toMatchObject({
+      value: '(19) 99999-0000',
+    });
+    // "Pretensão salarial" num type=tel: é a resposta salva (aqui, empate), não o telefone.
+    expect(decide(field({ control: 'tel', label: 'Pretensão salarial' }), profile)).toMatchObject({
+      reason: 'ambiguous',
+    });
+    expect(
+      decide(field({ control: 'tel', label: 'Pretensão salarial (CLT)' }), profile),
+    ).toMatchObject({ value: 'R$ 4.500' });
+    // CEP, documento, matrícula: sem resposta salva, fica em branco.
+    for (const label of ['CEP', 'Documento', 'Número do documento', 'Matrícula']) {
+      expect(decide(field({ control: 'tel', label }), profile)).toEqual({
+        kind: 'skip',
+        reason: 'no-answer',
+      });
+    }
+    expect(decide(field({ control: 'tel', name: 'cep' }), profile)).toMatchObject({
+      reason: 'no-answer',
+    });
+    // O rótulo ainda manda: "Celular" num campo de texto é o telefone.
+    expect(decide(field({ control: 'tel', label: 'Celular' }), profile)).toMatchObject({
+      value: '(19) 99999-0000',
+    });
+    // Resposta salva vence o tipo do campo.
+    expect(
+      decide(field({ control: 'email', label: 'Disponibilidade para início' }), profile),
+    ).toMatchObject({ value: 'Imediata' });
+  });
+
   it('listas e opções: só quando a resposta está entre elas', () => {
     expect(
       decide(
@@ -210,6 +250,51 @@ describe('campo do formulário → resposta', () => {
     expect(decide(field({ label: 'Nome', maxLength: 5 }), profile)).toMatchObject({
       reason: 'too-long',
     });
+  });
+
+  it('arquivo: documento, comprovante, certificado e imagem nunca recebem o currículo', () => {
+    for (const label of [
+      'Documento de identificação',
+      'Anexe seu RG',
+      'Comprovante de residência',
+      'Certificado de conclusão',
+      'Diploma',
+      'Carteira de trabalho',
+      'Currículo ou portfólio',
+      'Foto 3x4',
+    ]) {
+      expect(decide(field({ control: 'file', label }), profile, true)).toMatchObject({
+        kind: 'skip',
+      });
+    }
+    // Rótulo genérico ("Anexo", "Arquivo", "Documento"): só com a palavra currículo.
+    for (const label of ['Anexo', 'Arquivo', 'Documento', 'Upload']) {
+      expect(decide(field({ control: 'file', label }), profile, true)).toMatchObject({
+        reason: 'no-answer',
+      });
+    }
+    // Só imagem: nem com "currículo" no rótulo.
+    expect(
+      decide(field({ control: 'file', label: 'Currículo', accept: 'image/*' }), profile),
+    ).toMatchObject({ reason: 'format' });
+    // Único campo sem rótulo, mas só imagem: não.
+    expect(
+      decide(field({ control: 'file', name: 'f1', accept: 'image/*' }), profile, true),
+    ).toMatchObject({ reason: 'format' });
+    // Nome técnico em camelCase também conta.
+    expect(decide(field({ control: 'file', htmlId: 'resumeUpload' }), profile)).toEqual({
+      kind: 'resume-file',
+    });
+    expect(decide(field({ control: 'file', name: 'proofOfAddress' }), profile, true)).toMatchObject(
+      { reason: 'no-answer' },
+    );
+    expect(acceptsPdf('')).toBe(true);
+    expect(acceptsPdf('.pdf,.doc,.docx')).toBe(true);
+    expect(acceptsPdf('application/pdf')).toBe(true);
+    expect(acceptsPdf('*/*')).toBe(true);
+    expect(acceptsPdf('image/*')).toBe(false);
+    expect(acceptsPdf('image/png, image/jpeg')).toBe(false);
+    expect(acceptsPdf('.doc,.docx')).toBe(false);
   });
 
   it('arquivo: currículo pelo rótulo ou por ser o único; foto nunca', () => {

@@ -119,8 +119,8 @@ Ordem combinada, em blocos.
 - [x] Preencher formulário com Playwright, **nunca enviar** (JT): `pnpm candidatar` abre a
       vaga no Chrome/Edge, preenche com o Currículo e as respostas salvas e anexa o PDF; quem
       envia é você ([22](features/22-apply-fill.md))
-- [ ] Aviso de nota alta também no celular (ntfy ou Telegram), com horário de silêncio
-      (22h–8h, ajustável) — o sino já guarda os avisos; falta só o canal ([16](features/16-notifications.md))
+- [ ] ~~Aviso de nota alta também no celular (ntfy ou Telegram)~~ — fora da primeira
+      versão: o sino do app já guarda os avisos ([16](features/16-notifications.md))
 
 **Último passo:** sites de carreira de grandes empresas (iFood, Bosch, Mercado Livre,
 IBM…), cada um com o próprio formato — depois de tudo acima.

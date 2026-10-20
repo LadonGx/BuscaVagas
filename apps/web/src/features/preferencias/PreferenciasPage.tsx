@@ -42,8 +42,7 @@ export function PreferenciasPage() {
       />
       {isError && <p className={styles.error}>{error.message}</p>}
       {!saved && !isError && <p className={styles.hint}>Carregando preferências…</p>}
-      {/* Depois de salvar, a versão sobe e o formulário recomeça do que a API guardou. */}
-      {saved && <Editor key={saved.version} saved={saved} />}
+      {saved && <Editor saved={saved} />}
     </>
   );
 }
@@ -51,6 +50,17 @@ export function PreferenciasPage() {
 function Editor({ saved }: { saved: PreferencesDto }) {
   const [form, setForm] = useState<PreferencesForm>(() => toForm(saved));
   const [errors, setErrors] = useState<FormErrors>({});
+  /*
+   * Depois de salvar, a versão sobe e o formulário recomeça do que a API
+   * guardou — no lugar, sem remontar: remontar desmontaria o bloqueio de
+   * navegação no meio do "Salvar e sair".
+   */
+  const [formVersion, setFormVersion] = useState(saved.version);
+  if (formVersion !== saved.version) {
+    setFormVersion(saved.version);
+    setForm(toForm(saved));
+    setErrors({});
+  }
   const savePreferences = useSavePreferences();
   const toast = useToast();
   const dirtyCount = changedFields(form, saved).length;

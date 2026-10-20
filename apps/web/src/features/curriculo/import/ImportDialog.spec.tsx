@@ -119,6 +119,32 @@ describe('Importar de PDF', () => {
     );
   });
 
+  it('fechar durante a leitura descarta o resultado: reabrir começa do zero', async () => {
+    setup();
+    let finish: (lines: ResumeImportLine[]) => void = () => {};
+    vi.mocked(readPdfLines).mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const { user, dialog } = await openDialog();
+
+    await user.upload(within(dialog).getByLabelText('Arquivo PDF do currículo'), file());
+    expect(within(dialog).getByText(/Lendo curriculo\.pdf/)).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Importar de PDF' })).not.toBeInTheDocument(),
+    );
+
+    finish(PDF);
+    await user.click(screen.getByRole('button', { name: 'Escolher arquivo' }));
+    const reopened = await screen.findByRole('dialog', { name: 'Importar de PDF' });
+    // Dá tempo para a leitura antiga terminar: ela não pode virar revisão.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(within(reopened).queryByText(/Achei:/)).not.toBeInTheDocument();
+    expect(within(reopened).getByRole('button', { name: 'Escolher o PDF' })).toBeEnabled();
+  });
+
   it('PDF sem texto: explica e deixa escolher outro', async () => {
     setup();
     vi.mocked(readPdfLines).mockRejectedValue(

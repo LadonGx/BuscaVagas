@@ -94,6 +94,9 @@ describe('link do board', () => {
     'https://www.linkedin.com/jobs/view/123',
     'https://jobs.lever.co/',
     'x y',
+    // "%" solto: não lança "URI malformed".
+    'https://empresa.com.br/vagas/100%-remoto',
+    'https://jobs.lever.co/100%-remoto',
   ])('"%s" não é link de board', (url) => {
     expect(parseBoardUrl(url)).toBeNull();
   });
@@ -339,6 +342,30 @@ describe('scanCompanies', () => {
     expect(asked).toEqual(['outra']);
     expect(result).toMatchObject({ filtered: 0 });
     expect(result.jobs).toHaveLength(1);
+  });
+
+  it('externalIds vêm dos itens crus: formato novo que descarta tudo não encerra as vagas', async () => {
+    const result = await scanCompanies({
+      sourceId: 'x',
+      config,
+      query: { companies: ['acme', 'beta'] },
+      ctx: ctx(),
+      fetchCompany: async (company) =>
+        company.slug === 'acme'
+          ? // Tudo descartado, mas com id: as vagas continuam no board.
+            [{ id: 1 }, { id: 'a2' }]
+          : // Descartado e sem id: não dá para saber quem saiu.
+            [{ title: 'Backend Developer', place: 'Remote', id: 'b1' }, { nome: 'x' }],
+      mapItem: (raw) => {
+        const row = raw as { title?: string; place?: string | null };
+        return row.title ? item(row.title, row.place ?? null) : null;
+      },
+    });
+
+    expect(result.companies).toEqual([
+      { slug: 'acme', status: 'ok', jobs: 2, kept: 0, error: null, externalIds: ['1', 'a2'] },
+      { slug: 'beta', status: 'ok', jobs: 2, kept: 1, error: null },
+    ]);
   });
 
   it('sem empresas: vazio, sem requisição', async () => {

@@ -66,18 +66,26 @@ export const indeedSite: AlertSite = {
     const ids = new Set<string>();
     let dropped = 0;
 
-    tokens.forEach((token, index) => {
-      if (!token.href || !JOB_LINK.test(token.href)) return;
+    const cards = tokens.flatMap((token, index) => {
+      if (!token.href || !JOB_LINK.test(token.href)) return [];
       const rest: HtmlToken[] = [];
       for (const after of tokens.slice(index + 1, index + 1 + MAX_CARD_TOKENS)) {
         if (after.href && JOB_LINK.test(after.href)) break;
         rest.push(after);
       }
-      // Botões e rodapé também são links do Indeed: só conta como vaga
-      // perdida o que tem cara de cartão (empresa e idade logo abaixo).
-      const job = readCard(token, rest, message.date);
+      return [{ rest, job: readCard(token, rest, message.date) }];
+    });
+    // Cartão que não deu para ler ENTRE dois lidos é vaga perdida (ex.: idade
+    // num formato novo); antes do primeiro e depois do último são cabeçalho,
+    // botões e rodapé, que também são links do Indeed.
+    const firstRead = cards.findIndex((card) => card.job);
+    const lastRead = cards.findLastIndex((card) => card.job);
+
+    cards.forEach(({ rest, job }, index) => {
       if (!job) {
-        if (rest.some((item) => isAge(item.text))) dropped += 1;
+        const between = index > firstRead && index < lastRead;
+        // Fora disso, só conta o que tem cara de cartão (empresa e idade logo abaixo).
+        if (between || rest.some((item) => isAge(item.text))) dropped += 1;
         return;
       }
       if (ids.has(job.externalId!)) return;

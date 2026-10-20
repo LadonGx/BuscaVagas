@@ -35,9 +35,23 @@ export type Decision =
  */
 const SENSITIVE =
   /\b(senha|password|passwd|cpf|rg|cnh|pis|nis|ctps|passaporte|passport|ssn|cartao|card|cvv|cvc|captcha|token|codigo de verificacao|verification code|nome social|nome da mae|nome do pai|mother|father|conta bancaria|agencia|pix)\b/;
-const PHOTO = /\b(foto|photo|imagem|image|avatar|selfie)\b/;
-const RESUME_FILE =
-  /\b(curriculo|curriculum|cv|resume|anexo|anexar|arquivo|documento|attach|upload)\b/;
+const PHOTO = /\b(foto|fotos|photo|imagem|image|avatar|selfie)\b/;
+/** O campo de arquivo diz que é o currículo. */
+const RESUME_FILE = /\b(curriculos?|curriculum|cv|resumes?)\b/;
+/**
+ * Arquivo que não é o currículo, mesmo que o rótulo cite o currículo junto
+ * ("Currículo ou portfólio"): documento, comprovante, certificado...
+ */
+const NOT_RESUME_FILE =
+  /\b(documentos? (de identificacao|de identidade|pessoa(l|is)|oficia(l|is))|identidade|identificacao|identity|id card|rg|cpf|cnh|comprovantes?|proof|certificados?|certificates?|certidao|certidoes|diplomas?|historico escolar|transcript|carteira|carteirinha|atestados?|laudos?|declaracao|reservista|titulo de eleitor|passaporte|passport|portfolio|portifolio|carta|cover letter)\b/;
+/** Tipos aceitos que incluem o PDF. Vazio = qualquer arquivo; `image/*` não serve. */
+const PDF_ACCEPT = new Set(['.pdf', 'pdf', 'application/pdf', '*/*']);
+/**
+ * Num campo `type=tel`, palavras que dizem que não é telefone (CEP, documento,
+ * valor...): aí o tipo do campo não decide.
+ */
+const NOT_PHONE =
+  /\b(cep|codigo postal|postal|zip|zipcode|identidade|identificacao|documento|document|rg|cpf|cnpj|pis|nis|matricula|registro|salario|salarial|pretensao|remuneracao|valor|idade|ano|anos|quantidade|numero (da casa|do endereco|da residencia)|endereco)\b/;
 const PLACEHOLDER_OPTION = /^(selecione|escolha|select|choose|--|-)/;
 
 /** Os textos que descrevem o campo, do mais confiável para o menos. */
@@ -66,9 +80,30 @@ export function fieldKey(field: FieldInfo): ProfileKey | null {
     const key = classify(text);
     if (key) return key;
   }
-  if (field.control === 'email') return 'email';
-  if (field.control === 'tel') return 'phone';
   return null;
+}
+
+/**
+ * Pelo tipo do campo (`type=email`, `type=tel`): só quando nada no rótulo diz
+ * o que é e nenhuma resposta salva serve. `type=tel` com "CEP", "Documento" ou
+ * "Pretensão" não é telefone.
+ */
+function controlKey(field: FieldInfo): ProfileKey | null {
+  if (field.control === 'email') return 'email';
+  if (field.control === 'tel' && !descriptions(field).some((text) => NOT_PHONE.test(fold(text)))) {
+    return 'phone';
+  }
+  return null;
+}
+
+/** O campo de arquivo aceita PDF? Sem `accept` ou com qualquer tipo, sim; só imagem, não. */
+export function acceptsPdf(accept: string): boolean {
+  const types = accept
+    .toLowerCase()
+    .split(',')
+    .map((type) => type.trim())
+    .filter(Boolean);
+  return types.length === 0 || types.some((type) => PDF_ACCEPT.has(type));
 }
 
 /**
@@ -162,22 +197,31 @@ function shape(field: FieldInfo, value: string, from: string): Decision {
   return { kind: 'value', value: text, from };
 }
 
+/** "resumeUpload" → "resume Upload": nomes técnicos em camelCase também contam. */
+const splitCamel = (text: string) => text.replace(/([a-z])([A-Z])/g, '$1 $2');
+
 /**
  * O que fazer com um campo. Só decide: quem mexe na página é o filler, e só
  * em campo vazio.
  *
- * `onlyFileInput`: é o único campo de arquivo da página (aí é o currículo,
- * mesmo sem dizer).
+ * `onlyFileInPage`: é o único campo de arquivo da página inteira (todos os
+ * quadros). Só aí um campo de arquivo sem rótulo nem placeholder recebe o
+ * currículo.
  */
-export function decide(field: FieldInfo, profile: Profile, onlyFileInput = false): Decision {
+export function decide(field: FieldInfo, profile: Profile, onlyFileInPage = false): Decision {
   const texts = descriptions(field).map(fold);
   if (texts.some((text) => SENSITIVE.test(text))) return { kind: 'skip', reason: 'sensitive' };
 
   if (field.control === 'file') {
-    if (texts.some((text) => PHOTO.test(text))) return { kind: 'skip', reason: 'photo' };
-    const accept = field.accept.toLowerCase();
-    if (accept && !/pdf|application\/|\*/.test(accept)) return { kind: 'skip', reason: 'format' };
-    return onlyFileInput || texts.some((text) => RESUME_FILE.test(text))
+    const fileTexts = descriptions(field).map((text) => fold(splitCamel(text)));
+    if (fileTexts.some((text) => PHOTO.test(text))) return { kind: 'skip', reason: 'photo' };
+    if (fileTexts.some((text) => NOT_RESUME_FILE.test(text))) {
+      return { kind: 'skip', reason: 'no-answer' };
+    }
+    if (!acceptsPdf(field.accept)) return { kind: 'skip', reason: 'format' };
+    const saysResume = fileTexts.some((text) => RESUME_FILE.test(text));
+    const unlabeled = !field.label.trim() && !field.placeholder.trim();
+    return saysResume || (unlabeled && onlyFileInPage)
       ? { kind: 'resume-file' }
       : { kind: 'skip', reason: 'no-answer' };
   }
@@ -195,7 +239,14 @@ export function decide(field: FieldInfo, profile: Profile, onlyFileInput = false
 
   const question = field.label || field.placeholder || field.name;
   const found = bestAnswer(profile.answers, question);
-  if (!found) return { kind: 'skip', reason: 'no-answer' };
-  if ('ambiguous' in found) return { kind: 'skip', reason: 'ambiguous', detail: found.ambiguous };
-  return shape(field, found.answer.value, found.answer.label);
+  if (found && 'ambiguous' in found) {
+    return { kind: 'skip', reason: 'ambiguous', detail: found.ambiguous };
+  }
+  if (found) return shape(field, found.answer.value, found.answer.label);
+
+  // Por último, o tipo do campo: e-mail e telefone sem rótulo que diga outra coisa.
+  const fallback = key ? null : controlKey(field);
+  const value = fallback ? profile.values[fallback] : undefined;
+  if (fallback && value) return shape(field, value, KEY_LABELS[fallback]);
+  return { kind: 'skip', reason: 'no-answer' };
 }

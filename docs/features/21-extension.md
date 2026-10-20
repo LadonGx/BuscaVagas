@@ -77,11 +77,30 @@ Do texto saem:
 | ---------- | ----------------------------------------------------------------------- |
 | Local      | a linha "Brasil · há 1 semana · ..." (também "Empresa · Local · há...") |
 | Data       | "há 3 dias", "há 1 mês", "Republicada há 2 semanas", "3 days ago"       |
-| Modalidade | as etiquetas depois dessa linha ("Remoto", "Híbrido", "Presencial")     |
+| Modalidade | etiqueta que é só a modalidade ("Remoto", "Híbrido", "Presencial")      |
 | Contrato   | etiqueta "Estágio" / "Temporário"; ou só CLT ou só PJ na descrição      |
 | Salário    | "R$ 3.000/mês - R$ 4.000/mês", "Salário: R$ 4 mil" na descrição         |
-| Descrição  | de "Sobre a vaga" (ou "About the job") até "Sobre a empresa"            |
+| Descrição  | do título da descrição (ver abaixo) até "Sobre a empresa"               |
 | Título     | as duas linhas acima da do local, só se o campo estiver vazio           |
+
+- **Título da descrição:** "Sobre a vaga", "About the job" (LinkedIn),
+  "Descrição completa da vaga", "Full job description" (Indeed), "Descrição
+  da vaga" (Gupy) e parecidos. Sem nenhum deles, "Detalhes da vaga" / "Job
+  details".
+- **Etiquetas** só no topo, antes da descrição: entre a linha da data e o
+  título da descrição (sem a data, todo o topo; sem o título, as linhas acima
+  da data; sem nenhum dos dois, nenhuma). A modalidade só vale com a linha
+  inteira sendo a modalidade: "empresa 100% remota, mas esta vaga é
+  presencial" não decide nada.
+- **Salário** só em linha que fala de salário ("Salário", "Remuneração",
+  "Faixa", "Bolsa") ou que começa pelo valor ("R$ 1.800/mês", "A partir de
+  R$ 3.000"): "Vale-refeição de R$ 35 por dia" não é salário. Por ano ou por
+  hora só com o período colado no valor ("R$ 60 mil/ano", "R$ 120.000
+  anual", "R$ 50/h", "por hora"); "R$ 4.000 + bônus anual" é por mês.
+- Na linha da data, a modalidade sozinha não é empresa: em "Brasil · Remoto ·
+  há 2 dias", Brasil é o local e a empresa vem das linhas de cima. Se a linha
+  de cima for um local ("Campinas, SP", formato do Indeed), título e empresa
+  ficam com o título da aba.
 
 - Preenche só o que está vazio (ou o que um texto colado antes preencheu): o
   que você digitou fica.
@@ -144,12 +163,15 @@ serve para testar: no uso normal ela pega a aba ativa.
 - `apps/extension/src/parsing.spec.ts`: JSON-LD (campos, `@graph`, listas,
   JSON quebrado, sem vaga), títulos de aba do LinkedIn (com "|" e "–" no
   título), Indeed e Glassdoor, texto colado (LinkedIn, página inteira, formato
-  antigo em inglês, texto sem dados), rascunho → corpo do POST, endereços
-  aceitos, link da vaga no app.
+  antigo em inglês, Indeed com benefício "R$ 35 por dia" e "empresa 100%
+  remota", sem título nem data, "Brasil · Remoto · há 2 dias", títulos da
+  descrição, período do salário, texto sem dados), rascunho → corpo do POST,
+  `Content-Type` no POST, endereços aceitos, link da vaga no app.
 - `apps/extension/src/popup.spec.ts`: LinkedIn não lê a página e manda já
   salva com o link "de uma vaga"; JSON-LD preenche e manda para a Caixa; já
   está no app (mesma vaga de outra fonte, candidatura); campos faltando; app
-  fora do ar e endereço salvo; página que não é site; texto colado preenche
+  fora do ar e endereço salvo; endereço inválido avisa e, corrigido, envia;
+  página que não é site; texto colado preenche
   local, modalidade, contrato, data e descrição sem mexer no título que você
   corrigiu.
 - `packages/shared/src/capture.spec.ts`: sites restritos e `siteJobUrl`.

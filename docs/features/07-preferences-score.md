@@ -72,6 +72,10 @@ em branco, a nota fica em 500; batendo em tudo o que informa, uma vaga de
 alerta fica perto de 750–800. A migration `20261020120000_rescore_unknown_neutral`
 manda recalcular as vagas que já existiam.
 
+A idade da vaga muda com o tempo: com `maxAgeDays` ligado, a manutenção diária
+(fila `maintenance`, job `recency`) manda recalcular as vagas não descartadas
+que receberam nota antes de hoje.
+
 **Cobertura** = peso com sinal / peso dos critérios ligados (0–100%). O
 front mostra as duas: nota 700 com 40% de cobertura é "faltam dados", não
 "vaga ruim".

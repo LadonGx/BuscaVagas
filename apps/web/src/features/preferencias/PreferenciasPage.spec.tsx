@@ -30,6 +30,8 @@ const retention = (overrides: Partial<RetentionReportDto> = {}): RetentionReport
 /** API com estado: o PUT sobe a versão e põe as notas na fila. */
 function setup({
   rescoreQueued = true,
+  /** Atraso das contagens: o recarregamento depois do PUT leva tempo, como na rede de verdade. */
+  countsDelay = 0,
   resumeStacks = {
     scannedSections: ['Competências'],
     stacks: [
@@ -63,10 +65,12 @@ function setup({
       calls.push({ method: 'PUT', path: '/preferences', body: input });
       prefs = { ...prefs, ...input, version: prefs.version + 1, configured: true };
       pending = 35;
-      pendingReads = 2;
+      // A leitura logo depois de salvar vê a fila cheia; a seguinte (polling), vazia.
+      pendingReads = 1;
       return { ...prefs, rescoreQueued };
     },
-    'GET /jobs/counts': (): JobCountsDto => {
+    'GET /jobs/counts': async (): Promise<JobCountsDto> => {
+      if (countsDelay) await new Promise((resolve) => setTimeout(resolve, countsDelay));
       const result = counts({
         score: { great: 42, good: 61, weak: 20, incompatible: 18, pending, unscored: 0 },
       });
@@ -199,6 +203,37 @@ describe('Preferências', () => {
     // O formulário recomeçou do que a API guardou: nada pendente.
     expect(saveButton()).toBeDisabled();
   }, 10_000);
+
+  it('"Salvar e sair" salva e troca de tela', async () => {
+    // Com o recarregamento lento, o formulário já recebeu a versão nova quando o save termina.
+    const { calls } = setup({ countsDelay: 50 });
+    const { user, router } = await openPage();
+
+    await user.click(screen.getByRole('button', { name: 'Pleno' }));
+    await user.click(screen.getByRole('link', { name: /Currículo/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Sair sem salvar?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Salvar e sair' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/curriculo'));
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.body).toMatchObject({ seniorities: ['junior', 'mid'] });
+  });
+
+  it('depois de salvar, o formulário segue do que a API guardou sem perguntar ao sair', async () => {
+    const { calls } = setup();
+    const { user, router } = await openPage();
+
+    await user.click(screen.getByRole('button', { name: 'Pleno' }));
+    await user.click(saveButton());
+    await screen.findByText('Preferências salvas. Recalculando as notas…');
+    expect(screen.getByRole('button', { name: 'Pleno' })).toHaveAttribute('aria-pressed', 'true');
+    expect(saveButton()).toBeDisabled();
+
+    await user.click(screen.getByRole('link', { name: /Currículo/ }));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/curriculo'));
+    expect(screen.queryByRole('dialog', { name: 'Sair sem salvar?' })).not.toBeInTheDocument();
+    expect(calls).toHaveLength(1);
+  });
 
   it('a mesma tecnologia fica num grupo só: adicionar noutro move', async () => {
     const { calls } = setup();

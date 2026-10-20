@@ -5,7 +5,7 @@ import {
   type ApplicationStatus,
 } from '@busca-vagas/shared';
 import { CalendarClock } from 'lucide-react';
-import type { HTMLAttributes, Ref } from 'react';
+import { useId, useRef, useState, type HTMLAttributes, type Ref } from 'react';
 import { ApplicationStatusChip } from '../../components/job/Chips';
 import { formatAgo, formatDateTime } from '../../lib/format';
 import { isOpen } from './columns';
@@ -34,6 +34,20 @@ export function ApplicationCard({
 }: ApplicationCardProps) {
   const { job } = application;
   const hasNext = Boolean(application.nextStepAt) && isOpen(application);
+  const hintId = useId();
+  /** Opção escolhida pelo teclado e ainda não confirmada. */
+  const [pending, setPending] = useState<ApplicationStatus | ''>('');
+  /**
+   * A mudança veio do teclado com a lista fechada (no Chrome/Windows as setas
+   * já disparam `change`): aí só confirma com Enter ou ao sair do campo, para
+   * passear pelas opções não mover o cartão a cada seta.
+   */
+  const fromKeyboard = useRef(false);
+
+  function commit(status: ApplicationStatus | '') {
+    setPending('');
+    if (status && onMove) onMove(application.id, status);
+  }
 
   return (
     <article
@@ -73,25 +87,55 @@ export function ApplicationCard({
       )}
 
       {onMove && (
-        <label className={styles.move}>
-          <span className="sr-only">Mover {job.title} para</span>
-          <select
-            value=""
-            onChange={(event) => {
-              const status = event.target.value as ApplicationStatus;
-              if (status) onMove(application.id, status);
-            }}
-          >
-            <option value="">Mover para…</option>
-            {APPLICATION_STATUSES.filter((status) => status !== application.status).map(
-              (status) => (
-                <option key={status} value={status}>
-                  {APPLICATION_STATUS_LABELS[status]}
-                </option>
-              ),
-            )}
-          </select>
-        </label>
+        <>
+          {/* Fora do <label> para não entrar no nome do campo, só na descrição. */}
+          <span id={hintId} className="sr-only">
+            Pelo teclado, escolha com as setas e confirme com Enter.
+          </span>
+          <label className={styles.move}>
+            <span className="sr-only">Mover {job.title} para</span>
+            <select
+              value={pending}
+              aria-describedby={hintId}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  if (pending) {
+                    event.preventDefault();
+                    commit(pending);
+                  }
+                } else if (event.key === 'Escape') {
+                  setPending('');
+                } else if (event.key !== 'Tab') {
+                  fromKeyboard.current = true;
+                }
+              }}
+              onKeyUp={() => {
+                fromKeyboard.current = false;
+              }}
+              onPointerDown={() => {
+                fromKeyboard.current = false;
+              }}
+              onChange={(event) => {
+                const status = event.target.value as ApplicationStatus | '';
+                if (fromKeyboard.current) setPending(status);
+                else commit(status);
+              }}
+              onBlur={() => {
+                fromKeyboard.current = false;
+                if (pending) commit(pending);
+              }}
+            >
+              <option value="">Mover para…</option>
+              {APPLICATION_STATUSES.filter((status) => status !== application.status).map(
+                (status) => (
+                  <option key={status} value={status}>
+                    {APPLICATION_STATUS_LABELS[status]}
+                  </option>
+                ),
+              )}
+            </select>
+          </label>
+        </>
       )}
     </article>
   );

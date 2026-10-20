@@ -50,8 +50,9 @@ export interface CompanyScanStat {
   kept: number;
   error: string | null;
   /**
-   * Ids (externalId) de TODAS as vagas válidas do board, filtradas ou não. Vaga
-   * da empresa que não está aqui saiu do board: encerrada.
+   * Ids (externalId) de TODAS as vagas do board, filtradas, descartadas ou não
+   * (o id vem do item cru). Vaga da empresa que não está aqui saiu do board:
+   * encerrada. Ausente quando a lista não é confiável (item descartado sem id).
    */
   externalIds?: string[];
 }
@@ -87,6 +88,41 @@ export interface ScanCompaniesOptions {
   fetchCompany: (company: BoardCompany) => Promise<readonly unknown[]>;
   /** Item cru → vaga + local, ou `null` se não serve (conta como descartado). */
   mapItem: (raw: unknown, company: BoardCompany) => BoardItem | null;
+  /** Id da vaga no item cru (o mesmo do `externalId`). Padrão: o campo `id`. */
+  rawId?: (raw: unknown) => string | null;
+}
+
+/** `id` do item cru (texto ou número), sem depender do resto do formato. */
+export function rawIdOf(raw: unknown): string | null {
+  const id = raw && typeof raw === 'object' ? (raw as { id?: unknown }).id : undefined;
+  if (typeof id === 'string') return id.trim() || null;
+  if (typeof id === 'number' && Number.isFinite(id)) return String(id);
+  return null;
+}
+
+/**
+ * Ids de todas as vagas do board, das linhas cruas (assim uma mudança de
+ * formato que descarta tudo não "encerra" as vagas da empresa). `undefined`
+ * quando algum item descartado pode não ter id: aí não dá para saber quem saiu.
+ */
+function boardIds(
+  rows: readonly unknown[],
+  mapped: readonly BoardItem[],
+  dropped: number,
+  rawId: (raw: unknown) => string | null,
+): string[] | undefined {
+  const ids = new Set<string>();
+  let withoutId = 0;
+  for (const row of rows) {
+    const id = rawId(row);
+    if (id) ids.add(id);
+    else withoutId += 1;
+  }
+  if (dropped > 0 && withoutId > 0) return undefined;
+  for (const item of mapped) {
+    if (item.posting.externalId) ids.add(item.posting.externalId);
+  }
+  return [...ids];
 }
 
 /**
@@ -142,20 +178,24 @@ export async function scanCompanies(options: ScanCompaniesOptions): Promise<Sour
       }
 
       dropped += result.dropped;
+      const externalIds = boardIds(rows, result.ok, result.dropped, options.rawId ?? rawIdOf);
       stats.push({
         slug: company.slug,
         status: 'ok',
         jobs: rows.length,
         kept,
         error: null,
-        externalIds: result.ok
-          .map((item) => item.posting.externalId)
-          .filter((id): id is string => Boolean(id)),
+        ...(externalIds ? { externalIds } : {}),
       });
       ctx.log(
         `${sourceId}: ${company.slug} — ${rows.length} vagas, ${kept} mantidas, ` +
           `${result.ok.length - kept} filtradas, ${result.dropped} descartadas`,
       );
+      if (!externalIds) {
+        ctx.log(
+          `${sourceId}: ${company.slug} — vagas descartadas sem id: não confere quais saíram do board`,
+        );
+      }
     } catch (error) {
       if (ctx.signal.aborted) {
         throw error;

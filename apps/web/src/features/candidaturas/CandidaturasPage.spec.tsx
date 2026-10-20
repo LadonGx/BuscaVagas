@@ -1,5 +1,5 @@
 import type { ApplicationDetailDto, ApplicationStatus } from '@busca-vagas/shared';
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { mockApi } from '../../test/api-mock';
@@ -69,6 +69,19 @@ function setup(initial: ApplicationDetailDto[] = [lumen, fluxo, tora]) {
       recompute(app);
       return app;
     },
+    'PATCH /applications/:id/events/:eventId': (_u, init, { id, eventId }) => {
+      calls.push({
+        method: 'PATCH',
+        path: `/applications/${id}/events/${eventId}`,
+        body: body(init),
+      });
+      const app = find(id!);
+      Object.assign(
+        app.events.find((event) => event.id === eventId)!,
+        body(init),
+      );
+      return app;
+    },
     'PATCH /applications/:id': (_u, init, { id }) => {
       calls.push({ method: 'PATCH', path: `/applications/${id}`, body: body(init) });
       return Object.assign(find(id!), body(init));
@@ -122,6 +135,53 @@ describe('Candidaturas — quadro', () => {
       expect(within(column('Aplicada')).getByText('Back-end Jr (NestJS)')).toBeVisible(),
     );
     expect(calls[1]).toMatchObject({ method: 'DELETE', path: '/applications/app-1/events/ev-11' });
+  });
+
+  it('"Mover para…" pelo teclado: as setas só escolhem; Enter ou sair do campo confirma', async () => {
+    const { calls } = setup();
+    renderApp('/candidaturas');
+    await screen.findByRole('button', { name: 'Back-end Jr (NestJS)' });
+    const select = screen.getByRole('combobox', { name: 'Mover Back-end Jr (NestJS) para' });
+    expect(select).toHaveAccessibleDescription(
+      'Pelo teclado, escolha com as setas e confirme com Enter.',
+    );
+
+    // Chrome no Windows: seta com a lista fechada já dispara `change`.
+    const arrow = (value: string) => {
+      fireEvent.keyDown(select, { key: 'ArrowDown' });
+      fireEvent.change(select, { target: { value } });
+      fireEvent.keyUp(select, { key: 'ArrowDown' });
+    };
+    arrow('in_process');
+    arrow('offer');
+    expect(select).toHaveValue('offer');
+    expect(calls).toEqual([]);
+
+    fireEvent.keyDown(select, { key: 'Enter' });
+    await waitFor(() =>
+      expect(calls).toEqual([
+        { method: 'POST', path: '/applications/app-1/events', body: { status: 'offer' } },
+      ]),
+    );
+
+    // Sair do campo depois de escolher pelo teclado também confirma; Esc desiste.
+    const fluxoSelect = screen.getByRole('combobox', { name: 'Mover React Native Jr para' });
+    fireEvent.keyDown(fluxoSelect, { key: 'ArrowDown' });
+    fireEvent.change(fluxoSelect, { target: { value: 'applied' } });
+    fireEvent.keyDown(fluxoSelect, { key: 'Escape' });
+    fireEvent.blur(fluxoSelect);
+    expect(fluxoSelect).toHaveValue('');
+    expect(calls).toHaveLength(1);
+
+    fireEvent.keyDown(fluxoSelect, { key: 'ArrowDown' });
+    fireEvent.change(fluxoSelect, { target: { value: 'offer' } });
+    fireEvent.blur(fluxoSelect);
+    await waitFor(() => expect(calls).toHaveLength(2));
+    expect(calls[1]).toEqual({
+      method: 'POST',
+      path: '/applications/app-2/events',
+      body: { status: 'offer' },
+    });
   });
 
   it('aviso de mudança diz a coluna e, em Encerradas, o motivo', () => {
@@ -196,6 +256,69 @@ describe('Candidaturas — detalhe', () => {
       method: 'PATCH',
       body: { nextStepNote: 'Entrevista', nextStepAt: new Date('2026-12-15T14:00').toISOString() },
     });
+  });
+
+  it('editar etapa sem data não quebra: o campo é obrigatório e mostra o erro', async () => {
+    const { calls } = setup();
+    renderApp('/candidaturas/app-1');
+    const dialog = await screen.findByRole('dialog', { name: 'Back-end Jr (NestJS)' });
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Editar etapa Aplicada' }));
+    const when = within(dialog).getByLabelText(/^Quando aconteceu/);
+    expect(when).toBeRequired();
+    fireEvent.change(when, { target: { value: '' } });
+    // Sem a validação do navegador (o guarda do próprio formulário).
+    fireEvent.submit(when.closest('form')!);
+
+    expect(within(dialog).getByText('Informe quando aconteceu.')).toBeVisible();
+    expect(when).toHaveAttribute('aria-invalid', 'true');
+    expect(calls).toEqual([]);
+
+    fireEvent.change(when, { target: { value: '2026-10-05T09:30' } });
+    expect(within(dialog).queryByText('Informe quando aconteceu.')).not.toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toMatchObject({
+      method: 'PATCH',
+      path: '/applications/app-1/events/ev-1',
+      body: { occurredAt: new Date('2026-10-05T09:30').toISOString() },
+    });
+  });
+
+  it('formulários do detalhe abrem com o que está salvo, não com o que foi cancelado', async () => {
+    setup();
+    renderApp('/candidaturas/app-2');
+    const dialog = await screen.findByRole('dialog', { name: 'React Native Jr' });
+
+    // Próxima etapa: limpar e marcar de novo começa vazio.
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Limpar' }));
+    await within(dialog).findByText('Nenhuma próxima etapa marcada.');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Marcar' }));
+    expect(within(dialog).getByLabelText('Quando')).toHaveValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'O quê' })).toHaveValue('');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+
+    // Linha do tempo: a anotação cancelada não volta.
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Editar etapa Aplicada' }));
+    const note = within(dialog).getByRole('textbox', { name: 'Anotação' });
+    await userEvent.clear(note);
+    await userEvent.type(note, 'rascunho');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Editar etapa Aplicada' }));
+    expect(within(dialog).getByRole('textbox', { name: 'Anotação' })).toHaveValue('Pela Gupy.');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+
+    // Dados do processo: idem.
+    // O único "Editar" sem complemento (a próxima etapa está vazia: "Marcar").
+    const editProcess = () => within(dialog).getByRole('button', { name: 'Editar' });
+    await userEvent.click(editProcess());
+    await userEvent.type(
+      within(dialog).getByRole('textbox', { name: 'Onde se candidatou' }),
+      'LinkedIn',
+    );
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+    await userEvent.click(editProcess());
+    expect(within(dialog).getByRole('textbox', { name: 'Onde se candidatou' })).toHaveValue('');
   });
 
   it('apagar a candidatura pede um segundo clique', async () => {

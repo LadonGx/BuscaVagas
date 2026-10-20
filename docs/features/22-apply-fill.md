@@ -17,7 +17,9 @@ formulário com o seu Currículo do app. Quem confere e clica em enviar é você
   contorno roxo e um aviso no canto da página lembra que quem envia é você.
 - **Sites proibidos:** LinkedIn, Indeed, Glassdoor, InfoJobs e Vagas.com
   proíbem automação nos termos. O comando recusa essas vagas, e se a janela
-  for parar num desses sites, ele não mexe em nada lá.
+  for parar num desses sites, ele não mexe em nada lá. A conferência é feita
+  duas vezes: pelo endereço do quadro, antes, e de novo dentro da página
+  (`location.hostname`), porque o quadro pode navegar nesse meio-tempo.
 - **Genérico + Gupy:** acha os campos pelo rótulo, em qualquer site permitido
   e dentro de quadros (iframe). Na Gupy, você clica em "Candidatar-se" e
   entra com a sua conta; a Gupy já guarda seus dados, e aqui entram as
@@ -28,6 +30,11 @@ formulário com o seu Currículo do app. Quem confere e clica em enviar é você
 - **Respostas salvas:** as da seção "Respostas prontas" do Currículo (e os
   outros campos, como "Idiomas"). Pergunta sem resposta salva fica em branco.
   Texto gerado por IA fica para a Fase 4.
+- **Alertas do site ficam com você:** sem ninguém escutando, o Playwright
+  fecha sozinho `alert`/`confirm`/`prompt` (um `confirm()` voltaria
+  "Cancelar" na hora). Cada aba ganha um ouvinte que não faz nada: o alerta
+  fica na tela para você responder, e aquela aba fica sem preencher até lá.
+  Cada aba é preenchida na sua volta, sem esperar as outras.
 
 ## Usar
 
@@ -39,6 +46,9 @@ pnpm candidatar            # escolhe entre as vagas salvas
 pnpm candidatar <id>       # a vaga do app (o painel da vaga mostra o comando)
 pnpm candidatar <link>     # qualquer link de vaga de site permitido
 ```
+
+Com link, abre o link que você passou, mesmo que a vaga já esteja no app com
+outro link (a vaga do app só serve para registrar a candidatura no fim).
 
 1. A janela abre na vaga. Vá até o formulário (na Gupy, "Candidatar-se" e
    login). Os campos vazios são preenchidos conforme aparecem, etapa por
@@ -54,25 +64,42 @@ pnpm candidatar <link>     # qualquer link de vaga de site permitido
    ```
 
 3. Confira, complete e envie você mesmo.
-4. Feche a janela. O terminal pergunta "Você enviou a candidatura? (s/N)".
+4. Feche a janela (ou todas as abas). O terminal pergunta "Você enviou a
+   candidatura? (s/N)".
    Com "s", a candidatura é registrada no app (com a cópia do currículo e o
    PDF que foi anexado, como em [14](14-resume-versions.md)).
+
+Ctrl+C no terminal fecha a janela e segue para a pergunta; antes da janela
+abrir (gerando o PDF), na pergunta do fim ou num segundo Ctrl+C, sai na hora. Nos dois casos a
+pasta temporária do PDF é apagada.
 
 No painel da vaga (tela Vagas), "Preencher a candidatura" mostra o comando
 com o id da vaga, com botão de copiar. Nos sites restritos, avisa que não dá.
 
 ## O que é preenchido
 
-| No formulário                                    | Vem de (Currículo)                               |
-| ------------------------------------------------ | ------------------------------------------------ |
-| Nome, nome completo, primeiro nome, sobrenome    | "Nome completo" (o primeiro nome e o resto)      |
-| E-mail, telefone/celular/WhatsApp                | "E-mail", "Telefone/WhatsApp"                    |
-| Cidade, estado/UF, localização                   | "Cidade/UF" ("Campinas/SP" → Campinas, SP)       |
-| LinkedIn, GitHub, portfólio/site                 | "Links"                                          |
-| Data de nascimento (campo de data: AAAA-MM-DD)   | "Data de nascimento" (15/03/1999)                |
-| "Fale sobre você" (só caixa de texto grande)     | "Resumo profissional"                            |
-| Campo de arquivo de currículo (ou o único campo) | O PDF do Currículo                               |
-| Outras perguntas                                 | "Respostas prontas" e demais campos, pelo rótulo |
+| No formulário                                  | Vem de (Currículo)                               |
+| ---------------------------------------------- | ------------------------------------------------ |
+| Nome, nome completo, primeiro nome, sobrenome  | "Nome completo" (o primeiro nome e o resto)      |
+| E-mail, telefone/celular/WhatsApp (\*)         | "E-mail", "Telefone/WhatsApp"                    |
+| Cidade, estado/UF, localização                 | "Cidade/UF" ("Campinas/SP" → Campinas, SP)       |
+| LinkedIn, GitHub, portfólio/site               | "Links"                                          |
+| Data de nascimento (campo de data: AAAA-MM-DD) | "Data de nascimento" (15/03/1999)                |
+| "Fale sobre você" (só caixa de texto grande)   | "Resumo profissional"                            |
+| Campo de arquivo de currículo (\*\*)           | O PDF do Currículo                               |
+| Outras perguntas                               | "Respostas prontas" e demais campos, pelo rótulo |
+
+(\*) Pelo rótulo. O tipo do campo (`type=email`, `type=tel`) só decide quando
+o rótulo não diz o que é e nenhuma resposta salva serve; `type=tel` com
+"CEP", "Documento", "Matrícula", "Pretensão salarial" etc. não recebe o
+telefone.
+
+(\*\*) Só no campo que diz currículo ("Currículo", "CV", "Resume"), ou no
+único campo de arquivo da página inteira (todos os quadros) quando ele não
+tem rótulo nem placeholder. Nunca em campo de documento de identificação, RG,
+CPF, comprovante, foto, certificado, diploma, carteira, portfólio ou carta.
+O campo precisa aceitar PDF (`accept` vazio, com `.pdf`, `application/pdf` ou
+`*/*`; `image/*` não). O PDF vai uma vez por aba, num campo só.
 
 Como uma resposta salva casa com a pergunta: as palavras do rótulo (sem
 acento, sem "de", "a", "qual"...) precisam estar na pergunta. Com até duas
@@ -87,7 +114,12 @@ as opções ("Avançado" → "Avançado (C1)"). Campo de número recebe só o n�
 
 **Nunca preenchidos:** senha, CPF, RG, CNH, PIS, passaporte, cartão, conta,
 captcha, nome social, nome da mãe/pai, caixas de aceite e campos que já têm
-valor (o que o site ou você preencheu fica).
+valor (o que o site ou você preencheu fica). Nem campos escondidos: `hidden`,
+`display: none`, `visibility: hidden`, dentro de `aria-hidden="true"`,
+opacidade 0 ou fora da tela (à esquerda ou acima da página), que é como os
+sites escondem o campo-armadilha para robôs. Radio transparente vale (o site
+desenha a bolinha por cima); o de arquivo também (o botão bonito fica por
+cima).
 
 ## Configuração (opcional)
 
@@ -132,12 +164,17 @@ Sem mudança no banco nem na API.
 ## Testes
 
 - `match.spec.ts`: currículo → perfil, rótulos conhecidos, respostas salvas
-  (CLT/PJ, empate, "viagens" ≠ "início"), opções, sensíveis, tamanho máximo,
-  arquivo de currículo e foto, datas, números, nome do PDF.
+  (CLT/PJ, empate, "viagens" ≠ "início"), tipo `tel`/`email` só por último
+  (CEP, documento e pretensão não viram telefone), opções, sensíveis, tamanho
+  máximo, arquivo de currículo (documento, comprovante, certificado, imagem e
+  rótulo genérico ficam de fora; `accept`), foto, datas, números, nome do PDF.
 - `scan.spec.ts` (jsdom): pergunta pelo `<label>`, aria, texto antes do campo
   e legenda; campos escondidos, senha, caixa de aceite e já preenchidos de
-  fora; só os campos novos na volta seguinte; escreve sem enviar o
-  formulário e sem sobrescrever o que você digitou; o aviso.
+  fora; campo-armadilha (`aria-hidden`, opacidade 0, fora da tela, com
+  `getBoundingClientRect` simulado); site restrito dentro da página; só os
+  campos novos na volta seguinte; escreve sem enviar o formulário e sem
+  sobrescrever o que você digitou; o aviso.
+- `app-client.spec.ts`: `Content-Type: application/json` em POST e PUT.
 - `VagasPage.spec.tsx`: o painel mostra e copia o comando; site restrito não.
 - Conferido de ponta a ponta no Chromium: formulário de teste em duas etapas
   com iframe → 11 campos preenchidos, currículo anexado, CPF e senha em

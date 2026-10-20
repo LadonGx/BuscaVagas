@@ -13,27 +13,50 @@ import type { JobDto } from './jobs';
  */
 export const RESTRICTED_SITES = [
   'linkedin.com',
+  'lnkd.in',
   'indeed.com',
   'glassdoor.com',
   'glassdoor.com.br',
   'infojobs.com.br',
   'vagas.com.br',
+  'vagas.com',
 ] as const;
 
+/**
+ * Marcas bloqueadas em QUALQUER domínio de país (glassdoor.co.uk,
+ * indeed.com.br, de.indeed.com, infojobs.net...): a marca seguida só do
+ * sufixo ("com", "co.uk", "com.br", "de").
+ */
+const RESTRICTED_BRANDS = ['linkedin', 'indeed', 'glassdoor', 'infojobs'] as const;
+const COUNTRY_SUFFIX = /^[a-z]{2,3}(\.[a-z]{2})?$/;
+
+/** Host em minúsculas e sem o ponto final ("www.linkedin.com." vale o mesmo). */
 const hostOf = (url: string): string | null => {
   try {
-    return new URL(url).hostname.toLowerCase();
+    return new URL(url.trim()).hostname.toLowerCase().replace(/\.+$/, '') || null;
   } catch {
     return null;
   }
 };
 
+const isOnDomain = (host: string, domain: string) => host === domain || host.endsWith(`.${domain}`);
+
+/** O host é da marca, em qualquer país? (`br.indeed.com`, `www.glassdoor.co.uk`). */
+const isBrandHost = (host: string, brand: string) => {
+  const labels = host.split('.');
+  return labels.some(
+    (label, index) => label === brand && COUNTRY_SUFFIX.test(labels.slice(index + 1).join('.')),
+  );
+};
+
+const isRestrictedHostname = (host: string) =>
+  RESTRICTED_SITES.some((site) => isOnDomain(host, site)) ||
+  RESTRICTED_BRANDS.some((brand) => isBrandHost(host, brand));
+
 /** O link é de um site que não permite acesso automatizado? */
 export function isRestrictedUrl(url: string): boolean {
   const host = hostOf(url);
-  return Boolean(
-    host && RESTRICTED_SITES.some((site) => host === site || host.endsWith(`.${site}`)),
-  );
+  return Boolean(host && isRestrictedHostname(host));
 }
 
 /**
@@ -54,20 +77,19 @@ export function siteJobUrl(raw: string): string {
   } catch {
     return raw;
   }
-  const host = url.hostname.toLowerCase();
-  const isHost = (site: string) => host === site || host.endsWith(`.${site}`);
+  const host = url.hostname.toLowerCase().replace(/\.+$/, '');
 
-  if (isHost('linkedin.com')) {
+  if (isBrandHost(host, 'linkedin')) {
     const id =
       /\/jobs\/view\/(?:[^/]*-)?(\d+)/.exec(url.pathname)?.[1] ??
       url.searchParams.get('currentJobId');
     if (id && /^\d+$/.test(id)) return `https://www.linkedin.com/jobs/view/${id}`;
   }
-  if (isHost('glassdoor.com') || isHost('glassdoor.com.br')) {
+  if (isBrandHost(host, 'glassdoor')) {
     const id = url.searchParams.get('jl') ?? url.searchParams.get('jobListingId');
     if (id && /^\d+$/.test(id)) return `https://${host}/job-listing/j?jl=${id}`;
   }
-  if (isHost('indeed.com')) {
+  if (isBrandHost(host, 'indeed')) {
     const id = url.searchParams.get('jk') ?? url.searchParams.get('vjk');
     if (id && /^[a-z0-9]+$/i.test(id)) return `https://${host}/viewjob?jk=${id}`;
   }

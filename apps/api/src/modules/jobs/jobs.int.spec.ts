@@ -79,6 +79,34 @@ describeDb('Vagas (integração)', () => {
     expect(response.body.existingJobId).toBe(first.id);
   });
 
+  it('URL que é outro link de uma vaga (JobAlias) também responde 409 com o id dela', async () => {
+    const owner = await createJob({ title: 'Dev', company: 'Acme', url: 'https://acme.com/v/1' });
+    const other = await createJob({ title: 'Outra', company: 'Beta', url: 'https://beta.com/v/9' });
+    await t.prisma.jobAlias.create({
+      data: { url: 'https://acme.com/v/1-espelho', jobId: owner.id, source: 'manual' },
+    });
+
+    const created = await api()
+      .post('/api/jobs')
+      .send({ title: 'Dev', company: 'Acme', url: 'https://acme.com/v/1-espelho' })
+      .expect(409);
+    expect(created.body.existingJobId).toBe(owner.id);
+
+    const edited = await api()
+      .patch(`/api/jobs/${other.id}`)
+      .send({ url: 'https://acme.com/v/1-espelho' })
+      .expect(409);
+    expect(edited.body.existingJobId).toBe(owner.id);
+
+    // A própria vaga pode adotar um dos seus outros links como principal.
+    const adopted = await api()
+      .patch(`/api/jobs/${owner.id}`)
+      .send({ url: 'https://acme.com/v/1-espelho' })
+      .expect(200);
+    expect(adopted.body.url).toBe('https://acme.com/v/1-espelho');
+    expect(await t.prisma.jobAlias.count()).toBe(0);
+  });
+
   it('várias vagas sem URL convivem', async () => {
     await createJob({ title: 'Indicação 1', company: 'A' });
     await createJob({ title: 'Indicação 2', company: 'B' });
@@ -139,7 +167,10 @@ describeDb('Vagas (integração)', () => {
     expect(first.body.items.map((job: JobDto) => job.title)).toEqual(['Vaga 5', 'Vaga 4']);
 
     // Apaga uma vaga já vista: com offset, a próxima página pularia uma.
-    await api().delete(`/api/jobs/${first.body.items[0].id}`).expect(204);
+    await api()
+      .delete(`/api/jobs/${first.body.items[0].id}`)
+      .set('Content-Type', 'application/json')
+      .expect(204);
 
     const second = await api().get(`/api/jobs?limit=2&cursor=${first.body.nextCursor}`).expect(200);
     expect(second.body.items.map((job: JobDto) => job.title)).toEqual(['Vaga 3', 'Vaga 2']);
@@ -174,7 +205,7 @@ describeDb('Vagas (integração)', () => {
   it('404 para vaga inexistente', async () => {
     await api().get('/api/jobs/nao-existe').expect(404);
     await api().patch('/api/jobs/nao-existe').send({ notes: 'x' }).expect(404);
-    await api().delete('/api/jobs/nao-existe').expect(404);
+    await api().delete('/api/jobs/nao-existe').set('Content-Type', 'application/json').expect(404);
   });
 
   it('ingest cria as novas, marca as existentes como vistas e não sobrescreve edição', async () => {

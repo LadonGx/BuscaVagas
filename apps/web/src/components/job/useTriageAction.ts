@@ -27,26 +27,24 @@ export function useTriageAction() {
         dismissReason: status === 'dismissed' ? (reason ?? null) : null,
       };
 
-      triage.mutate(
-        { job, status, reason },
-        {
-          onSuccess: () =>
-            toast.show({
-              tone: 'success',
-              message: DONE[status],
-              action: {
-                label: 'Desfazer',
-                onClick: () =>
-                  triage.mutate(
-                    { job: changed, status: before.status, reason: before.reason },
-                    {
-                      onError: (error) => toast.show({ tone: 'error', message: error.message }),
-                    },
-                  ),
+      // `mutateAsync` por chamada: os callbacks do `mutate` só rodam para a
+      // última chamada, e triagens rápidas em sequência perderiam o aviso.
+      const showError = (error: Error) => toast.show({ tone: 'error', message: error.message });
+      void triage.mutateAsync({ job, status, reason }).then(
+        () =>
+          toast.show({
+            tone: 'success',
+            message: DONE[status],
+            action: {
+              label: 'Desfazer',
+              onClick: () => {
+                void triage
+                  .mutateAsync({ job: changed, status: before.status, reason: before.reason })
+                  .catch(showError);
               },
-            }),
-          onError: (error) => toast.show({ tone: 'error', message: error.message }),
-        },
+            },
+          }),
+        showError,
       );
     },
     [triage, toast],

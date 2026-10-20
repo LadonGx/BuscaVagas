@@ -62,11 +62,16 @@ export function parseBoardUrl(input: string): BoardRef | null {
     return null;
   }
 
-  const host = url.hostname.toLowerCase().replace(/^www\./, '');
-  const parts = url.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+  const host = url.hostname
+    .toLowerCase()
+    .replace(/\.+$/, '')
+    .replace(/^www\./, '');
 
   for (const item of HOSTS) {
     if (!item.host.test(host)) continue;
+    // Só decodifica depois de saber que é um board: "%" solto (".../100%-remoto") não lança.
+    const parts = decodePath(url.pathname);
+    if (!parts) return null;
     // Board embutido no site da empresa: .../embed/job_board?for=<slug>
     const slug =
       item.sourceId === 'greenhouse' && parts[0] === 'embed'
@@ -75,6 +80,15 @@ export function parseBoardUrl(input: string): BoardRef | null {
     return SLUG.test(slug) ? { sourceId: item.sourceId, slug } : null;
   }
   return null;
+}
+
+/** Segmentos do caminho, decodificados; `null` se algum tem `%` inválido. */
+function decodePath(pathname: string): string[] | null {
+  try {
+    return pathname.split('/').filter(Boolean).map(decodeURIComponent);
+  } catch {
+    return null;
+  }
 }
 
 /** Página pública do board, para abrir no navegador. */

@@ -7,7 +7,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
 import { createTestApp, describeDb, resetDatabase, type TestApp } from '../../../test/helpers';
 import { Prisma } from '../../generated/prisma/client';
-import { BACKUP_TABLES, NULLABLE_JSON_FIELDS } from './backup.service';
+import { BACKUP_TABLES, BackupService, NULLABLE_JSON_FIELDS } from './backup.service';
 import { BackupModule } from './backup.module';
 
 const PDF = Buffer.from('%PDF-1.4\n% backup\n%%EOF\n', 'latin1');
@@ -185,9 +185,11 @@ describeDb('Backup (integração)', () => {
     expect(restoredApplication.events).toHaveLength(2);
     expect(await t.prisma.systemFlag.count()).toBe(1);
     expect((await t.prisma.preferences.findUniqueOrThrow({ where: { id: 1 } })).version).toBe(3);
+    // As notas voltam para a fila (o backup pode ser de antes de uma mudança na nota).
+    expect(await t.prisma.job.count({ where: { scoredVersion: { not: null } } })).toBe(0);
 
     // A cópia do que havia antes ficou na pasta, com a vaga "Nova".
-    expect(result.safetyBackup).toMatch(/^buscavagas-antes-de-restaurar-\d{8}-\d{4}\.zip$/);
+    expect(result.safetyBackup).toMatch(/^buscavagas-antes-de-restaurar-\d{8}-\d{6}\.zip$/);
     expect(readdirSync(dir)).toContain(result.safetyBackup);
     const safety = unzipSync(new Uint8Array(readFileSync(join(dir, result.safetyBackup))));
     expect(strFromU8(safety['data/Job.json']!)).toContain('"title":"Nova"');
@@ -239,6 +241,54 @@ describeDb('Backup (integração)', () => {
 
     await api().post('/api/backup/restore').set('Content-Type', 'application/zip').expect(400);
     expect(await t.prisma.job.count()).toBe(2);
+  });
+
+  it('arquivo corrompido (JSON inválido ou manifest torto) responde 400 sem mexer em nada', async () => {
+    await seed();
+    const files = unzipSync(new Uint8Array(await download()));
+    const copies = readdirSync(dir).length;
+    const restore = (zip: Record<string, Uint8Array>) =>
+      api()
+        .post('/api/backup/restore')
+        .set('Content-Type', 'application/zip')
+        .send(Buffer.from(zipSync(zip)))
+        .expect(400);
+
+    const badJson = await restore({ ...files, 'data/Job.json': strToU8('[{"id": ') });
+    expect(badJson.body.message).toBe('Backup corrompido: data/Job.json não é um JSON válido.');
+    const notList = await restore({ ...files, 'data/Job.json': strToU8('{"id": 1}') });
+    expect(notList.body.message).toMatch(/data\/Job\.json não é uma lista/);
+
+    const manifest = JSON.parse(strFromU8(files['manifest.json']!)) as Record<string, unknown>;
+    for (const broken of [{ migrations: 'x' }, { migrations: [1] }, { counts: [] }]) {
+      const zip = {
+        ...files,
+        'manifest.json': strToU8(JSON.stringify({ ...manifest, ...broken })),
+      };
+      const response = await api()
+        .post('/api/backup/inspect')
+        .set('Content-Type', 'application/zip')
+        .send(Buffer.from(zipSync(zip)))
+        .expect(400);
+      expect(response.body.message).toMatch(/não é um backup do BuscaVagas/);
+    }
+    expect(await t.prisma.job.count()).toBe(2);
+    // Recusado antes de começar: nem a cópia de segurança foi feita.
+    expect(readdirSync(dir)).toHaveLength(copies);
+  });
+
+  it('duas restaurações no mesmo segundo guardam duas cópias (nenhuma sobrescreve)', async () => {
+    await seed();
+    const zip = new Uint8Array(await download());
+    const service = t.app.get(BackupService);
+    const now = new Date('2026-10-14T15:30:45.000Z');
+    const first = await service.restore(zip, now);
+    const second = await service.restore(zip, now);
+    expect(first.safetyBackup).toBe('buscavagas-antes-de-restaurar-20261014-153045.zip');
+    expect(second.safetyBackup).toBe('buscavagas-antes-de-restaurar-20261014-153045-2.zip');
+    expect(readdirSync(dir)).toEqual(
+      expect.arrayContaining([first.safetyBackup, second.safetyBackup]),
+    );
   });
 
   it('dado quebrado no meio: transação desfaz, nada muda', async () => {

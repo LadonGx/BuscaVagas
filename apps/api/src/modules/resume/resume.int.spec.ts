@@ -158,7 +158,10 @@ describeDb('Currículo (integração)', () => {
     // `kind` é ignorado: não muda depois de criada.
     expect(renamed.body).toMatchObject({ title: 'Trabalho voluntário', kind: 'entries' });
 
-    await api().delete(`/api/resume/sections/${created.id}`).expect(204);
+    await api()
+      .delete(`/api/resume/sections/${created.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(204);
     expect(await t.prisma.resumeItem.count({ where: { sectionId: created.id } })).toBe(0);
   });
 
@@ -208,8 +211,14 @@ describeDb('Currículo (integração)', () => {
     const resume = await getResume();
     const item = section(resume, 'Idiomas').items[0]!;
 
-    await api().delete(`/api/resume/items/${item.id}`).expect(204);
-    await api().delete(`/api/resume/items/${item.id}`).expect(404);
+    await api()
+      .delete(`/api/resume/items/${item.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(204);
+    await api()
+      .delete(`/api/resume/items/${item.id}`)
+      .set('Content-Type', 'application/json')
+      .expect(404);
     await api().patch('/api/resume/sections/nao-existe').send({ title: 'x' }).expect(404);
     await api()
       .post('/api/resume/sections/nao-existe/items')
@@ -220,7 +229,10 @@ describeDb('Currículo (integração)', () => {
   it('apagar todas as seções faz o padrão voltar no próximo acesso', async () => {
     const resume = await getResume();
     for (const s of resume.sections) {
-      await api().delete(`/api/resume/sections/${s.id}`).expect(204);
+      await api()
+        .delete(`/api/resume/sections/${s.id}`)
+        .set('Content-Type', 'application/json')
+        .expect(204);
     }
 
     expect((await getResume()).sections).toHaveLength(DEFAULT_RESUME_SECTIONS.length);

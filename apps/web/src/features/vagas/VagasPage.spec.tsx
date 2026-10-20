@@ -1,10 +1,11 @@
 import type { JobDto } from '@busca-vagas/shared';
-import { screen, waitFor, within } from '@testing-library/react';
+import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { mockApi, reply } from '../../test/api-mock';
 import { job, layoutRoutes } from '../../test/fixtures';
 import { renderApp } from '../../test/render';
+import { SEARCH_DEBOUNCE_MS } from './VagasToolbar';
 
 const acme = job({ id: 'j1', title: 'Full Stack Júnior', company: 'Acme' });
 const brisa = job({
@@ -87,6 +88,30 @@ describe('Vagas', () => {
 
     await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar vagas' }), 'react');
     await waitFor(() => expect(lastList()?.get('q')).toBe('react'));
+  });
+
+  it('busca acompanha a URL: Voltar e links trocam o texto, sem reescrever o antigo', async () => {
+    const { lastList } = setup();
+    const { router } = renderApp('/vagas?busca=react');
+    const search = await screen.findByRole('searchbox', { name: 'Buscar vagas' });
+    expect(search).toHaveValue('react');
+
+    // Link dentro do app para outra busca.
+    await act(() => router.navigate('/vagas?busca=node'));
+    expect(search).toHaveValue('node');
+    await waitFor(() => expect(lastList()?.get('q')).toBe('node'));
+
+    // Voltar.
+    await act(() => router.navigate(-1));
+    expect(search).toHaveValue('react');
+    await new Promise((resolve) => setTimeout(resolve, SEARCH_DEBOUNCE_MS + 100));
+    expect(router.state.location.search).toBe('?busca=react');
+    expect(lastList()?.get('q')).toBe('react');
+
+    // Digitar continua indo para a URL.
+    await userEvent.type(search, ' native');
+    await waitFor(() => expect(router.state.location.search).toBe('?busca=react+native'));
+    expect(search).toHaveValue('react native');
   });
 
   it('salvar tira o cartão da caixa na hora e o desfazer volta para a caixa', async () => {

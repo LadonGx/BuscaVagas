@@ -5,10 +5,10 @@ import {
   type WorkModel,
 } from '@busca-vagas/shared';
 import { Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import type { SourceOption } from '../../api/discovery';
 import type { JobFilters, JobTab } from '../../api/jobs';
 import { formatNumber } from '../../lib/format';
+import { useSearchText } from '../../lib/useSearchText';
 import { MIN_SCORE_OPTIONS } from './useJobFilters';
 import styles from './VagasToolbar.module.css';
 
@@ -51,16 +51,8 @@ interface VagasToolbarProps {
 
 export function VagasToolbar(props: VagasToolbarProps) {
   const { filters, counts } = props;
-  const [text, setText] = useState(filters.q ?? '');
-  const { onQuery } = props;
-
-  // Busca depois que a pessoa para de digitar.
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (text.trim() !== (filters.q ?? '')) onQuery(text);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [text, filters.q, onQuery]);
+  // Busca depois que a pessoa para de digitar; Voltar ou um link trazem o texto da URL.
+  const search = useSearchText(filters.q ?? '', props.onQuery, SEARCH_DEBOUNCE_MS);
 
   const models = filters.workModel ?? [];
   const toggleModel = (model: WorkModel) =>
@@ -76,8 +68,8 @@ export function VagasToolbar(props: VagasToolbarProps) {
           <span className="sr-only">Buscar vagas</span>
           <input
             type="search"
-            value={text}
-            onChange={(event) => setText(event.target.value)}
+            value={search.text}
+            onChange={(event) => search.onChange(event.target.value)}
             placeholder="Buscar por título ou empresa…"
           />
         </label>

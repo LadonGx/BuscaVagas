@@ -35,7 +35,8 @@ describe('mapGupyJob', () => {
       stack: ['typescript', 'react', 'node.js', 'postgresql', 'docker'],
       salary: null,
       postedAt: '2026-10-05T13:22:10.000Z',
-      deadline: '2026-12-08T00:00:00.000Z',
+      // "2026-12-08T00:00:00.000Z" é só a data: fim do dia 08/12 em São Paulo.
+      deadline: '2026-12-09T02:59:59.999Z',
     });
   });
 

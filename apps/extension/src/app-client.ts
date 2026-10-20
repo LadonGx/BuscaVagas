@@ -32,8 +32,15 @@ async function request<T>(
 ): Promise<{ status: number; body: T }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  // A API exige `Content-Type: application/json` em todo método que muda
+  // algo (POST, PUT, PATCH, DELETE), mesmo sem corpo.
+  const method = (init.method ?? 'GET').toUpperCase();
+  const headers = new Headers(init.headers);
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method) && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
   try {
-    const response = await fetchFn(url, { ...init, signal: controller.signal });
+    const response = await fetchFn(url, { ...init, method, headers, signal: controller.signal });
     const body = (await response.json().catch(() => null)) as T;
     return { status: response.status, body };
   } finally {
@@ -82,11 +89,7 @@ export async function createJob(
   const { status, body } = await request<JobDto & { message?: string | string[] }>(
     fetchFn,
     `${base}/api/jobs`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input),
-    },
+    { method: 'POST', body: JSON.stringify(input) },
   );
   if (status !== 201) {
     const message = Array.isArray(body?.message) ? body.message.join(' ') : body?.message;

@@ -87,7 +87,12 @@ describeDb('Avisos de nota alta (integração)', () => {
     expect(list.items.map((item) => item.jobs.map((j) => j.title))).toEqual([['B'], ['A']]);
     expect(list.items[0]).toMatchObject({ kind: 'high-score', readAt: null });
 
-    const read = (await api().post('/api/notifications/read').expect(200)).body as NotificationsDto;
+    const read = (
+      await api()
+        .post('/api/notifications/read')
+        .set('Content-Type', 'application/json')
+        .expect(200)
+    ).body as NotificationsDto;
     expect(read.unread).toBe(0);
     expect(read.items.every((item) => item.readAt !== null)).toBe(true);
   });

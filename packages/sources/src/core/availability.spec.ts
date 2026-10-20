@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { checkAvailability, isRestrictedHost } from './availability';
-import { HttpError, type HttpClient } from './http';
+import { createHttpClient, HttpError, type HttpClient } from './http';
 
 /** Respostas por URL: objeto = JSON, string = HTML, número = status de erro. */
 function fakeHttp(routes: Record<string, unknown>) {
@@ -129,6 +129,104 @@ describe('a vaga ainda está aberta?', () => {
     expect(isRestrictedHost('https://br.indeed.com/viewjob?jk=1')).toBe(true);
     expect(isRestrictedHost('https://www.glassdoor.com.br/x')).toBe(true);
     expect(isRestrictedHost('https://acme.gupy.io/job/1')).toBe(false);
+  });
+
+  it('"não está disponível para PcD" não é vaga fechada; frases inteiras de fechada são', async () => {
+    const { http } = fakeHttp({
+      'https://acme.gupy.io/job/6': '<p>Esta vaga não está disponível para PcD apenas.</p>',
+      'https://acme.gupy.io/job/7': '<p>Vaga indisponível para candidatos fora de SP.</p>',
+      'https://acme.gupy.io/job/8': '<p>Esta vaga não está mais disponível.</p>',
+      'https://acme.gupy.io/job/9': '<p>Inscrições encerradas</p>',
+      'https://jobs.acme.com/1': '<h2>This job is no longer available</h2>',
+    });
+    const check = (url: string) =>
+      checkAvailability({ source: 'gupy', url, externalId: null, board: null }, http, NOW);
+    expect((await check('https://acme.gupy.io/job/6')).state).toBe('open');
+    expect((await check('https://acme.gupy.io/job/7')).state).toBe('open');
+    expect(await check('https://acme.gupy.io/job/8')).toEqual({
+      state: 'closed',
+      reason: 'A página diz: "Esta vaga não está mais disponível"',
+    });
+    expect((await check('https://acme.gupy.io/job/9')).state).toBe('closed');
+    expect((await check('https://jobs.acme.com/1')).state).toBe('closed');
+  });
+
+  it('validThrough só com a data vale até o fim do dia em São Paulo', async () => {
+    const { http } = fakeHttp({
+      'https://carreiras.acme.com/hoje': '{"@type":"JobPosting","validThrough":"2026-10-12"}',
+      'https://carreiras.acme.com/ontem':
+        '{"@type":"JobPosting","validThrough":"2026-10-11T00:00:00.000Z"}',
+    });
+    const check = (url: string) =>
+      checkAvailability({ source: 'manual', url, externalId: null, board: null }, http, NOW);
+    // 12/10 às 23h em São Paulo (02:00Z do dia 13): ainda aberta.
+    const lateNight = new Date('2026-10-13T02:00:00Z');
+    expect(
+      (
+        await checkAvailability(
+          {
+            source: 'manual',
+            url: 'https://carreiras.acme.com/hoje',
+            externalId: null,
+            board: null,
+          },
+          http,
+          lateNight,
+        )
+      ).state,
+    ).toBe('open');
+    expect(await check('https://carreiras.acme.com/ontem')).toEqual({
+      state: 'closed',
+      reason: 'Inscrições até 11/10/2026',
+    });
+  });
+
+  it('link que redireciona para LinkedIn & cia.: não segue, nem com uma requisição', async () => {
+    const fetched: string[] = [];
+    const routes: Record<string, () => Response> = {
+      'https://bit.ly/vaga': () =>
+        new Response(null, { status: 301, headers: { Location: 'https://lnkd.in/abc' } }),
+      'https://carreiras.acme.com/r': () =>
+        new Response(null, { status: 302, headers: { Location: '/vaga/1' } }),
+      'https://carreiras.acme.com/vaga/1': () =>
+        new Response(null, {
+          status: 307,
+          headers: { Location: 'https://www.linkedin.com./jobs/view/1' },
+        }),
+      'https://carreiras.acme.com/ok': () =>
+        new Response(null, { status: 302, headers: { Location: '/final' } }),
+      'https://carreiras.acme.com/final': () => new Response('<p>Vaga encerrada</p>'),
+      'https://carreiras.acme.com/loop': () =>
+        new Response(null, { status: 302, headers: { Location: '/loop' } }),
+    };
+    const http = createHttpClient({
+      fetchImpl: async (input, init) => {
+        const url = String(input);
+        fetched.push(url);
+        expect(init?.redirect).toBe('manual');
+        const route = routes[url];
+        return route ? route() : new Response('não achei', { status: 404 });
+      },
+    });
+    const check = (url: string) =>
+      checkAvailability({ source: 'manual', url, externalId: null, board: null }, http, NOW);
+
+    const blocked = {
+      state: 'unknown',
+      reason: 'O link leva a um site que não permite conferência automática: abra o link para ver',
+    };
+    expect(await check('https://bit.ly/vaga')).toEqual(blocked);
+    expect(await check('https://carreiras.acme.com/r')).toEqual(blocked);
+    expect(fetched.some((url) => /linkedin|lnkd/.test(url))).toBe(false);
+
+    expect(await check('https://carreiras.acme.com/ok')).toEqual({
+      state: 'closed',
+      reason: 'A página diz: "Vaga encerrada"',
+    });
+    expect(await check('https://carreiras.acme.com/loop')).toEqual({
+      state: 'unknown',
+      reason: 'Não deu para conferir agora (Mais de 5 redirecionamentos)',
+    });
   });
 
   it('vaga sem link e sem board: não há o que conferir', async () => {

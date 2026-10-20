@@ -6,10 +6,19 @@ um comando sobe banco, fila, API e tela, e o app fica em
 
 ```bash
 cp .env.example .env      # Windows (cmd): copy .env.example .env
+mkdir -p backups          # só no Linux, antes do primeiro app:up (ver abaixo)
 pnpm app:up               # ou: docker compose -f docker-compose.yml -f docker-compose.app.yml up -d --build
 ```
 
 Sem pnpm instalado, o comando do `docker compose` acima faz o mesmo.
+
+**Linux: crie a pasta `backups/` antes do primeiro `pnpm app:up`.** O
+container roda como o usuário `node` e grava nela as cópias feitas antes de
+restaurar um backup. Se a pasta não existir, o Docker a cria como root, e a
+restauração falha com `EACCES`. O `node` do container tem o id 1000, o do
+primeiro usuário na maioria das distribuições; se o seu for outro (`id -u`),
+libere a escrita também: `chmod a+rwx backups`. No Windows e no macOS (Docker
+Desktop) isso não acontece.
 
 ## Decisões
 
@@ -119,8 +128,10 @@ falhou. A mensagem diz qual; o banco fica como estava.
 rodando juntas. Veja "Dev e Docker: um de cada vez".
 
 **Linux: a restauração do backup falha com `EACCES`.** O Docker criou a pasta
-`backups/` como root. Crie a pasta antes (`mkdir backups`) com o seu usuário.
-No Windows e no macOS isso não acontece.
+`backups/` como root (ela não existia no primeiro `pnpm app:up`). Devolva a
+pasta ao seu usuário: `sudo chown "$(id -u):$(id -g)" backups` (e, se o seu id
+não for 1000, `chmod a+rwx backups`). Não precisa reiniciar o app. No Windows
+e no macOS isso não acontece.
 
 ## Testes
 

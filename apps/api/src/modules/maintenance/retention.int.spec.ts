@@ -132,8 +132,12 @@ describeDb('Retenção (integração)', () => {
   it('apaga só descartadas antigas e caixa esquecida; o resto fica', async () => {
     await scenario();
 
-    const result = (await api().post('/api/maintenance/retention').expect(200))
-      .body as RetentionReportDto;
+    const result = (
+      await api()
+        .post('/api/maintenance/retention')
+        .set('Content-Type', 'application/json')
+        .expect(200)
+    ).body as RetentionReportDto;
 
     expect(result).toMatchObject({ dismissed: 1, stale: 1, sourceRuns: 1, dryRun: false });
     expect(await remaining()).toEqual(['2', '4', '5', '6', 'manual-antiga']);

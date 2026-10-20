@@ -25,31 +25,24 @@ export function useMoveWithUndo() {
 
   return useCallback(
     (id: string, status: ApplicationStatus) => {
-      move.mutate(
-        { id, status },
-        {
-          onSuccess: (detail) => {
-            const eventId = newestEventId(detail);
-            toast.show({
-              tone: 'success',
-              message: moveMessage(status),
-              action: eventId
-                ? {
-                    label: 'Desfazer',
-                    onClick: () =>
-                      deleteEvent.mutate(
-                        { id, eventId },
-                        {
-                          onError: (error) => toast.show({ tone: 'error', message: error.message }),
-                        },
-                      ),
-                  }
-                : undefined,
-            });
-          },
-          onError: (error) => toast.show({ tone: 'error', message: error.message }),
-        },
-      );
+      // `mutateAsync` por chamada: os callbacks do `mutate` só rodam para a
+      // última chamada, e mover dois cartões em seguida perderia um aviso.
+      const showError = (error: Error) => toast.show({ tone: 'error', message: error.message });
+      void move.mutateAsync({ id, status }).then((detail) => {
+        const eventId = newestEventId(detail);
+        toast.show({
+          tone: 'success',
+          message: moveMessage(status),
+          action: eventId
+            ? {
+                label: 'Desfazer',
+                onClick: () => {
+                  void deleteEvent.mutateAsync({ id, eventId }).catch(showError);
+                },
+              }
+            : undefined,
+        });
+      }, showError);
     },
     [move, deleteEvent, toast],
   );

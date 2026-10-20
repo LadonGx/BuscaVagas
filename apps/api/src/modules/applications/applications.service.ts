@@ -184,6 +184,7 @@ export class ApplicationsService {
     await this.assertExists(id);
 
     await this.prisma.$transaction(async (tx) => {
+      await lockApplication(tx, id);
       await tx.statusEvent.create({
         data: {
           applicationId: id,
@@ -206,6 +207,7 @@ export class ApplicationsService {
     await this.assertEventBelongs(id, eventId);
 
     await this.prisma.$transaction(async (tx) => {
+      await lockApplication(tx, id);
       await tx.statusEvent.update({ where: { id: eventId }, data: input });
       await recompute(tx, id);
     });
@@ -217,17 +219,23 @@ export class ApplicationsService {
     await this.assertEventBelongs(id, eventId);
 
     await this.prisma.$transaction(async (tx) => {
+      // Com a candidatura travada, dois "apagar evento" ao mesmo tempo rodam
+      // um depois do outro: o segundo conta o que o primeiro deixou e nunca
+      // sobra candidatura sem evento.
+      await lockApplication(tx, id);
       const count = await tx.statusEvent.count({ where: { applicationId: id } });
 
       if (count <= 1) {
-        throw new ConflictException({
-          statusCode: 409,
-          message:
-            'Este é o único evento da candidatura. Para desfazer tudo, apague a candidatura.',
-        });
+        throw onlyEvent();
       }
 
-      await tx.statusEvent.delete({ where: { id: eventId } });
+      // O evento pode ter saído enquanto esperávamos a trava.
+      const { count: deleted } = await tx.statusEvent.deleteMany({
+        where: { id: eventId, applicationId: id },
+      });
+      if (deleted === 0) {
+        throw eventNotFound();
+      }
       await recompute(tx, id);
     });
 
@@ -250,8 +258,20 @@ export class ApplicationsService {
     });
 
     if (!event || event.applicationId !== id) {
-      throw new NotFoundException({ statusCode: 404, message: 'Evento não encontrado.' });
+      throw eventNotFound();
     }
+  }
+}
+
+/**
+ * `SELECT ... FOR UPDATE` na candidatura: mudanças no histórico dela entram
+ * em fila até a transação terminar. Candidatura que sumiu no meio = 404.
+ */
+async function lockApplication(tx: Tx, applicationId: string): Promise<void> {
+  const rows = await tx.$queryRaw<{ id: string }[]>`
+    SELECT id FROM "Application" WHERE id = ${applicationId} FOR UPDATE`;
+  if (rows.length === 0) {
+    throw notFound();
   }
 }
 
@@ -262,6 +282,11 @@ async function recompute(tx: Tx, applicationId: string): Promise<void> {
     select: { status: true, occurredAt: true, createdAt: true },
   });
 
+  // Não deveria acontecer (a trava impede), mas histórico vazio é 409, não 500.
+  if (events.length === 0) {
+    throw onlyEvent();
+  }
+
   await tx.application.update({
     where: { id: applicationId },
     data: deriveApplicationState(events),
@@ -270,4 +295,15 @@ async function recompute(tx: Tx, applicationId: string): Promise<void> {
 
 function notFound(): NotFoundException {
   return new NotFoundException({ statusCode: 404, message: 'Candidatura não encontrada.' });
+}
+
+function eventNotFound(): NotFoundException {
+  return new NotFoundException({ statusCode: 404, message: 'Evento não encontrado.' });
+}
+
+function onlyEvent(): ConflictException {
+  return new ConflictException({
+    statusCode: 409,
+    message: 'Este é o único evento da candidatura. Para desfazer tudo, apague a candidatura.',
+  });
 }

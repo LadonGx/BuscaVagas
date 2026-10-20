@@ -11,6 +11,7 @@ import { EmailSource } from './email.source';
 import { htmlTokens } from './html';
 import { describeImapError, type MailboxReader } from './mailbox';
 import { parseMessage, type MailMessage } from './message';
+import { indeedSite } from './sites/indeed';
 
 /**
  * Fixtures: alertas reais ANONIMIZADOS (nome, e-mail e links de rastreio
@@ -120,6 +121,27 @@ describe('Indeed', () => {
     const first = alert.jobs[0]!;
     expect(first.externalId).toBe(contentId('TOTVS', first.title, 'São Paulo, SP'));
     expect(new Set(alert.jobs.map((job) => job.externalId)).size).toBe(10);
+  });
+
+  it('cartão com empresa e local mas idade ilegível entre dois cartões conta como descartado', () => {
+    const card = (title: string, age: string) =>
+      `<a href="https://engage.indeed.com/f/a/${encodeURIComponent(title)}">${title}</a>` +
+      `<p>ACME</p><p>São Paulo, SP</p><p>Resumo da vaga</p><p>${age}</p>`;
+    const mail: MailMessage = {
+      from: 'alert@indeed.com',
+      subject: 'Vagas',
+      date: new Date('2026-10-14T12:00:00Z'),
+      text: '',
+      html:
+        card('Dev Backend', 'há 2 dias') +
+        card('Dev Frontend', 'publicada em outubro') +
+        card('Dev Mobile', 'há 1 semana') +
+        '<a href="https://engage.indeed.com/f/a/rodape">Ver todas as vagas</a><p>Rodapé</p><p>Mais texto</p>',
+      authResults: null,
+    };
+    const read = indeedSite.read(mail);
+    expect(read.jobs.map((job) => job.title)).toEqual(['Dev Backend', 'Dev Mobile']);
+    expect(read.dropped).toBe(1);
   });
 });
 
@@ -236,6 +258,59 @@ describe('ferramentas', () => {
     expect(salaryFromText('R$ 60 mil por ano')).toMatchObject({ min: 60000, period: 'year' });
     expect(salaryFromText('R$ 25 por hora')).toMatchObject({ min: 25, period: 'hour' });
     expect(salaryFromText('a combinar')).toBeNull();
+  });
+
+  it('salaryFromText: decimal com K/mil e período ao lado do valor', () => {
+    expect(salaryFromText('R$2.5K/yr - R$3.5K/yr')).toEqual({
+      min: 2500,
+      max: 3500,
+      currency: 'BRL',
+      period: 'year',
+    });
+    expect(salaryFromText('R$ 2,5 mil - R$ 3,5 mil')).toMatchObject({
+      min: 2500,
+      max: 3500,
+      period: 'month',
+    });
+    expect(salaryFromText('R$ 48 mil/ano')).toMatchObject({ min: 48000, period: 'year' });
+    expect(salaryFromText('R$ 50 mil anual')).toMatchObject({ period: 'year' });
+    expect(salaryFromText('R$ 30/h')).toMatchObject({ min: 30, period: 'hour' });
+    expect(salaryFromText('R$ 30 - R$ 40 /hr')).toMatchObject({ max: 40, period: 'hour' });
+    expect(salaryFromText('R$ 2.500 - R$ 3.000')).toMatchObject({ min: 2500, max: 3000 });
+    expect(salaryFromText('R$2,500 - R$3,000')).toMatchObject({ min: 2500, max: 3000 });
+    // Por semana: o projeto não tem esse período, não vira "por mês".
+    expect(salaryFromText('R$ 800 por semana')).toBeNull();
+    expect(salaryFromText('R$ 1K/week')).toBeNull();
+  });
+
+  it('postedFromAge: mais de N dias, semanas, meses e horas', () => {
+    const sent = new Date('2026-10-14T12:00:00Z');
+    const daysAgo = (text: string) =>
+      (sent.getTime() - (postedFromAge(text, sent) as Date).getTime()) / 86_400_000;
+    expect(daysAgo('há mais de 30 dias')).toBe(30);
+    expect(daysAgo('Há 1 mês')).toBe(30);
+    expect(daysAgo('há 2 meses')).toBe(60);
+    expect(daysAgo('há 1 semana')).toBe(7);
+    expect(daysAgo('há 2 semanas')).toBe(14);
+    expect(postedFromAge('há 1 hora', sent)?.toISOString()).toBe('2026-10-14T11:00:00.000Z');
+    expect(postedFromAge('há 3 horas', sent)?.toISOString()).toBe('2026-10-14T09:00:00.000Z');
+    expect(postedFromAge('há 2 anos-luz', sent)).toBeUndefined();
+  });
+
+  it('htmlTokens: "<" sem ">" não trava (200 KB em menos de 1 s)', () => {
+    for (const html of ['<a'.repeat(100_000), '<!--'.repeat(50_000), '<script>'.repeat(25_000)]) {
+      const start = performance.now();
+      htmlTokens(html);
+      expect(performance.now() - start).toBeLessThan(1000);
+    }
+    expect(htmlTokens('x <a y')).toEqual([
+      { text: 'x', href: null },
+      { text: 'a y', href: null },
+    ]);
+    expect(htmlTokens('<!-- a --><b>b</b><SCRIPT>c</SCRIPT>d<style>x</style >')).toEqual([
+      { text: 'b', href: null },
+      { text: 'd', href: null },
+    ]);
   });
 
   it('splitMode e postedFromAge', () => {

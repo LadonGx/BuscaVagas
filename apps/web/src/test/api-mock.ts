@@ -24,12 +24,25 @@ function match(pattern: string, key: string): Record<string, string> | null {
  * `fetch` falso por rota: `{ 'GET /jobs/counts': () => ({...}) }`; aceita
  * parâmetros (`'PUT /jobs/:id/triage'`). O valor
  * devolvido vira JSON 200; `reply(status, body)` muda o status; rota sem
- * handler responde 404 (e aparece no teste que esqueceu dela).
+ * handler responde 404 (e aparece no teste que esqueceu dela). Escrita sem
+ * `Content-Type: application/json` (ou `application/zip`) responde 415, como a API.
  */
 export function mockApi(routes: Record<string, Handler>) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init: RequestInit = {}) => {
     const url = new URL(String(input), 'http://localhost');
-    const key = `${init.method ?? 'GET'} ${url.pathname.replace(/^\/api/, '')}`;
+    const method = init.method ?? 'GET';
+    const key = `${method} ${url.pathname.replace(/^\/api/, '')}`;
+
+    // Como a API (local-only.ts): escrita só com JSON ou o .zip do backup, com ou sem corpo.
+    const type = new Headers(init.headers).get('Content-Type') ?? '';
+    if (method !== 'GET' && !/^application\/(json|zip)\b/i.test(type)) {
+      return new Response(
+        JSON.stringify({ message: `${key} sem Content-Type: application/json` }),
+        {
+          status: 415,
+        },
+      );
+    }
     let handler = routes[key];
     let params: Record<string, string> = {};
     if (!handler) {

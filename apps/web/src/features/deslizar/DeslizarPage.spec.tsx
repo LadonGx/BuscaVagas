@@ -44,6 +44,8 @@ describe('Deslizar', () => {
 
     expect(await screen.findByRole('article', { name: 'Vaga atual: Primeira vaga' })).toBeVisible();
     expect(query()?.get('triage')).toBe('inbox');
+    // Vaga com candidatura (aplicada, "Desisti") não aparece para deslizar.
+    expect(query()?.get('hasApplication')).toBe('false');
     expect(query()?.get('hideIncompatible')).toBe('true');
     expect(query()?.get('hideClosed')).toBe('true');
   });

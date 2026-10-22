@@ -6,7 +6,7 @@
   "license": "MIT",
   "packageManager": "pnpm@12.10.1",
   "engines": {
-    "node": ">=22.22.0"
+    "node": ">=24.22.1"
   },
   "scripts": {
     "postinstall": "pnpm build:packages && pnpm db:generate",

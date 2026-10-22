@@ -185,7 +185,8 @@ Dados: `GET /api/jobs` (infinito), `GET /api/jobs/:id` no painel.
 
 ### Deslizar — `/deslizar`
 
-Dados: `GET /api/jobs?triage=inbox&hideIncompatible=true` (ordem automática:
+Dados: `GET /api/jobs?triage=inbox&hasApplication=false&hideIncompatible=true&hideClosed=true`
+(só o que falta olhar: sem candidatura, compatível e aberta; ordem automática:
 pela nota com preferências, senão pela entrada no app).
 
 - Um cartão por vez, com a próxima por trás; barra de progresso; contadores

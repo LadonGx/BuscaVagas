@@ -1,8 +1,8 @@
 # Imagem do app completo (API + tela) para o docker-compose.app.yml.
 # Ver docs/features/19-docker-app.md. Para programar, use o modo dev (README).
 
-# Node 24 LTS (o README recomenda; o mínimo é 22.22).
-FROM node:24-bookworm-slim AS base
+# Node 24.22.1 LTS: correções de segurança de outubro de 2026 (o mínimo do projeto).
+FROM node:24.22.1-bookworm-slim AS base
 # openssl: o motor de migrações do Prisma precisa dele.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends openssl ca-certificates \

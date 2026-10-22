@@ -14,9 +14,21 @@ vira duas vagas. Mas a mesma vaga chega com **outro link** em dois casos:
   existe (`JobAlias`): não entra outra vaga na caixa, e o painel mostra
   "Também na Greenhouse" com o link. A fonte trazer o alias de novo conta como
   "vista" e mantém a vaga aberta (`lastSeenAt`).
-- **Repostada = vaga nova, ligada à anterior.** Entra **na caixa** (padrão),
-  com o selo "Repostada" e o que você fez com a anterior ("você descartou",
-  "você salvou", "você já se candidatou").
+- **Repostada = vaga nova, ligada à anterior.** Leva o selo "Repostada" e o
+  que você fez com a anterior ("você descartou", "você salvou", "você já se
+  candidatou"). Onde entra depende dessa decisão:
+  - anterior **com candidatura** (qualquer status, inclusive "Desisti"):
+    entra **já descartada**, motivo "Repostagem de vaga em que você já se
+    candidatou";
+  - anterior **descartada**: entra **já descartada**, motivo "Repostagem de
+    vaga que você já descartou";
+  - anterior salva ou ainda na caixa: entra **na caixa**.
+
+  A Caixa e o Deslizar mostram só o que falta olhar. Em Descartadas a
+  repostagem aparece com o motivo, e "Voltar para a caixa" desfaz. A
+  migration `20261022120000_dismiss_decided_reposts` fez o mesmo com as
+  repostagens que já estavam na caixa.
+
 - **"Descartar sozinha se for repostada"**, por vaga: a chave fica no painel
   de toda vaga descartada. Ligada, a próxima repostagem já entra descartada,
   com o motivo "Repostagem de vaga que você pediu para descartar sempre". A

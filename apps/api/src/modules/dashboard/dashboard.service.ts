@@ -45,6 +45,8 @@ export class DashboardService {
       this.prisma.job.count({
         where: {
           triage: 'inbox',
+          // Com candidatura já saiu da caixa.
+          application: { is: null },
           incompatible: false,
           scoredVersion: { gte: version },
           score: { gte: SCORE_TIER_MIN.great },
@@ -103,6 +105,7 @@ export class DashboardService {
     const rows = await this.prisma.job.findMany({
       where: {
         triage: 'inbox',
+        application: { is: null },
         incompatible: false,
         scoredVersion: { gte: version },
         score: { not: null },

@@ -62,7 +62,9 @@ export function jobListQuery(filters: JobFilters) {
   const { tab } = filters;
   return {
     triage: tab === 'applied' ? undefined : [tab],
-    hasApplication: tab === 'applied' ? true : undefined,
+    // Caixa = só as vagas por olhar: com candidatura (inclusive "Desisti")
+    // ficam em "Com candidatura". Vale também para o Deslizar.
+    hasApplication: tab === 'applied' ? true : tab === 'inbox' ? false : undefined,
     q: filters.q || undefined,
     workModel: filters.workModel,
     minScore: filters.minScore,
@@ -76,7 +78,9 @@ export function jobListQuery(filters: JobFilters) {
 
 /** A vaga continua cabendo nesta aba depois de mudar a triagem? */
 export function fitsTab(job: Pick<JobDto, 'triage' | 'application'>, tab: JobTab): boolean {
-  return tab === 'applied' ? job.application !== null : job.triage === tab;
+  if (tab === 'applied') return job.application !== null;
+  if (tab === 'inbox') return job.triage === 'inbox' && job.application === null;
+  return job.triage === tab;
 }
 
 type JobPages = InfiniteData<Page<JobDto>, string | null>;

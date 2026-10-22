@@ -35,6 +35,13 @@ Desfazer = mandar `status: "inbox"`.
 - Criar uma candidatura marca a vaga como `saved` automaticamente ([03](03-applications.md)).
 - Listagem padrão (`GET /api/jobs`) mostra `inbox` e `saved`; descartadas só
   com `?triage=dismissed`.
+- **Caixa = só o que falta olhar:** a aba Caixa e o Deslizar pedem
+  `triage=inbox&hasApplication=false` (e escondem as encerradas). Vaga com
+  candidatura — aplicada, em processo ou "Desisti" — fica só em "Com
+  candidatura", mesmo que a triagem dela seja `inbox`. As contagens
+  (`/jobs/counts`: caixa, Deslizar, encerradas da caixa), o "nota alta na
+  caixa" do Início e o sino seguem a mesma regra. Repostagem de vaga que você
+  já aplicou ou descartou entra descartada ([11](11-reposts.md)).
 
 ## Testes
 

@@ -241,6 +241,10 @@ export const REPOST_WINDOW_DAYS = 180;
 export const DUPLICATE_LIVE_DAYS = 7;
 /** Motivo gravado na repostagem que entra já descartada. */
 export const MUTED_REPOST_REASON = 'Repostagem de vaga que você pediu para descartar sempre';
+/** Repostagem de vaga em que você já se candidatou: entra já descartada. */
+export const APPLIED_REPOST_REASON = 'Repostagem de vaga em que você já se candidatou';
+/** Repostagem de vaga que você já descartou: entra já descartada. */
+export const DISMISSED_REPOST_REASON = 'Repostagem de vaga que você já descartou';
 
 export interface JobRepostDto {
   /** Quantas vezes já tinha aparecido (nos últimos `REPOST_WINDOW_DAYS` dias). */

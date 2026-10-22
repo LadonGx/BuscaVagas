@@ -75,6 +75,30 @@ describeDb('Contagens e filtro "com candidatura" (integração)', () => {
     expect(counts).toMatchObject({ triage: { inbox: 4 }, swipeable: 2, inboxClosed: 2 });
   });
 
+  it('com candidatura (aplicada, em processo, "Desisti") sai da caixa e do Deslizar', async () => {
+    await job({ title: 'Por olhar', score: 900 });
+    const applied = await job({ title: 'Aplicada', score: 900 });
+    await apply(applied.id);
+    const withdrawn = await job({ title: 'Desisti', score: 900, closedAt: new Date() });
+    await apply(withdrawn.id);
+    await job({ title: 'Descartada', score: 900, triage: 'dismissed' });
+
+    const counts = (await api().get('/api/jobs/counts').expect(200)).body as JobCountsDto;
+    expect(counts).toMatchObject({
+      triage: { inbox: 1, saved: 0, dismissed: 1 },
+      withApplication: 2,
+      swipeable: 1,
+      inboxClosed: 0,
+      score: { great: 1 },
+    });
+
+    // O que a tela pede para a aba Caixa e para o Deslizar.
+    const inbox = (
+      await api().get('/api/jobs?triage=inbox&hasApplication=false&hideClosed=true').expect(200)
+    ).body.items as JobDto[];
+    expect(inbox.map((item) => item.title)).toEqual(['Por olhar']);
+  });
+
   it('nota de preferências antigas conta como pendente, na contagem e na vaga', async () => {
     await t.prisma.preferences.create({ data: { id: 1, version: 3 } });
     await job({ title: 'Atual', score: 900, scoredVersion: 3 });

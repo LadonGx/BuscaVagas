@@ -1,4 +1,6 @@
 import {
+  APPLIED_REPOST_REASON,
+  DISMISSED_REPOST_REASON,
   MUTED_REPOST_REASON,
   type JobDto,
   type JobHistoryDto,
@@ -124,7 +126,21 @@ describeDb('Repostadas e duplicadas (integração)', () => {
     expect(await t.prisma.jobAlias.count()).toBe(2);
   });
 
-  it('repostada depois de sumir: vaga nova ligada à anterior; descartada volta para a caixa', async () => {
+  it('repostada depois de sumir: vaga nova ligada à anterior; de salva, entra na caixa', async () => {
+    await jobs.ingest([gupy(1)]);
+    const first = await t.prisma.job.findFirstOrThrow();
+    await api().put(`/api/jobs/${first.id}/triage`).send({ status: 'saved' }).expect(200);
+    await age('https://acme.gupy.io/jobs/1', 20);
+
+    await jobs.ingest([gupy(2)]);
+    const repost = (await list()).find((job) => job.url === 'https://acme.gupy.io/jobs/2');
+    expect(repost).toMatchObject({
+      triage: 'inbox',
+      repost: { count: 1, previous: { id: first.id, triage: 'saved', application: null } },
+    });
+  });
+
+  it('repostada de vaga descartada: entra já descartada, com o motivo', async () => {
     await jobs.ingest([gupy(1)]);
     const first = await t.prisma.job.findFirstOrThrow();
     await api().put(`/api/jobs/${first.id}/triage`).send({ status: 'dismissed' }).expect(200);
@@ -133,10 +149,12 @@ describeDb('Repostadas e duplicadas (integração)', () => {
     const result = await jobs.ingest([gupy(2)]);
     expect(result).toMatchObject({ created: 1, duplicates: 0, reposts: 1 });
 
-    const [repost] = await list();
+    const repost = (
+      (await api().get('/api/jobs?triage=dismissed').expect(200)).body.items as JobDto[]
+    ).find((job) => job.url === 'https://acme.gupy.io/jobs/2');
     expect(repost).toMatchObject({
-      url: 'https://acme.gupy.io/jobs/2',
-      triage: 'inbox',
+      triage: 'dismissed',
+      dismissReason: DISMISSED_REPOST_REASON,
       repost: {
         count: 1,
         previous: { id: first.id, triage: 'dismissed', application: null },
@@ -172,7 +190,14 @@ describeDb('Repostadas e duplicadas (integração)', () => {
     const third = await t.prisma.job.findUniqueOrThrow({
       where: { url: 'https://acme.gupy.io/jobs/3' },
     });
-    expect(third).toMatchObject({ triage: 'inbox', repostCount: 2, repostOfId: second.id });
+    // Sem o "descartar sempre", vale a regra geral: a anterior estava
+    // descartada, então a repostagem também entra descartada.
+    expect(third).toMatchObject({
+      triage: 'dismissed',
+      dismissReason: DISMISSED_REPOST_REASON,
+      repostCount: 2,
+      repostOfId: second.id,
+    });
   });
 
   it('histórico: as outras vezes, inclusive a apagada pela limpeza, e a candidatura', async () => {
@@ -196,6 +221,8 @@ describeDb('Repostadas e duplicadas (integração)', () => {
       where: { url: 'https://acme.gupy.io/jobs/2' },
     });
     expect(current.repostCount).toBe(2);
+    // Já se candidatou à anterior: a repostagem não entra na Caixa.
+    expect(current).toMatchObject({ triage: 'dismissed', dismissReason: APPLIED_REPOST_REASON });
 
     const history = (await api().get(`/api/jobs/${current.id}/history`).expect(200))
       .body as JobHistoryDto;

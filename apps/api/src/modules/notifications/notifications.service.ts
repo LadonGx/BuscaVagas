@@ -96,6 +96,8 @@ export class NotificationsService {
       const jobs = await tx.job.findMany({
         where: {
           triage: 'inbox',
+          // Já se candidatou: não precisa de aviso.
+          application: { is: null },
           notifiedAt: null,
           incompatible: false,
           score: { gte: minScore },

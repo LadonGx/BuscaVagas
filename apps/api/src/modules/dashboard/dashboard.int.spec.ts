@@ -106,8 +106,13 @@ describeDb('Painel (integração)', () => {
     await job({ title: 'Incompatível', score: 0, incompatible: true });
     await job({ title: 'Na fila', score: 990, scoredVersion: null });
     await job({ title: 'Sem nota', score: null });
+    const applied = await job({ title: 'Aplicada', score: 995 });
+    await t.prisma.application.create({
+      data: { jobId: applied.id, status: 'applied', appliedAt: NOW },
+    });
 
     const dashboard = await service.get(NOW, SP);
+    // A que já tem candidatura saiu da caixa: nem melhor nova, nem na conta.
     expect(dashboard.topNew.map((j) => j.title)).toEqual(['A', 'B']);
     expect(dashboard.highScoreInbox).toBe(3); // A, B e a velha
   });

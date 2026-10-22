@@ -46,7 +46,7 @@ Detalhes e decisões em [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Requisitos
 
-- **Node.js 22.22+** (recomendado: 24 LTS) — o React Router 8 do front pede essa versão
+- **Node.js 24.22.1+** (24 LTS, com as correções de segurança de outubro de 2026; está no `.nvmrc`)
 - **pnpm 12** — `npm install -g pnpm@12`
 - **Docker** (Docker Desktop no Windows/macOS)
 
@@ -158,9 +158,8 @@ seguro porque nada fica exposto na rede:
 ## Problemas comuns
 
 **Aviso `Unsupported engine` no `pnpm install`, ou testes do front quebrando.**
-O Node está abaixo de 22.22 (`node -v`). O app pode até subir, mas o Vitest, o
-jsdom e o React Router pedem 22.22+. Instale o Node 24 LTS e rode `pnpm install`
-de novo.
+O Node está abaixo de 24.22.1 (`node -v`). Instale o Node 24.22.1 (ou um 24
+mais novo) e rode `pnpm install` de novo.
 
 **`http proxy error ... ECONNREFUSED 127.0.0.1:3333` no terminal do front.**
 A API não estava no ar naquele instante — ainda subindo ou reiniciando (o modo

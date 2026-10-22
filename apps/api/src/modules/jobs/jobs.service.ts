@@ -5,6 +5,8 @@ import {
   isPreferencesConfigured,
   MANUAL_SOURCE,
   MUTED_REPOST_REASON,
+  APPLIED_REPOST_REASON,
+  DISMISSED_REPOST_REASON,
   REPOST_WINDOW_DAYS,
   normalizeStack,
   SCORE_TIER_MIN,
@@ -165,17 +167,26 @@ export class JobsService {
       visible AS (
         SELECT j.*,
           (j."scoredVersion" IS NULL OR j."scoredVersion" < prefs.version) AS pending
-        FROM "Job" j, prefs WHERE j.triage IN ('inbox', 'saved')
+        FROM "Job" j, prefs
+        WHERE j.triage = 'saved' OR (j.triage = 'inbox'
+          AND NOT EXISTS (SELECT 1 FROM "Application" a WHERE a."jobId" = j.id))
+      ),
+      -- Caixa = vagas por olhar: triagem "caixa" e sem candidatura (aplicada,
+      -- em processo ou "Desisti" já saíram dela). docs/features/02-triage.md
+      inbox AS (
+        SELECT j.* FROM "Job" j
+        WHERE j.triage = 'inbox'
+          AND NOT EXISTS (SELECT 1 FROM "Application" a WHERE a."jobId" = j.id)
       )
       SELECT
-        (SELECT count(*) FROM "Job" WHERE triage = 'inbox') AS inbox,
+        (SELECT count(*) FROM inbox) AS inbox,
         (SELECT count(*) FROM "Job" WHERE triage = 'saved') AS saved,
         (SELECT count(*) FROM "Job" WHERE triage = 'dismissed') AS dismissed,
         (SELECT count(*) FROM "Application") AS "withApplication",
-        (SELECT count(*) FROM "Job" WHERE triage = 'inbox' AND NOT incompatible
+        (SELECT count(*) FROM inbox WHERE NOT incompatible
           AND "closedAt" IS NULL AND ("deadline" IS NULL OR "deadline" >= now())) AS swipeable,
-        (SELECT count(*) FROM "Job" WHERE triage = 'inbox'
-          AND ("closedAt" IS NOT NULL OR "deadline" < now())) AS "inboxClosed",
+        (SELECT count(*) FROM inbox
+          WHERE "closedAt" IS NOT NULL OR "deadline" < now()) AS "inboxClosed",
         count(*) FILTER (WHERE pending) AS pending,
         count(*) FILTER (WHERE NOT pending AND incompatible) AS incompatible,
         count(*) FILTER (WHERE NOT pending AND NOT incompatible AND score IS NULL) AS unscored,
@@ -489,7 +500,13 @@ export class JobsService {
       ? await Promise.all([
           this.prisma.job.findMany({
             where: { fingerprint: { in: fingerprints }, lastSeenAt: { gte: since } },
-            select: { id: true, fingerprint: true, lastSeenAt: true },
+            select: {
+              id: true,
+              fingerprint: true,
+              lastSeenAt: true,
+              triage: true,
+              application: { select: { id: true } },
+            },
             orderBy: [{ lastSeenAt: 'desc' }, { id: 'desc' }],
           }),
           this.prisma.forgottenJob.findMany({
@@ -547,15 +564,21 @@ export class JobsService {
             ...previous.map((item) => item.lastSeenAt.getTime()),
             ...gone.map((item) => item.forgottenAt.getTime()),
           ];
+          // Você já decidiu sobre esta vaga (silenciou, se candidatou ou
+          // descartou): a repostagem entra já descartada, fora da Caixa e do
+          // Deslizar, com o motivo. "Voltar para a caixa" desfaz.
+          const reason = mutedSet.has(fingerprint)
+            ? MUTED_REPOST_REASON
+            : previous.some((item) => item.application)
+              ? APPLIED_REPOST_REASON
+              : latest?.triage === 'dismissed'
+                ? DISMISSED_REPOST_REASON
+                : null;
           Object.assign(job, {
             repostOfId: latest?.id ?? null,
             repostCount: count,
             previousSeenAt: new Date(Math.max(...seenTimes)),
-            ...(mutedSet.has(fingerprint) && {
-              triage: 'dismissed',
-              triagedAt: now,
-              dismissReason: MUTED_REPOST_REASON,
-            }),
+            ...(reason && { triage: 'dismissed', triagedAt: now, dismissReason: reason }),
           } satisfies Partial<Prisma.JobCreateManyInput>);
           result.reposts += 1;
         }

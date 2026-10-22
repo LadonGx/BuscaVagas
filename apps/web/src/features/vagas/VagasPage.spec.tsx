@@ -60,6 +60,8 @@ describe('Vagas', () => {
     expect(within(acmeCard).getByText('Híbrida')).toBeVisible();
     expect(within(card('Analista Pleno')).getByText(/Nenhuma das suas stacks/)).toBeVisible();
     expect(lastList()?.get('triage')).toBe('inbox');
+    // Caixa = só as vagas por olhar: com candidatura fica fora.
+    expect(lastList()?.get('hasApplication')).toBe('false');
     expect(lastList()?.get('limit')).toBe('30');
     expect(screen.getByText('142 na caixa · ordenadas pela sua nota')).toBeVisible();
   });
